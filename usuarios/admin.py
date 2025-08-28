@@ -1,5 +1,5 @@
 """
-Django admin configuration for the concursos module.
+Django admin configuration for the usuarios module.
 """
 from django.contrib import admin
 from .models import Concurso

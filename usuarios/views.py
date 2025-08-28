@@ -1,5 +1,5 @@
 """
-DRF views for the concursos module.
+DRF views for the usuarios module.
 """
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
