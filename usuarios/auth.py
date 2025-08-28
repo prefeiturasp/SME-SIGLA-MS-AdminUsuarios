@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from rest_framework.authentication import BaseAuthentication, get_authorization_header
 from rest_framework import exceptions
 
-from .services import ExternalServices
+from .services import AuthenticationService
 
 
 class ExternalServiceAuthentication(BaseAuthentication):
@@ -23,7 +23,7 @@ class ExternalServiceAuthentication(BaseAuthentication):
             raise exceptions.AuthenticationFailed("Invalid Authorization header. Token string should not contain spaces.")
 
         token = auth[1].decode("utf-8")
-        services = ExternalServices()
+        services = AuthenticationService()
         try:
             payload = services.validate_token(token)
         except Exception:
