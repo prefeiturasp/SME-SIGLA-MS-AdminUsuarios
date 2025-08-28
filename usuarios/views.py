@@ -14,7 +14,7 @@ from .serializers import (
     ChangePasswordSerializer,
     CreateUserSerializer,
 )
-from .services import ExternalServices
+from .services import AuthenticationService
 
 
 class LoginView(APIView):
@@ -23,7 +23,7 @@ class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        services = ExternalServices()
+        services = AuthenticationService()
         result = services.login(
             username=serializer.validated_data['username'],
             password=serializer.validated_data['password']
@@ -38,7 +38,7 @@ class ChangePasswordView(APIView):
         serializer = ChangePasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         token = request.headers.get('Authorization', '').replace('Bearer ', '') or None
-        services = ExternalServices()
+        services = AuthenticationService()
         success = services.change_password(
             user_id=serializer.validated_data['user_id'],
             old_password=serializer.validated_data['old_password'],
@@ -54,7 +54,7 @@ class CreateUserView(APIView):
     def post(self, request):
         serializer = CreateUserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        services = ExternalServices()
+        services = AuthenticationService()
         remote_user = services.create_user(
             username=serializer.validated_data['username'],
             email=serializer.validated_data['email'],
