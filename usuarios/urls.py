@@ -1,6 +1,4 @@
-"""
-URL configuration for the concursos module.
-"""
+# URL configuration for the usuarios module.
 from django.urls import path
 from .views import LoginView, ChangePasswordView, CreateUserView
 
