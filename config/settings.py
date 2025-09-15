@@ -1,7 +1,3 @@
-"""
-Django settings for convocacao_processes project.
-"""
-
 from pathlib import Path
 import os
 from dotenv import load_dotenv
@@ -65,14 +61,14 @@ if DB_ENGINE == 'django.db.backends.sqlite3':
     DATABASES = {
         'default': {
             'ENGINE': DB_ENGINE,
-            'NAME': os.environ.get('DB_NAME', BASE_DIR / 'db.sqlite3'),
+            'NAME': os.environ.get('DB_NAME', BASE_DIR / 'db_sigla.sqlite3'),
         }
     }
 else:
     DATABASES = {
         'default': {
             'ENGINE': DB_ENGINE,
-            'NAME': os.environ.get('DB_NAME', 'concursos'),
+            'NAME': os.environ.get('DB_NAME', 'db_sigla'),
             'USER': os.environ.get('DB_USER', 'postgres'),
             'PASSWORD': os.environ.get('DB_PASSWORD', 'postgres'),
             'HOST': os.environ.get('DB_HOST', 'localhost'),
@@ -105,14 +101,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
 
-# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
