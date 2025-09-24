@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    'drf_spectacular',
     'usuarios',
 ]
 
@@ -115,6 +116,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 # CORS settings
@@ -131,4 +133,11 @@ EXTERNAL_SERVICES = {
         'base_url': os.environ.get('USER_SERVICE_BASE_URL', 'http://localhost:8101'),
         'timeout': int(os.environ.get('USER_SERVICE_TIMEOUT', '10')),
     },
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Admin Usuarios Sigla API',
+    'DESCRIPTION': 'API para o sistema de administração de usuários de sigla',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
 }
