@@ -9,12 +9,12 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 
-from .serializers import (
+from usuarios.serializers import (
     LoginSerializer,
     ChangePasswordSerializer,
     CreateUserSerializer,
 )
-from .services import AuthenticationService
+from usuarios.services import AuthenticationService
 
 
 class LoginView(APIView):
