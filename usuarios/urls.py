@@ -1,6 +1,6 @@
 # URL configuration for the usuarios module.
 from django.urls import path
-from .views import LoginView, ChangePasswordView, CreateUserView
+from usuarios.views import LoginView, ChangePasswordView, CreateUserView
 
 urlpatterns = [
     path('login/', LoginView.as_view(), name='usuario-login'),
