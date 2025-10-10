@@ -1,79 +1,142 @@
 """
 DRF views for the usuarios module.
 """
+
+import logging
+from typing import dataclass_transform
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.views import APIView
+from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth.models import User
 
 from usuarios.serializers import (
+    # ChangePasswordSerializer,
+    # CreateUserSerializer,
     LoginSerializer,
-    ChangePasswordSerializer,
-    CreateUserSerializer,
+    LoginResponseSerializer,
+    EsqueciSenhaSerializer,
+    CriarNovaSenhaSerializer,
 )
-from usuarios.services import AuthenticationService
+from usuarios.services.autenticacao import AutenticacaoService
+from usuarios.services.sme_integracao import SmeIntegracaoService
+from usuarios.services.email import EmailService
+from django.utils.http import urlsafe_base64_decode
+from django.contrib.auth.tokens import default_token_generator
+from usuarios.exceptions import (
+    AutenticacaoRespostaInvalidaError,
+    AutenticacaoRequisicaoError,
+    AutenticacaoCredenciaisInvalidasError,
+    AutenticacaoUpstreamError,
+    SmeIntegracaoException,
+)
+
+logger = logging.getLogger(__name__)
 
 
-class LoginView(APIView):
+def _mask_email(email: str) -> str:
+    try:
+        local, domain = email.split('@', 1)
+    except ValueError:
+        return '***'
+    if not local:
+        return f"***@{domain}"
+    if len(local) <= 2:
+        masked_local = local[0] + '*' * max(1, len(local) - 1)
+    else:
+        masked_local = local[0] + '*' * (len(local) - 2) + local[-1]
+    return f"{masked_local}@{domain}"
+
+class LoginView(TokenObtainPairView):
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []
 
     def post(self, request):
+
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        services = AuthenticationService()
-        result = services.login(
-            username=serializer.validated_data['username'],
-            password=serializer.validated_data['password']
-        )
-        return Response(result, status=status.HTTP_200_OK)
-
-
-class ChangePasswordView(APIView):
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        serializer = ChangePasswordSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        token = request.headers.get('Authorization', '').replace('Bearer ', '') or None
-        services = AuthenticationService()
-        success = services.change_password(
-            user_id=serializer.validated_data['user_id'],
-            old_password=serializer.validated_data['old_password'],
-            new_password=serializer.validated_data['new_password'],
-            token=token,
-        )
-        return Response({"success": success}, status=status.HTTP_200_OK)
-
-
-class CreateUserView(APIView):
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        serializer = CreateUserSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        services = AuthenticationService()
-        remote_user = services.create_user(
-            username=serializer.validated_data['username'],
-            email=serializer.validated_data['email'],
-            password=serializer.validated_data['password'],
-            first_name=serializer.validated_data.get('first_name', ''),
-            last_name=serializer.validated_data.get('last_name', ''),
-        )
-        # Optional local sync with Django's User model
-        username = serializer.validated_data['username']
-        email = serializer.validated_data['email']
-        first_name = serializer.validated_data.get('first_name', '')
-        last_name = serializer.validated_data.get('last_name', '')
-        if not User.objects.filter(username=username).exists():
-            User.objects.create_user(
-                username=username,
-                email=email,
-                password=serializer.validated_data['password'],
-                first_name=first_name,
-                last_name=last_name,
+        usuario = User.objects.filter(username=serializer.validated_data['usuario']).first()
+        if not usuario:
+            return Response({'detail': 'Usuário não encontrado'}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            data = AutenticacaoService.autentica(
+                serializer.validated_data['usuario'],
+                serializer.validated_data['senha']
             )
-        return Response(remote_user, status=status.HTTP_201_CREATED)
+        except AutenticacaoCredenciaisInvalidasError:
+            return Response({'detail': 'Credenciais inválidas'}, status=status.HTTP_401_UNAUTHORIZED)
+        except (AutenticacaoRespostaInvalidaError, AutenticacaoUpstreamError, AutenticacaoRequisicaoError):
+            return Response({'detail': 'Falha no serviço de autenticação'}, status=status.HTTP_400_BAD_REQUEST)
 
+        response_data = AutenticacaoService.montar_resposta_login(data, usuario)
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
+class EsqueciSenhaView(APIView):
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        serializer = EsqueciSenhaSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        usuario = serializer.validated_data['rf']
+        user = User.objects.filter(username=usuario).first()
+        if not user:
+            return Response({'detail': 'Usuário não encontrado'}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            info = SmeIntegracaoService.informacao_usuario(usuario)
+        except Exception:
+            return Response({'detail': 'Falha ao consultar dados do usuário'}, status=status.HTTP_400_BAD_REQUEST)
+
+        email = (info or {}).get('Email') or (info or {}).get('email')
+        nome = (info or {}).get('Nome') or (info or {}).get('nome') or user.first_name
+        if not email:
+            return Response({'detail': 'E-mail não encontrado para o usuário'}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            EmailService.enviar_email_esqueci_senha(
+                user=user,
+                email=email,
+                nome=nome
+            )
+        except Exception:
+            return Response({'detail': 'Falha ao enviar e-mail'}, status=status.HTTP_502_BAD_GATEWAY)
+
+        return Response({'usuario': user.username, 'email': _mask_email(email), 'email_enviado': True}, status=status.HTTP_200_OK)
+
+
+class CriarNovaSenhaView(APIView):
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        serializer = CriarNovaSenhaSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        uidb64 = serializer.validated_data['uid']
+        token = serializer.validated_data['token']
+        nova_senha = serializer.validated_data['nova_senha']
+
+        try:
+            uid = urlsafe_base64_decode(uidb64).decode()
+            user = User.objects.get(pk=uid)
+        except Exception:
+            return Response({'detail': 'UID inválido'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not default_token_generator.check_token(user, token):
+            return Response({'detail': 'Token inválido'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            SmeIntegracaoService.redefine_senha(user.username, nova_senha)
+        except SmeIntegracaoException as e:
+            logger.error(f"Falha ao redefinir senha no SME Integração: {e}")
+            return Response({'detail': 'Falha ao redefinir senha no SME Integração'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(nova_senha)
+        user.save(update_fields=['password'])
+
+        return Response({'detail': 'Senha alterada com sucesso'}, status=status.HTTP_200_OK)
