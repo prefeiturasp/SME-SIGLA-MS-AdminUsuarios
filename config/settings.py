@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt',
     'corsheaders',
     'drf_spectacular',
     'usuarios',
@@ -42,7 +43,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -111,9 +112,9 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'usuarios.auth.ExternalServiceAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -126,16 +127,16 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 # External services configuration
-EXTERNAL_SERVICES = {
-    'auth_service': {
-        'base_url': os.environ.get('AUTH_SERVICE_BASE_URL', 'http://localhost:8100'),
-        'timeout': int(os.environ.get('AUTH_SERVICE_TIMEOUT', '10')),
-    },
-    'user_service': {
-        'base_url': os.environ.get('USER_SERVICE_BASE_URL', 'http://localhost:8101'),
-        'timeout': int(os.environ.get('USER_SERVICE_TIMEOUT', '10')),
-    },
-}
+# EXTERNAL_SERVICES = {
+#     'auth_service': {
+#         'base_url': os.environ.get('AUTH_SERVICE_BASE_URL', 'http://localhost:8100'),
+#         'timeout': int(os.environ.get('AUTH_SERVICE_TIMEOUT', '10')),
+#     },
+#     'user_service': {
+#         'base_url': os.environ.get('USER_SERVICE_BASE_URL', 'http://localhost:8101'),
+#         'timeout': int(os.environ.get('USER_SERVICE_TIMEOUT', '10')),
+#     },
+# }
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Admin Usuarios Sigla API',
@@ -143,3 +144,19 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
+
+CORESSO_API_TOKEN = os.environ.get('CORESSO_API_TOKEN', '')
+CORESSO_API_URL = os.environ.get('CORESSO_API_URL', '')
+SME_INTEGRACAO_URL = os.environ.get('SME_INTEGRACAO_URL', '')
+SME_INTEGRACAO_TOKEN = os.environ.get('SME_INTEGRACAO_TOKEN', '')
+
+
+DJANGO_EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST="smtp.gmail.com"
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER="vitor.spassu@gmail.com"
+EMAIL_HOST_PASSWORD="jzgg ajuq fpdm shqv"
+DEFAULT_FROM_EMAIL="vitor.spassu@gmail.com"
+
+APLICACAO_URL = os.environ.get('APLICACAO_URL', '')
