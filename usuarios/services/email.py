@@ -47,10 +47,10 @@ class EmailService:
         contexto_email = {
             "nome_usuario": nome,
             "link_reset": link_reset,
-            "aplicacao_url": settings.APLICACAO_URL,
+            "ms_url": settings.MS_URL,
         }
         cls.enviar_email(
-            subject='Esqueci minha senha',
+            subject='Esqueci minha senha - SIGLA',
             template_name='reset_senha.html',
             context=contexto_email,
             recipients=[email],

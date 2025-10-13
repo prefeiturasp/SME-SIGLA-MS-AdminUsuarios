@@ -164,3 +164,4 @@ EMAIL_HOST_PASSWORD="jzgg ajuq fpdm shqv"
 DEFAULT_FROM_EMAIL="vitor.spassu@gmail.com"
 
 APLICACAO_URL = os.environ.get('APLICACAO_URL', '')
+MS_URL = os.environ.get('MS_URL', '')
