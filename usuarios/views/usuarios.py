@@ -306,96 +306,7 @@ class GerenciarPermissoesUsuarioView(APIView):
         )
 
 
-    #TODO REMOVER APOS TESTES POIS ESSAS PERMISSÕES DEVE SER FEITAS EXCLUSIVAMENTE COM OS GRUPOS 
-    @extend_schema(
-        request={
-            "application/json": {
-                "type": "object",
-                "properties": {
-                    "usuario": {"type": "string"},
-                    "adicionar_codenames": {"type": "array", "items": {"type": "string"}},
-                    "remover_codenames": {"type": "array", "items": {"type": "string"}},
-                },
-                "required": ["usuario"],
-            }
-        },
-        responses={
-            200: OpenApiResponse(description="Permissões atualizadas"),
-            400: OpenApiResponse(description="Dados inválidos"),
-            404: OpenApiResponse(description="Usuário não encontrado"),
-        },
-        description=(
-            "Adiciona e/ou remove permissões (por codename) de um usuário. "
-            "Envie arrays 'adicionar_codenames' e/ou 'remover_codenames' com codenames."
-        ),
-    )
-    def post(self, request):
-        payload = request.data or {}
-        username = payload.get("usuario")
-        adicionar_codenames = payload.get("adicionar_codenames") or []
-        remover_codenames = payload.get("remover_codenames") or []
-
-        if not isinstance(username, str) or username.strip() == "":
-            return Response({"detail": "usuario é obrigatório"}, status=status.HTTP_400_BAD_REQUEST)
-
-        if not isinstance(adicionar_codenames, list) or not isinstance(remover_codenames, list):
-            return Response({"detail": "'adicionar_codenames' e 'remover_codenames' devem ser listas"}, status=status.HTTP_400_BAD_REQUEST)
-
-        user = User.objects.filter(username=username).first()
-        if not user:
-            return Response({"detail": "Usuário não encontrado"}, status=status.HTTP_404_NOT_FOUND)
-
-        
-        adicionar_codenames_codenames = [c for c in adicionar_codenames if isinstance(c, str) and c]
-        remover_codenames_codenames = [c for c in remover_codenames if isinstance(c, str) and c]
-
-        perms_add = list(Permission.objects.filter(codename__in=adicionar_codenames_codenames)) if adicionar_codenames_codenames else []
-        perms_rem = list(Permission.objects.filter(codename__in=remover_codenames_codenames)) if remover_codenames_codenames else []
-
-        
-        unknown_add = sorted(set(adicionar_codenames_codenames) - {p.codename for p in perms_add})
-        unknown_rem = sorted(set(remover_codenames_codenames) - {p.codename for p in perms_rem})
-        if unknown_add or unknown_rem:
-            return Response(
-                {
-                    "detail": "Algumas permissões não foram encontradas",
-                    "adicionar_codenames_desconhecidas": unknown_add,
-                    "remover_codenames_desconhecidas": unknown_rem,
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if perms_add:
-            user.user_permissions.add(*perms_add)
-        if perms_rem:
-            user.user_permissions.remove(*perms_rem)
-
-        user.save()
-
-        atuais = (
-            user.user_permissions.select_related("content_type").all().order_by("content_type__app_label", "codename")
-        )
-        atuais_data = [
-            {
-                "id": p.id,
-                "codename": p.codename,
-                "name": p.name,
-                "app_label": p.content_type.app_label,
-                "model": p.content_type.model,
-            }
-            for p in atuais
-        ]
-
-        return Response(
-            {
-                "usuario": user.username,
-                "permissoes": atuais_data,
-                "adicionadas": [p.codename for p in perms_add],
-                "removidas": [p.codename for p in perms_rem],
-            },
-            status=status.HTTP_200_OK,
-        )
-
+ 
 
 class CriarPermissaoView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -748,11 +659,11 @@ class GerenciarUsuariosGrupoView(APIView):
             "application/json": {
                 "type": "object",
                 "properties": {
-                    "grupo_id": {"type": "integer"},
+                    "grupo": {"type": "string"},
                     "adicionar_usuarios": {"type": "array", "items": {"type": "string"}},
                     "remover_usuarios": {"type": "array", "items": {"type": "string"}},
                 },
-                "required": ["grupo_id"],
+                "required": ["grupo"],
             }
         },
         responses={
@@ -767,20 +678,20 @@ class GerenciarUsuariosGrupoView(APIView):
     )
     def put(self, request):
         payload = request.data or {}
-        grupo_id = payload.get("grupo_id")
+        grupo_name = payload.get("grupo")
         adicionar_usuarios = payload.get("adicionar_usuarios") or []
         remover_usuarios = payload.get("remover_usuarios") or []
 
         
-        if not isinstance(grupo_id, int):
-            return Response({"detail": "'grupo_id' deve ser um número inteiro"}, status=status.HTTP_400_BAD_REQUEST)
+        if not isinstance(grupo_name, str):
+            return Response({"detail": "'grupo' deve ser um string"}, status=status.HTTP_400_BAD_REQUEST)
         if not isinstance(adicionar_usuarios, list) or not isinstance(remover_usuarios, list):
             return Response(
                 {"detail": "'adicionar_usuarios' e 'remover_usuarios' devem ser listas"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        grupo = Group.objects.filter(id=grupo_id).first()
+        grupo = Group.objects.filter(name=grupo_name).first()
         if not grupo:
             return Response({"detail": "Grupo não encontrado"}, status=status.HTTP_404_NOT_FOUND)
 
