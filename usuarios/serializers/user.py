@@ -2,10 +2,14 @@ from rest_framework import serializers
 
 
 class CreateUserSerializer(serializers.Serializer):
-    username = serializers.CharField()
+    usuario = serializers.CharField()
+    senha = serializers.CharField(write_only=True)
     email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
-    first_name = serializers.CharField(required=False, allow_blank=True, default="")
-    last_name = serializers.CharField(required=False, allow_blank=True, default="")
+    
+    def validate(self, data):
+        # Converte usuario -> username e senha -> password após validação
+        data['username'] = data.pop('usuario')
+        data['password'] = data.pop('senha')
+        return data
 
 
