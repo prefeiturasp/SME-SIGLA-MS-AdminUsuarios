@@ -58,10 +58,9 @@ class LoginView(TokenObtainPairView):
     authentication_classes = []
 
     @extend_schema(
-        request=LoginSerializer        
+        request=LoginSerializer
     )
     def post(self, request):
-
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         usuario = User.objects.filter(username=serializer.validated_data['usuario']).first()
