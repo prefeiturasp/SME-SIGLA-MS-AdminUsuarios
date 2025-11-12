@@ -17,16 +17,17 @@ logger = logging.getLogger(__name__)
 class AutenticacaoService:
     DEFAULT_HEADERS = {
         'Content-Type': 'application/json',
-        'Authorization': f'Token {settings.CORESSO_API_TOKEN}'}
-    DEFAULT_TIMEOUT = 10
+        'x-api-eol-key': settings.SME_INTEGRACAO_TOKEN
+    }
+    DEFAULT_TIMEOUT = 100
 
     @classmethod
     def autentica(cls, login, senha) -> Dict[str, Any]:
-        payload = {'login': login, 'senha': senha}
+        payload = {'usuario': login, 'senha': senha, 'codigoSistema': 1}
         try:
             logger.info("Autenticando no coresso. Login: %s", login)
             response = requests.post(
-                f"{settings.CORESSO_API_URL}/autenticacao/",
+                f"{settings.SME_INTEGRACAO_URL}/api/v1/autenticacao/externa",
                 headers=cls.DEFAULT_HEADERS,
                 timeout=cls.DEFAULT_TIMEOUT,
                 json=payload
