@@ -1,0 +1,611 @@
+[
+  {
+    "id": 1,
+    "codename": "add_logentry",
+    "name": "Can add log entry",
+    "app_label": "admin",
+    "model": "logentry"
+  },
+  {
+    "id": 2,
+    "codename": "change_logentry",
+    "name": "Can change log entry",
+    "app_label": "admin",
+    "model": "logentry"
+  },
+  {
+    "id": 3,
+    "codename": "delete_logentry",
+    "name": "Can delete log entry",
+    "app_label": "admin",
+    "model": "logentry"
+  },
+  {
+    "id": 4,
+    "codename": "view_logentry",
+    "name": "Can view log entry",
+    "app_label": "admin",
+    "model": "logentry"
+  },
+  {
+    "id": 25,
+    "codename": "add_logentry",
+    "name": "Can add log entry",
+    "app_label": "auditlog",
+    "model": "logentry"
+  },
+  {
+    "id": 26,
+    "codename": "change_logentry",
+    "name": "Can change log entry",
+    "app_label": "auditlog",
+    "model": "logentry"
+  },
+  {
+    "id": 27,
+    "codename": "delete_logentry",
+    "name": "Can delete log entry",
+    "app_label": "auditlog",
+    "model": "logentry"
+  },
+  {
+    "id": 28,
+    "codename": "view_logentry",
+    "name": "Can view log entry",
+    "app_label": "auditlog",
+    "model": "logentry"
+  },
+  {
+    "id": 5,
+    "codename": "add_permission",
+    "name": "Can add permission",
+    "app_label": "auth",
+    "model": "permission"
+  },
+  {
+    "id": 6,
+    "codename": "change_permission",
+    "name": "Can change permission",
+    "app_label": "auth",
+    "model": "permission"
+  },
+  {
+    "id": 7,
+    "codename": "delete_permission",
+    "name": "Can delete permission",
+    "app_label": "auth",
+    "model": "permission"
+  },
+  {
+    "id": 8,
+    "codename": "view_permission",
+    "name": "Can view permission",
+    "app_label": "auth",
+    "model": "permission"
+  },
+  {
+    "id": 9,
+    "codename": "add_group",
+    "name": "Can add group",
+    "app_label": "auth",
+    "model": "group"
+  },
+  {
+    "id": 10,
+    "codename": "change_group",
+    "name": "Can change group",
+    "app_label": "auth",
+    "model": "group"
+  },
+  {
+    "id": 11,
+    "codename": "delete_group",
+    "name": "Can delete group",
+    "app_label": "auth",
+    "model": "group"
+  },
+  {
+    "id": 12,
+    "codename": "view_group",
+    "name": "Can view group",
+    "app_label": "auth",
+    "model": "group"
+  },
+  {
+    "id": 13,
+    "codename": "add_user",
+    "name": "Can add user",
+    "app_label": "auth",
+    "model": "user"
+  },
+  {
+    "id": 14,
+    "codename": "change_user",
+    "name": "Can change user",
+    "app_label": "auth",
+    "model": "user"
+  },
+  {
+    "id": 15,
+    "codename": "delete_user",
+    "name": "Can delete user",
+    "app_label": "auth",
+    "model": "user"
+  },
+  {
+    "id": 16,
+    "codename": "view_user",
+    "name": "Can view user",
+    "app_label": "auth",
+    "model": "user"
+  },
+  {
+    "id": 73,
+    "codename": "add_candidato",
+    "name": "Can add Candidato",
+    "app_label": "candidatos",
+    "model": "candidato"
+  },
+  {
+    "id": 74,
+    "codename": "change_candidato",
+    "name": "Can change Candidato",
+    "app_label": "candidatos",
+    "model": "candidato"
+  },
+  {
+    "id": 75,
+    "codename": "delete_candidato",
+    "name": "Can delete Candidato",
+    "app_label": "candidatos",
+    "model": "candidato"
+  },
+  {
+    "id": 76,
+    "codename": "view_candidato",
+    "name": "Can view Candidato",
+    "app_label": "candidatos",
+    "model": "candidato"
+  },
+  {
+    "id": 77,
+    "codename": "add_concursocandidatoslote",
+    "name": "Can add Lote de Candidatos do Concurso",
+    "app_label": "candidatos",
+    "model": "concursocandidatoslote"
+  },
+  {
+    "id": 78,
+    "codename": "change_concursocandidatoslote",
+    "name": "Can change Lote de Candidatos do Concurso",
+    "app_label": "candidatos",
+    "model": "concursocandidatoslote"
+  },
+  {
+    "id": 79,
+    "codename": "delete_concursocandidatoslote",
+    "name": "Can delete Lote de Candidatos do Concurso",
+    "app_label": "candidatos",
+    "model": "concursocandidatoslote"
+  },
+  {
+    "id": 80,
+    "codename": "view_concursocandidatoslote",
+    "name": "Can view Lote de Candidatos do Concurso",
+    "app_label": "candidatos",
+    "model": "concursocandidatoslote"
+  },
+  {
+    "id": 81,
+    "codename": "add_concursocandidato",
+    "name": "Can add Concurso do Candidato",
+    "app_label": "candidatos",
+    "model": "concursocandidato"
+  },
+  {
+    "id": 82,
+    "codename": "change_concursocandidato",
+    "name": "Can change Concurso do Candidato",
+    "app_label": "candidatos",
+    "model": "concursocandidato"
+  },
+  {
+    "id": 83,
+    "codename": "delete_concursocandidato",
+    "name": "Can delete Concurso do Candidato",
+    "app_label": "candidatos",
+    "model": "concursocandidato"
+  },
+  {
+    "id": 84,
+    "codename": "view_concursocandidato",
+    "name": "Can view Concurso do Candidato",
+    "app_label": "candidatos",
+    "model": "concursocandidato"
+  },
+  {
+    "id": 17,
+    "codename": "add_contenttype",
+    "name": "Can add content type",
+    "app_label": "contenttypes",
+    "model": "contenttype"
+  },
+  {
+    "id": 18,
+    "codename": "change_contenttype",
+    "name": "Can change content type",
+    "app_label": "contenttypes",
+    "model": "contenttype"
+  },
+  {
+    "id": 19,
+    "codename": "delete_contenttype",
+    "name": "Can delete content type",
+    "app_label": "contenttypes",
+    "model": "contenttype"
+  },
+  {
+    "id": 20,
+    "codename": "view_contenttype",
+    "name": "Can view content type",
+    "app_label": "contenttypes",
+    "model": "contenttype"
+  },
+  {
+    "id": 49,
+    "codename": "add_dre",
+    "name": "Can add DRE",
+    "app_label": "escolhas",
+    "model": "dre"
+  },
+  {
+    "id": 50,
+    "codename": "change_dre",
+    "name": "Can change DRE",
+    "app_label": "escolhas",
+    "model": "dre"
+  },
+  {
+    "id": 51,
+    "codename": "delete_dre",
+    "name": "Can delete DRE",
+    "app_label": "escolhas",
+    "model": "dre"
+  },
+  {
+    "id": 52,
+    "codename": "view_dre",
+    "name": "Can view DRE",
+    "app_label": "escolhas",
+    "model": "dre"
+  },
+  {
+    "id": 53,
+    "codename": "add_escolha",
+    "name": "Can add Escolha",
+    "app_label": "escolhas",
+    "model": "escolha"
+  },
+  {
+    "id": 54,
+    "codename": "change_escolha",
+    "name": "Can change Escolha",
+    "app_label": "escolhas",
+    "model": "escolha"
+  },
+  {
+    "id": 55,
+    "codename": "delete_escolha",
+    "name": "Can delete Escolha",
+    "app_label": "escolhas",
+    "model": "escolha"
+  },
+  {
+    "id": 56,
+    "codename": "view_escolha",
+    "name": "Can view Escolha",
+    "app_label": "escolhas",
+    "model": "escolha"
+  },
+  {
+    "id": 57,
+    "codename": "add_escola",
+    "name": "Can add Escola",
+    "app_label": "escolhas",
+    "model": "escola"
+  },
+  {
+    "id": 58,
+    "codename": "change_escola",
+    "name": "Can change Escola",
+    "app_label": "escolhas",
+    "model": "escola"
+  },
+  {
+    "id": 59,
+    "codename": "delete_escola",
+    "name": "Can delete Escola",
+    "app_label": "escolhas",
+    "model": "escola"
+  },
+  {
+    "id": 60,
+    "codename": "view_escola",
+    "name": "Can view Escola",
+    "app_label": "escolhas",
+    "model": "escola"
+  },
+  {
+    "id": 61,
+    "codename": "add_vagasescolas",
+    "name": "Can add Vagas da Escola",
+    "app_label": "escolhas",
+    "model": "vagasescolas"
+  },
+  {
+    "id": 62,
+    "codename": "change_vagasescolas",
+    "name": "Can change Vagas da Escola",
+    "app_label": "escolhas",
+    "model": "vagasescolas"
+  },
+  {
+    "id": 63,
+    "codename": "delete_vagasescolas",
+    "name": "Can delete Vagas da Escola",
+    "app_label": "escolhas",
+    "model": "vagasescolas"
+  },
+  {
+    "id": 64,
+    "codename": "view_vagasescolas",
+    "name": "Can view Vagas da Escola",
+    "app_label": "escolhas",
+    "model": "vagasescolas"
+  },
+  {
+    "id": 69,
+    "codename": "add_vagasescolaslote",
+    "name": "Can add Lote de Vagas do Processo",
+    "app_label": "escolhas",
+    "model": "vagasescolaslote"
+  },
+  {
+    "id": 70,
+    "codename": "change_vagasescolaslote",
+    "name": "Can change Lote de Vagas do Processo",
+    "app_label": "escolhas",
+    "model": "vagasescolaslote"
+  },
+  {
+    "id": 71,
+    "codename": "delete_vagasescolaslote",
+    "name": "Can delete Lote de Vagas do Processo",
+    "app_label": "escolhas",
+    "model": "vagasescolaslote"
+  },
+  {
+    "id": 72,
+    "codename": "view_vagasescolaslote",
+    "name": "Can view Lote de Vagas do Processo",
+    "app_label": "escolhas",
+    "model": "vagasescolaslote"
+  },
+  {
+    "id": 29,
+    "codename": "add_importacaoarquivohabilitado",
+    "name": "Can add Importação de arquivo habilitado",
+    "app_label": "importa_arquivos",
+    "model": "importacaoarquivohabilitado"
+  },
+  {
+    "id": 30,
+    "codename": "change_importacaoarquivohabilitado",
+    "name": "Can change Importação de arquivo habilitado",
+    "app_label": "importa_arquivos",
+    "model": "importacaoarquivohabilitado"
+  },
+  {
+    "id": 31,
+    "codename": "delete_importacaoarquivohabilitado",
+    "name": "Can delete Importação de arquivo habilitado",
+    "app_label": "importa_arquivos",
+    "model": "importacaoarquivohabilitado"
+  },
+  {
+    "id": 32,
+    "codename": "view_importacaoarquivohabilitado",
+    "name": "Can view Importação de arquivo habilitado",
+    "app_label": "importa_arquivos",
+    "model": "importacaoarquivohabilitado"
+  },
+  {
+    "id": 33,
+    "codename": "add_importacaoarquivovagas",
+    "name": "Can add Importação de arquivo de vagas",
+    "app_label": "importa_arquivos",
+    "model": "importacaoarquivovagas"
+  },
+  {
+    "id": 34,
+    "codename": "change_importacaoarquivovagas",
+    "name": "Can change Importação de arquivo de vagas",
+    "app_label": "importa_arquivos",
+    "model": "importacaoarquivovagas"
+  },
+  {
+    "id": 35,
+    "codename": "delete_importacaoarquivovagas",
+    "name": "Can delete Importação de arquivo de vagas",
+    "app_label": "importa_arquivos",
+    "model": "importacaoarquivovagas"
+  },
+  {
+    "id": 36,
+    "codename": "view_importacaoarquivovagas",
+    "name": "Can view Importação de arquivo de vagas",
+    "app_label": "importa_arquivos",
+    "model": "importacaoarquivovagas"
+  },
+  {
+    "id": 37,
+    "codename": "add_layoutarquivoimportacao",
+    "name": "Can add Layout de importação de arquivo",
+    "app_label": "importa_arquivos",
+    "model": "layoutarquivoimportacao"
+  },
+  {
+    "id": 38,
+    "codename": "change_layoutarquivoimportacao",
+    "name": "Can change Layout de importação de arquivo",
+    "app_label": "importa_arquivos",
+    "model": "layoutarquivoimportacao"
+  },
+  {
+    "id": 39,
+    "codename": "delete_layoutarquivoimportacao",
+    "name": "Can delete Layout de importação de arquivo",
+    "app_label": "importa_arquivos",
+    "model": "layoutarquivoimportacao"
+  },
+  {
+    "id": 40,
+    "codename": "view_layoutarquivoimportacao",
+    "name": "Can view Layout de importação de arquivo",
+    "app_label": "importa_arquivos",
+    "model": "layoutarquivoimportacao"
+  },
+  {
+    "id": 65,
+    "codename": "add_importacaoerro",
+    "name": "Can add Erro de Importação",
+    "app_label": "importa_arquivos",
+    "model": "importacaoerro"
+  },
+  {
+    "id": 66,
+    "codename": "change_importacaoerro",
+    "name": "Can change Erro de Importação",
+    "app_label": "importa_arquivos",
+    "model": "importacaoerro"
+  },
+  {
+    "id": 67,
+    "codename": "delete_importacaoerro",
+    "name": "Can delete Erro de Importação",
+    "app_label": "importa_arquivos",
+    "model": "importacaoerro"
+  },
+  {
+    "id": 68,
+    "codename": "view_importacaoerro",
+    "name": "Can view Erro de Importação",
+    "app_label": "importa_arquivos",
+    "model": "importacaoerro"
+  },
+  {
+    "id": 87,
+    "codename": "baixar_layoutarquivoimportacao",
+    "name": "Pode baixar Layout de importação de arquivo",
+    "app_label": "importa_arquivos",
+    "model": "layoutarquivoimportacao"
+  },
+  {
+    "id": 41,
+    "codename": "add_processoconvocacao",
+    "name": "Can add Processo de Convocação",
+    "app_label": "processos",
+    "model": "processoconvocacao"
+  },
+  {
+    "id": 42,
+    "codename": "change_processoconvocacao",
+    "name": "Can change Processo de Convocação",
+    "app_label": "processos",
+    "model": "processoconvocacao"
+  },
+  {
+    "id": 43,
+    "codename": "delete_processoconvocacao",
+    "name": "Can delete Processo de Convocação",
+    "app_label": "processos",
+    "model": "processoconvocacao"
+  },
+  {
+    "id": 44,
+    "codename": "view_processoconvocacao",
+    "name": "Can view Processo de Convocação",
+    "app_label": "processos",
+    "model": "processoconvocacao"
+  },
+  {
+    "id": 45,
+    "codename": "add_cargoprocesso",
+    "name": "Can add Cargo do Processo",
+    "app_label": "processos",
+    "model": "cargoprocesso"
+  },
+  {
+    "id": 46,
+    "codename": "change_cargoprocesso",
+    "name": "Can change Cargo do Processo",
+    "app_label": "processos",
+    "model": "cargoprocesso"
+  },
+  {
+    "id": 47,
+    "codename": "delete_cargoprocesso",
+    "name": "Can delete Cargo do Processo",
+    "app_label": "processos",
+    "model": "cargoprocesso"
+  },
+  {
+    "id": 48,
+    "codename": "view_cargoprocesso",
+    "name": "Can view Cargo do Processo",
+    "app_label": "processos",
+    "model": "cargoprocesso"
+  },
+  {
+    "id": 85,
+    "codename": "details_processoconvocacao",
+    "name": "Can view details Processo de Convocação",
+    "app_label": "processos",
+    "model": "processoconvocacao"
+  },
+  {
+    "id": 86,
+    "codename": "finalize_processoconvocacao",
+    "name": "Pode finalizar o processo de convocação",
+    "app_label": "processos",
+    "model": "processoconvocacao"
+  },
+  {
+    "id": 21,
+    "codename": "add_session",
+    "name": "Can add session",
+    "app_label": "sessions",
+    "model": "session"
+  },
+  {
+    "id": 22,
+    "codename": "change_session",
+    "name": "Can change session",
+    "app_label": "sessions",
+    "model": "session"
+  },
+  {
+    "id": 23,
+    "codename": "delete_session",
+    "name": "Can delete session",
+    "app_label": "sessions",
+    "model": "session"
+  },
+  {
+    "id": 24,
+    "codename": "view_session",
+    "name": "Can view session",
+    "app_label": "sessions",
+    "model": "session"
+  }
+]
