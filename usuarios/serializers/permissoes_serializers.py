@@ -77,3 +77,51 @@ class UpdateGroupUsersSerializer(serializers.Serializer):
     grupo = serializers.CharField()
     adicionar_usuarios = serializers.ListField(child=serializers.CharField(), required=False)
     remover_usuarios = serializers.ListField(child=serializers.CharField(), required=False)
+
+
+class UpdateUsuarioSerializer(serializers.Serializer):
+    """
+    Atualiza campos básicos do usuário nativo do Django.
+    """
+
+    usuario = serializers.CharField(help_text="Username do usuário a ser atualizado.")
+    nome = serializers.CharField(required=False, allow_blank=True)
+    email = serializers.EmailField(required=False, allow_blank=True)
+    is_active = serializers.BooleanField(required=False)
+    # Lista final desejada de grupos (substitui os atuais)
+    grupos = serializers.ListField(child=serializers.CharField(), required=False)
+    adicionar_grupos = serializers.ListField(child=serializers.CharField(), required=False)
+    remover_grupos = serializers.ListField(child=serializers.CharField(), required=False)
+
+    def validate_email(self, value: str) -> str:
+        email = (value or "").strip()
+        if not email:
+            return ""
+
+        # unicidade case-insensitive, ignorando o próprio usuário
+        username = (self.initial_data or {}).get("usuario", "")
+        user = User.objects.filter(username=username).only("id").first()
+        if user and User.objects.filter(email__iexact=email).exclude(id=user.id).exists():
+            raise serializers.ValidationError("Email já está em uso por outro usuário.")
+        return email
+
+    def validate(self, attrs):
+        grupos_final = attrs.get("grupos")
+        adicionar = attrs.get("adicionar_grupos") or []
+        remover = attrs.get("remover_grupos") or []
+
+        # valida nomes de grupos informados (em qualquer um dos campos)
+        grupos_informados = []
+        if grupos_final is not None:
+            grupos_informados.extend(grupos_final)
+        grupos_informados.extend(adicionar)
+        grupos_informados.extend(remover)
+
+        grupos_set = {g.strip() for g in grupos_informados if (g or "").strip()}
+        if grupos_set:
+            existentes = set(Group.objects.filter(name__in=grupos_set).values_list("name", flat=True))
+            faltando = sorted(grupos_set - existentes)
+            if faltando:
+                raise serializers.ValidationError({"grupos": f"Grupos inexistentes: {', '.join(faltando)}"})
+
+        return attrs
