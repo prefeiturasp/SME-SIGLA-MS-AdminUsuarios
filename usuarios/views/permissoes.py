@@ -18,6 +18,7 @@ from usuarios.serializers.permissoes_serializers import (
     CreateGroupSerializer,
     UpdateGroupPermissionsSerializer,
     UpdateGroupUsersSerializer,
+    UpdateUsuarioSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -74,9 +75,12 @@ class GerenciarPermissoesUsuarioView(APIView):
 
         serializer = PermissionSerializer(permissoes.order_by("content_type__app_label", "codename"), many=True)
         grupos = list(user.groups.order_by("name").values_list("name", flat=True))
+        nome = (f"{user.first_name} {user.last_name}".strip() if (user.first_name or user.last_name) else "") or None
         return Response(
             {
                 "usuario": user.username,
+                "nome": nome,
+                "email": user.email or None,
                 "grupos": grupos,
                 "total_permissoes": len(serializer.data),
                 "permissoes": serializer.data,
@@ -245,8 +249,90 @@ class UsuariosComGruposView(APIView):
         if usuario_filtro:
             qs = qs.filter(username__icontains=usuario_filtro)
 
-        data = [
-            {"usuario": u.username, "grupos": list(u.groups.values_list("name", flat=True))}
-            for u in qs
-        ]
+        data = []
+        for u in qs:
+            nome = (f"{u.first_name} {u.last_name}".strip() if (u.first_name or u.last_name) else "") or None
+            data.append(
+                {
+                    "usuario": u.username,
+                    "nome": nome,
+                    "email": u.email or None,
+                    "is_active": u.is_active,
+                    "grupos": list(u.groups.values_list("name", flat=True)),
+                }
+            )
         return Response({"count": len(data), "results": data}, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        request=UpdateUsuarioSerializer,
+        responses={
+            200: OpenApiResponse(description="Usuário atualizado com sucesso."),
+            400: OpenApiResponse(description="Dados inválidos."),
+            404: OpenApiResponse(description="Usuário não encontrado."),
+        },
+        description=(
+            "Atualiza campos do usuário (nome, email, is_active) e gerencia grupos. "
+            'Se "grupos" for enviado, ele representa a lista FINAL (inclusive pode ser [] para remover todos). '
+            "Email deve ser único."
+        ),
+    )
+    def patch(self, request):
+        serializer = UpdateUsuarioSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        user = User.objects.filter(username=data["usuario"]).prefetch_related("groups").first()
+        if not user:
+            return Response({"detail": "Usuário não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Atualiza nome (mapeia para first_name/last_name)
+        if "nome" in data:
+            nome = (data.get("nome") or "").strip()
+            if nome:
+                parts = [p for p in nome.split(" ") if p]
+                user.first_name = parts[0] if parts else ""
+                user.last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
+            else:
+                user.first_name = ""
+                user.last_name = ""
+
+        # Atualiza email (validação de unicidade já feita no serializer)
+        if "email" in data:
+            user.email = (data.get("email") or "").strip()
+
+        # Ativa/desativa
+        if "is_active" in data:
+            user.is_active = data["is_active"]
+
+        user.save()
+
+        # Grupos:
+        # - Se vier "grupos", ele representa a lista FINAL (mantém só esses).
+        # - Caso contrário, usa adicionar_grupos/remover_grupos como patch incremental.
+        if "grupos" in data:
+            grupos_desejados = [g.strip() for g in (data.get("grupos") or []) if (g or "").strip()]
+            desired_set = set(grupos_desejados)
+            current_set = set(user.groups.values_list("name", flat=True))
+
+            to_add = sorted(desired_set - current_set)
+            to_remove = sorted(current_set - desired_set)
+
+            if to_add:
+                grupos_add = Group.objects.filter(name__in=to_add)
+                user.groups.add(*grupos_add)
+
+            if to_remove:
+                grupos_rem = Group.objects.filter(name__in=to_remove)
+                user.groups.remove(*grupos_rem)
+
+        nome_resp = (
+            (f"{user.first_name} {user.last_name}".strip() if (user.first_name or user.last_name) else "") or None
+        )
+        payload = {
+            "usuario": user.username,
+            "nome": nome_resp,
+            "email": user.email or None,
+            "is_active": user.is_active,
+            "grupos": list(user.groups.values_list("name", flat=True)),
+        }
+        return Response(payload, status=status.HTTP_200_OK)
