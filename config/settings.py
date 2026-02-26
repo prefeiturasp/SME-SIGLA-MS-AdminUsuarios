@@ -155,13 +155,17 @@ SME_INTEGRACAO_URL = os.environ.get('SME_INTEGRACAO_URL', '')
 SME_INTEGRACAO_TOKEN = os.environ.get('SME_INTEGRACAO_TOKEN', '')
 
 
-DJANGO_EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST="smtp.gmail.com"
-EMAIL_PORT=587
-EMAIL_USE_TLS=True
-EMAIL_HOST_USER="vitor.spassu@gmail.com"
-EMAIL_HOST_PASSWORD="jzgg ajuq fpdm shqv"
-DEFAULT_FROM_EMAIL="vitor.spassu@gmail.com"
+# E-mail
+EMAIL_BACKEND = os.environ.get(
+    'EMAIL_BACKEND',
+    os.environ.get('DJANGO_EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend'),
+)
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'true').lower() == 'true'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'noreply@localhost')
 
 APLICACAO_URL = os.environ.get('APLICACAO_URL', '')
 MS_URL = os.environ.get('MS_URL', '')
