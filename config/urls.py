@@ -24,10 +24,12 @@ _static_urlpatterns = (
     + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 )
 
+# Só as rotas da app entram sob MS_PATH. Static/media ficam na raiz (/django_static/, /media/)
+# para bater com STATIC_URL e MEDIA_URL usados pelo admin e pelo collectstatic.
 if getattr(settings, 'DJANGO_ENVIRONMENT', 'local') != 'local':
     _ms_prefix = (getattr(settings, 'MS_PATH', '') or '/ms-admin-usuarios').strip('/')
     urlpatterns = [
-        path(f'{_ms_prefix}/', include(_core_urlpatterns + _static_urlpatterns)),
-    ]
+        path(f'{_ms_prefix}/', include(_core_urlpatterns)),
+    ] + _static_urlpatterns
 else:
     urlpatterns = _core_urlpatterns + _static_urlpatterns

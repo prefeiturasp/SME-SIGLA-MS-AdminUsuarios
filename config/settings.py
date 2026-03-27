@@ -104,10 +104,16 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATIC_URL = '/django_static/'
+# Em QA/prod o app fica atrás de um path (MS_PATH); STATIC_URL/MEDIA_URL precisam bater com o urlconf.
+_ms_path_segment = (MS_PATH or '/ms-admin-usuarios').strip('/')
+if DJANGO_ENVIRONMENT != 'local':
+    STATIC_URL = f'/{_ms_path_segment}/django_static/'
+    MEDIA_URL = f'/{_ms_path_segment}/media/'
+else:
+    STATIC_URL = '/django_static/'
+    MEDIA_URL = '/media/'
 
 # Media files (uploads)
-MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
