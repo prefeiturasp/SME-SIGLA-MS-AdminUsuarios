@@ -10,7 +10,8 @@ MS_PATH = os.environ.get('MS_PATH', '/ms-admin-usuarios')
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-your-secret-key-here')
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+# ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'qa-api-sigla.sme.prefeitura.sp.gov.br']
 
 # Application definition
 INSTALLED_APPS = [
