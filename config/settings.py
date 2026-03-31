@@ -11,8 +11,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-your-secret-key-here')
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 # ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'qa-api-sigla.sme.prefeitura.sp.gov.br']
-CSRF_TRUSTED_ORIGINS = ['https://qa-api-sigla.sme.prefeitura.sp.gov.br']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'qa-api-sigla.sme.prefeitura.sp.gov.br', 'hom-api-sigla.sme.prefeitura.sp.gov.br']
+CSRF_TRUSTED_ORIGINS = ['https://qa-api-sigla.sme.prefeitura.sp.gov.br', 'https://hom-api-sigla.sme.prefeitura.sp.gov.br']
 
 # Application definition
 INSTALLED_APPS = [
@@ -137,18 +137,6 @@ REST_FRAMEWORK = {
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
-
-# External services configuration
-# EXTERNAL_SERVICES = {
-#     'auth_service': {
-#         'base_url': os.environ.get('AUTH_SERVICE_BASE_URL', 'http://localhost:8100'),
-#         'timeout': int(os.environ.get('AUTH_SERVICE_TIMEOUT', '10')),
-#     },
-#     'user_service': {
-#         'base_url': os.environ.get('USER_SERVICE_BASE_URL', 'http://localhost:8101'),
-#         'timeout': int(os.environ.get('USER_SERVICE_TIMEOUT', '10')),
-#     },
-# }
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Admin Usuarios Sigla API',
