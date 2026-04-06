@@ -1,4 +1,3 @@
-from .swagger import SwaggerFromFileView
 from .usuarios import (
     CriarUsuarioView,
     LoginView,
