@@ -165,3 +165,10 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'no
 
 APLICACAO_URL = os.environ.get('APLICACAO_URL', '')
 MS_URL = os.environ.get('MS_URL', '')
+
+from datetime import timedelta
+ 
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=24),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+}
