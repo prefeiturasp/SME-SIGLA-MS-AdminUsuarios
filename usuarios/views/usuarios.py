@@ -76,6 +76,8 @@ class LoginView(TokenObtainPairView):
         except (AutenticacaoRespostaInvalidaError, AutenticacaoUpstreamError, AutenticacaoRequisicaoError):
             return Response({'detail': 'Falha no serviço de autenticação'}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Atualiza nome/email do usuário local com dados retornados da autenticação
+        AutenticacaoService.atualizar_usuario_com_dados_autenticacao(user=usuario, dados=data)
         response_data = AutenticacaoService.montar_resposta_login(data, usuario)
         return Response(response_data, status=status.HTTP_200_OK)
 

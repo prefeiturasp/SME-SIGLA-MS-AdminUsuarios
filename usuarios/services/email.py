@@ -43,7 +43,7 @@ class EmailService:
         logger.info("Gerando token de reset para usuário: %s", user.username)
         token_data = TokenService.gerar_token_para_reset(user, email)
 
-        link_reset = f"{settings.APLICACAO_URL}/criar-nova-senha/{token_data['uid']}/{token_data['token']}"
+        link_reset = f"{settings.APLICACAO_URL}criar-nova-senha/{token_data['uid']}/{token_data['token']}"
         contexto_email = {
             "nome_usuario": nome,
             "link_reset": link_reset,
