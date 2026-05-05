@@ -69,3 +69,44 @@ class AutenticacaoService:
         resposta['token'] = tokens['access']
         return resposta
 
+    @classmethod
+    def atualizar_usuario_com_dados_autenticacao(cls, *, user: User, dados: Any) -> User:
+        """
+        Atualiza campos do User (nome/email) com base nos dados retornados pelo serviço de autenticação.
+
+        - nome: mapeia para first_name/last_name (split por espaço)
+        - email: mapeia para user.email
+
+        A função é tolerante a variações de chave (Nome/nome, Email/email).
+        """
+        if not isinstance(dados, dict):
+            return user
+
+        nome = dados.get("nome")
+        email = dados.get("email")
+
+        update_fields = []
+
+        if isinstance(nome, str):
+            nome = nome.strip()
+            if nome:
+                parts = [p for p in nome.split(" ") if p]
+                first_name = parts[0] if parts else ""
+                last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
+
+                if first_name and user.first_name != first_name:
+                    user.first_name = first_name
+                    update_fields.append("first_name")
+                if user.last_name != last_name:
+                    user.last_name = last_name
+                    update_fields.append("last_name")
+
+        if isinstance(email, str):
+            email = email.strip()
+            if email and user.email != email:
+                user.email = email
+                update_fields.append("email")
+
+        if update_fields:
+            user.save(update_fields=update_fields)
+        return user
