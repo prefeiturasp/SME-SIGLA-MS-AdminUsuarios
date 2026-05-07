@@ -17,11 +17,12 @@ from django.contrib.auth.models import User, Permission, Group
 from django.contrib.contenttypes.models import ContentType
 
 from usuarios.serializers import (
-    
+
     LoginSerializer,
     LoginResponseSerializer,
     EsqueciSenhaSerializer,
     CriarNovaSenhaSerializer,
+    AlterarSenhaSerializer,
     CreateUserSerializer,
 )
 from usuarios.services.autenticacao import AutenticacaoService
@@ -142,6 +143,47 @@ class CriarNovaSenhaView(APIView):
         except SmeIntegracaoException as e:
             logger.error(f"Falha ao redefinir senha no SME Integração: {e}")
             return Response({'detail': 'Falha ao redefinir senha no SME Integração'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(nova_senha)
+        user.save(update_fields=['password'])
+
+        return Response({'detail': 'Senha alterada com sucesso'}, status=status.HTTP_200_OK)
+
+
+class MeusDadosView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        nome_completo = f"{user.first_name} {user.last_name}".strip()
+        grupos = list(user.groups.values_list('name', flat=True))
+        return Response({
+            'rf': user.username,
+            'nome_completo': nome_completo,
+            'email': user.email,
+            'perfil_acesso': grupos,
+        }, status=status.HTTP_200_OK)
+
+
+class AlterarSenhaView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = AlterarSenhaSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        senha_atual = serializer.validated_data['senha_atual']
+        nova_senha = serializer.validated_data['nova_senha']
+
+        if not user.check_password(senha_atual):
+            return Response({'detail': 'Senha atual incorreta.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            SmeIntegracaoService.redefine_senha(user.username, nova_senha)
+        except SmeIntegracaoException as e:
+            logger.error(f"Falha ao redefinir senha no SME Integração: {e}")               
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         user.set_password(nova_senha)
         user.save(update_fields=['password'])

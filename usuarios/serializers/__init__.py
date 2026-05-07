@@ -1,5 +1,5 @@
 from .login import LoginSerializer, LoginResponseSerializer, EsqueciSenhaSerializer
-from .password import ChangePasswordSerializer, CriarNovaSenhaSerializer
+from .password import ChangePasswordSerializer, CriarNovaSenhaSerializer, AlterarSenhaSerializer
 from .user import CreateUserSerializer
 
 __all__ = [
@@ -8,6 +8,7 @@ __all__ = [
     'EsqueciSenhaSerializer',
     'ChangePasswordSerializer',
     'CriarNovaSenhaSerializer',
+    'AlterarSenhaSerializer',
     'CreateUserSerializer',
 ]
 

@@ -3,6 +3,8 @@ from .usuarios import (
     LoginView,
     EsqueciSenhaView,
     CriarNovaSenhaView,
+    MeusDadosView,
+    AlterarSenhaView,
 )
 from .permissoes import (
     PermissoesDisponiveisView,
