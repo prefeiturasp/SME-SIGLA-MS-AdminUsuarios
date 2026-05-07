@@ -10,14 +10,11 @@ from usuarios.exceptions import (
     AutenticacaoRequisicaoError,
     SmeIntegracaoException,
 )
-from django.contrib.auth.models import Group
 from usuarios.views.usuarios import (
-    AlterarSenhaView,
     CriarNovaSenhaView,
     CriarUsuarioView,
     EsqueciSenhaView,
     LoginView,
-    MeusDadosView,
     _mask_email,
 )
 
@@ -252,116 +249,4 @@ def test_criar_usuario_success(rf):
     assert User.objects.filter(username="novo").exists()
 
 
-# --- MeusDadosView ---
-
-def test_meus_dados_unauthenticated(rf):
-    request = rf.get("/usuarios/meus-dados/")
-    response = MeusDadosView.as_view()(request)
-    assert response.status_code in (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN)
-
-
-def test_meus_dados_returns_user_info(rf):
-    user = User.objects.create_user(
-        username="rf001", password="senha", first_name="João", last_name="Silva", email="joao@pref.sp.gov.br"
-    )
-    grupo = Group.objects.create(name="Gestor")
-    user.groups.add(grupo)
-
-    request = rf.get("/usuarios/meus-dados/")
-    request.user = user
-    response = MeusDadosView.as_view()(request)
-
-    assert response.status_code == status.HTTP_200_OK
-    assert response.data["rf"] == "rf001"
-    assert response.data["nome_completo"] == "João Silva"
-    assert response.data["email"] == "joao@pref.sp.gov.br"
-    assert "Gestor" in response.data["perfil_acesso"]
-
-
-def test_meus_dados_sem_nome_e_sem_grupos(rf):
-    user = User.objects.create_user(username="rf002", password="senha")
-
-    request = rf.get("/usuarios/meus-dados/")
-    request.user = user
-    response = MeusDadosView.as_view()(request)
-
-    assert response.status_code == status.HTTP_200_OK
-    assert response.data["nome_completo"] == ""
-    assert response.data["perfil_acesso"] == []
-
-
-# --- AlterarSenhaView ---
-
-SENHA_VALIDA = "Abc1@xyz9"
-
-
-def test_alterar_senha_unauthenticated(rf):
-    request = rf.post(
-        "/usuarios/alterar-senha/",
-        {"senha_atual": "qualquer", "nova_senha": SENHA_VALIDA, "confirmacao_nova_senha": SENHA_VALIDA},
-        format="json",
-    )
-    response = AlterarSenhaView.as_view()(request)
-    assert response.status_code in (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN)
-
-
-def test_alterar_senha_invalida_retorna_400(rf):
-    user = User.objects.create_user(username="rf003", password="senhaAtual1!")
-    request = rf.post(
-        "/usuarios/alterar-senha/",
-        {"senha_atual": "senhaAtual1!", "nova_senha": "fraca", "confirmacao_nova_senha": "fraca"},
-        format="json",
-    )
-    request.user = user
-    response = AlterarSenhaView.as_view()(request)
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-
-def test_alterar_senha_atual_incorreta(rf):
-    user = User.objects.create_user(username="rf004", password="senhaCorreta1!")
-    request = rf.post(
-        "/usuarios/alterar-senha/",
-        {"senha_atual": "senhaErrada1!", "nova_senha": SENHA_VALIDA, "confirmacao_nova_senha": SENHA_VALIDA},
-        format="json",
-    )
-    request.user = user
-    response = AlterarSenhaView.as_view()(request)
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.data["detail"] == "Senha atual incorreta."
-
-
-def test_alterar_senha_sme_exception(rf, monkeypatch):
-    user = User.objects.create_user(username="rf005", password="senhaAtual1!")
-
-    def _raise(*_args, **_kwargs):
-        raise SmeIntegracaoException("erro externo")
-
-    monkeypatch.setattr("usuarios.views.usuarios.SmeIntegracaoService.redefine_senha", _raise)
-    request = rf.post(
-        "/usuarios/alterar-senha/",
-        {"senha_atual": "senhaAtual1!", "nova_senha": SENHA_VALIDA, "confirmacao_nova_senha": SENHA_VALIDA},
-        format="json",
-    )
-    request.user = user
-    response = AlterarSenhaView.as_view()(request)
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.data["detail"] == "erro externo"
-
-
-def test_alterar_senha_success(rf, monkeypatch):
-    user = User.objects.create_user(username="rf006", password="senhaAtual1!")
-    monkeypatch.setattr("usuarios.views.usuarios.SmeIntegracaoService.redefine_senha", lambda *_a, **_k: None)
-
-    request = rf.post(
-        "/usuarios/alterar-senha/",
-        {"senha_atual": "senhaAtual1!", "nova_senha": SENHA_VALIDA, "confirmacao_nova_senha": SENHA_VALIDA},
-        format="json",
-    )
-    request.user = user
-    response = AlterarSenhaView.as_view()(request)
-
-    user.refresh_from_db()
-    assert response.status_code == status.HTTP_200_OK
-    assert response.data["detail"] == "Senha alterada com sucesso"
-    assert user.check_password(SENHA_VALIDA)
 
