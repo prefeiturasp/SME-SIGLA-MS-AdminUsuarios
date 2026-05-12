@@ -217,7 +217,7 @@ def test_criar_usuario_username_conflict(rf):
     User.objects.create_user(username="existente", email="x@x.com", password="123456")
     request = rf.post(
         "/usuarios/criar-usuario/",
-        {"usuario": "existente", "senha": "123456", "email": "novo@x.com"},
+        {"username": "existente", "nome": "Maria Silva", "senha": "123456", "email": "novo@x.com"},
         format="json",
     )
     response = CriarUsuarioView.as_view()(request)
@@ -229,7 +229,7 @@ def test_criar_usuario_email_conflict(rf):
     User.objects.create_user(username="u1", email="igual@x.com", password="123456")
     request = rf.post(
         "/usuarios/criar-usuario/",
-        {"usuario": "novo", "senha": "123456", "email": "igual@x.com"},
+        {"username": "novo", "nome": "Maria Silva", "senha": "123456", "email": "igual@x.com"},
         format="json",
     )
     response = CriarUsuarioView.as_view()(request)
@@ -240,11 +240,13 @@ def test_criar_usuario_email_conflict(rf):
 def test_criar_usuario_success(rf):
     request = rf.post(
         "/usuarios/criar-usuario/",
-        {"usuario": "novo", "senha": "123456", "email": "novo@x.com"},
+        {"username": "novo", "nome": "Maria Silva", "senha": "123456", "email": "novo@x.com"},
         format="json",
     )
     response = CriarUsuarioView.as_view()(request)
     assert response.status_code == status.HTTP_201_CREATED
     assert response.data["user"] == "novo"
-    assert User.objects.filter(username="novo").exists()
+    user = User.objects.get(username="novo")
+    assert user.first_name == "Maria"
+    assert user.last_name == "Silva"
 
