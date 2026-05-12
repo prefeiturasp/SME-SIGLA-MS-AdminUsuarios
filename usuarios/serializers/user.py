@@ -9,5 +9,4 @@ class CreateUserSerializer(serializers.Serializer):
     username = serializers.CharField()
     nome = serializers.CharField()
     email = serializers.EmailField()
-    senha = serializers.CharField(write_only=True)
 

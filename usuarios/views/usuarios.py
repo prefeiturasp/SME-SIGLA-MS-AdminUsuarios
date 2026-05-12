@@ -254,7 +254,7 @@ class CriarUsuarioView(APIView):
             400: OpenApiResponse(description="Dados inválidos"),
             409: OpenApiResponse(description="Usuário já cadastrado"),
         },
-        description="Cria um novo usuário a partir de username, nome, email e senha."
+        description="Cria um novo usuário a partir de username, nome e email."
     )
     def post(self, request):
         serializer = CreateUserSerializer(data=request.data)
@@ -262,7 +262,6 @@ class CriarUsuarioView(APIView):
 
         username = serializer.validated_data['username']
         email = serializer.validated_data['email']
-        senha = serializer.validated_data['senha']
         nome = serializer.validated_data['nome']
 
         if User.objects.filter(username=username).exists():
@@ -283,7 +282,6 @@ class CriarUsuarioView(APIView):
 
         user = User.objects.create_user(
             username=username,
-            password=senha,
             email=email,
             first_name=first_name,
             last_name=last_name,
