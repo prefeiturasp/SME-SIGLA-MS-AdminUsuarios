@@ -1,5 +1,5 @@
 import pytest
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from rest_framework import status
@@ -10,11 +10,14 @@ from usuarios.exceptions import (
     AutenticacaoRequisicaoError,
     SmeIntegracaoException,
 )
+from usuarios.serializers.password import AlterarSenhaSerializer
 from usuarios.views.usuarios import (
+    AlterarSenhaView,
     CriarNovaSenhaView,
     CriarUsuarioView,
     EsqueciSenhaView,
     LoginView,
+    MeusDadosView,
     _mask_email,
 )
 
@@ -248,3 +251,140 @@ def test_criar_usuario_success(rf):
     assert response.data["user"] == "novo"
     assert User.objects.filter(username="novo").exists()
 
+def test_meus_dados_unauthenticated(rf):
+    request = rf.get("/usuarios/meus-dados/")
+    response = MeusDadosView.as_view()(request)
+    assert response.status_code in (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN)
+
+
+def test_meus_dados_sem_grupos(rf):
+    user = User.objects.create_user(
+        username="rf999", first_name="João", last_name="Silva", email="joao@sp.gov.br"
+    )
+    request = rf.get("/usuarios/meus-dados/")
+    request.user = user
+    response = MeusDadosView.as_view()(request)
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["rf"] == "rf999"
+    assert response.data["nome_completo"] == "João Silva"
+    assert response.data["email"] == "joao@sp.gov.br"
+    assert response.data["perfil_acesso"] == []
+
+
+def test_meus_dados_com_grupos(rf):
+    user = User.objects.create_user(username="rf888", first_name="Maria")
+    grupo = Group.objects.create(name="Gestor")
+    user.groups.add(grupo)
+    request = rf.get("/usuarios/meus-dados/")
+    request.user = user
+    response = MeusDadosView.as_view()(request)
+    assert response.status_code == status.HTTP_200_OK
+    assert "Gestor" in response.data["perfil_acesso"]
+
+
+def test_meus_dados_nome_apenas_first_name(rf):
+    user = User.objects.create_user(username="rf777", first_name="Ana", last_name="")
+    request = rf.get("/usuarios/meus-dados/")
+    request.user = user
+    response = MeusDadosView.as_view()(request)
+    assert response.data["nome_completo"] == "Ana"
+
+
+# ── AlterarSenhaView ──────────────────────────────────────────────────────────
+
+def test_alterar_senha_unauthenticated(rf):
+    request = rf.post("/usuarios/alterar-senha/", {}, format="json")
+    response = AlterarSenhaView.as_view()(request)
+    assert response.status_code in (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN)
+
+
+def test_alterar_senha_atual_incorreta(rf):
+    user = User.objects.create_user(username="rf111", password="SenhaCorreta1!")
+    request = rf.post(
+        "/usuarios/alterar-senha/",
+        {"senha_atual": "Errada1!", "nova_senha": "NovaSenha1!", "confirmacao_nova_senha": "NovaSenha1!"},
+        format="json",
+    )
+    request.user = user
+    response = AlterarSenhaView.as_view()(request)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "Senha atual incorreta" in response.data["detail"]
+
+
+def test_alterar_senha_sme_exception(rf, monkeypatch):
+    user = User.objects.create_user(username="rf222", password="SenhaCorreta1!")
+
+    def _raise_sme(*_args, **_kwargs):
+        raise SmeIntegracaoException("senha fraca")
+
+    monkeypatch.setattr("usuarios.views.usuarios.SmeIntegracaoService.redefine_senha", _raise_sme)
+    request = rf.post(
+        "/usuarios/alterar-senha/",
+        {"senha_atual": "SenhaCorreta1!", "nova_senha": "NovaSenha1!", "confirmacao_nova_senha": "NovaSenha1!"},
+        format="json",
+    )
+    request.user = user
+    response = AlterarSenhaView.as_view()(request)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "senha fraca" in response.data["detail"]
+
+
+def test_alterar_senha_success(rf, monkeypatch):
+    user = User.objects.create_user(username="rf333", password="SenhaCorreta1!")
+    monkeypatch.setattr("usuarios.views.usuarios.SmeIntegracaoService.redefine_senha", lambda *_a, **_k: None)
+    request = rf.post(
+        "/usuarios/alterar-senha/",
+        {"senha_atual": "SenhaCorreta1!", "nova_senha": "NovaSenha1!", "confirmacao_nova_senha": "NovaSenha1!"},
+        format="json",
+    )
+    request.user = user
+    response = AlterarSenhaView.as_view()(request)
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["detail"] == "Senha alterada com sucesso"
+    user.refresh_from_db()
+    assert user.check_password("NovaSenha1!")
+
+
+# ── AlterarSenhaSerializer ────────────────────────────────────────────────────
+
+@pytest.mark.parametrize("nova_senha,esperado", [
+    ("curta1!", "entre 8 e 12"),
+    ("SenhaLongaDemais1!", "entre 8 e 12"),
+    ("Semsymbol1", "símbolo"),
+    ("SEMMINUS1!", "minúscula"),
+    ("semmaius1!", "maiúscula"),
+    ("SemNumero!", "número"),
+    ("Espaço 1!", "espaços"),
+    ("Acentuàdo1!", "acentuados"),
+])
+def test_alterar_senha_serializer_validacao_nova_senha(nova_senha, esperado):
+    data = {
+        "senha_atual": "Antiga1!",
+        "nova_senha": nova_senha,
+        "confirmacao_nova_senha": nova_senha,
+    }
+    serializer = AlterarSenhaSerializer(data=data)
+    assert not serializer.is_valid()
+    errors_str = str(serializer.errors)
+    assert esperado in errors_str
+
+
+def test_alterar_senha_serializer_confirmacao_divergente():
+    data = {
+        "senha_atual": "Antiga1!",
+        "nova_senha": "NovaSenha1!",
+        "confirmacao_nova_senha": "Diferente1!",
+    }
+    serializer = AlterarSenhaSerializer(data=data)
+    assert not serializer.is_valid()
+    assert "confirmacao_nova_senha" in serializer.errors
+
+
+def test_alterar_senha_serializer_valido():
+    data = {
+        "senha_atual": "Antiga1!",
+        "nova_senha": "NovaSenha1!",
+        "confirmacao_nova_senha": "NovaSenha1!",
+    }
+    serializer = AlterarSenhaSerializer(data=data)
+    assert serializer.is_valid(), serializer.errors
