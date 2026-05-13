@@ -200,8 +200,7 @@ class BuscarUsuarioEolView(APIView):
         responses={
             200: OpenApiResponse(description="Dados do usuário no EOL"),
             400: OpenApiResponse(description="Usuário já cadastrado no SIGLA"),
-            404: OpenApiResponse(description="Usuário não encontrado no EOL"),
-            502: OpenApiResponse(description="Falha ao consultar o EOL"),
+            404: OpenApiResponse(description="Usuário não encontrado no EOL")
         },
         description="Busca dados do usuário no EOL via RF. Retorna 400 se já existir no SIGLA."
     )
