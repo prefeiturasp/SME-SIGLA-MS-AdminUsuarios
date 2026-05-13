@@ -228,7 +228,7 @@ class BuscarUsuarioEolView(APIView):
             logger.exception("Falha ao consultar EOL para RF: %s", rf)
             return Response(
                 {'detail': 'Falha ao consultar o EOL.'},
-                status=status.HTTP_402_BAD_GATEWAY,
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         nome = (info or {}).get('Nome') or (info or {}).get('nome', '')
