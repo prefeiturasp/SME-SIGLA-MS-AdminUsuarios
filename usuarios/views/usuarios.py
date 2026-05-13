@@ -17,13 +17,13 @@ from django.contrib.auth.models import User, Permission, Group
 from django.contrib.contenttypes.models import ContentType
 
 from usuarios.serializers import (
-
     LoginSerializer,
     LoginResponseSerializer,
     EsqueciSenhaSerializer,
     CriarNovaSenhaSerializer,
     AlterarSenhaSerializer,
     CreateUserSerializer,
+    BuscarUsuarioEolSerializer,
 )
 from usuarios.services.autenticacao import AutenticacaoService
 from usuarios.services.sme_integracao import SmeIntegracaoService
@@ -191,6 +191,57 @@ class AlterarSenhaView(APIView):
         return Response({'detail': 'Senha alterada com sucesso'}, status=status.HTTP_200_OK)
 
 
+class BuscarUsuarioEolView(APIView):
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+
+    @extend_schema(
+        request=BuscarUsuarioEolSerializer,
+        responses={
+            200: OpenApiResponse(description="Dados do usuário no EOL"),
+            400: OpenApiResponse(description="Usuário já cadastrado no SIGLA"),
+            404: OpenApiResponse(description="Usuário não encontrado no EOL")
+        },
+        description="Busca dados do usuário no EOL via RF. Retorna 400 se já existir no SIGLA."
+    )
+    def post(self, request):
+        serializer = BuscarUsuarioEolSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        rf = serializer.validated_data['rf']
+
+        if User.objects.filter(username=rf).exists():
+            return Response(
+                {'detail': 'Usuário já cadastrado no SIGLA.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            info = SmeIntegracaoService.informacao_usuario(rf)
+        except SmeIntegracaoException:
+            return Response(
+                {'detail': 'Usuário não encontrado no EOL.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception:
+            logger.exception("Falha ao consultar EOL para RF: %s", rf)
+            return Response(
+                {'detail': 'Falha ao consultar o EOL.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        nome = (info or {}).get('Nome') or (info or {}).get('nome', '')
+        email = (info or {}).get('Email') or (info or {}).get('email', '')
+
+        if not nome and not email:
+            return Response(
+                {'detail': 'Usuário não encontrado no EOL.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        return Response({'username': rf, 'nome': nome, 'email': email}, status=status.HTTP_200_OK)
+
+
 class CriarUsuarioView(APIView):
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
@@ -198,37 +249,45 @@ class CriarUsuarioView(APIView):
     @extend_schema(
         request=CreateUserSerializer,
         responses={
-            201: OpenApiResponse(
-                description="Usuário criado com sucesso"
-            ),
+            201: OpenApiResponse(description="Usuário criado com sucesso"),
             400: OpenApiResponse(description="Dados inválidos"),
             409: OpenApiResponse(description="Usuário já cadastrado"),
         },
-        description="Cria um novo usuário, verificando se o nome de usuário ou e-mail já estão em uso."
+        description="Cria um novo usuário a partir de username, nome e email."
     )
     def post(self, request):
         serializer = CreateUserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        username = serializer.validated_data.get("username")
-        email = serializer.validated_data.get("email")
+        username = serializer.validated_data['username']
+        email = serializer.validated_data['email']
+        nome = serializer.validated_data['nome']
 
         if User.objects.filter(username=username).exists():
             return Response(
-                {"detail": "Nome de usuário já está cadastrado."},
+                {'detail': 'Nome de usuário já está cadastrado.'},
                 status=status.HTTP_409_CONFLICT,
             )
 
-        if email and User.objects.filter(email=email).exists():
+        if User.objects.filter(email__iexact=email).exists():
             return Response(
-                {"detail": "E-mail já está cadastrado."},
+                {'detail': 'E-mail já está cadastrado.'},
                 status=status.HTTP_409_CONFLICT,
             )
 
-        user = User.objects.create_user(**serializer.validated_data)
+        partes = nome.strip().split(' ', 1)
+        first_name = partes[0]
+        last_name = partes[1] if len(partes) > 1 else ''
+
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+        )
 
         return Response(
-            {"detail": "Usuário criado com sucesso", "user": user.username},
+            {'detail': 'Usuário criado com sucesso', 'user': user.username},
             status=status.HTTP_201_CREATED,
         )
 

@@ -5,6 +5,7 @@ from .usuarios import (
     CriarNovaSenhaView,
     MeusDadosView,
     AlterarSenhaView,
+    BuscarUsuarioEolView,
 )
 from .permissoes import (
     PermissoesDisponiveisView,
