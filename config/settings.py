@@ -205,6 +205,6 @@ MS_URL = os.environ.get('MS_URL', '')
 from datetime import timedelta
  
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=24),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=7),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
 }
