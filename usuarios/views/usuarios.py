@@ -221,7 +221,7 @@ class BuscarUsuarioEolView(APIView):
         except SmeIntegracaoException:
             return Response(
                 {'detail': 'Usuário não encontrado no EOL.'},
-                status=status.HTTP_404_NOT_FOUND,
+                status=status.HTTP_400_BAD_REQUEST,
             )
         except Exception:
             logger.exception("Falha ao consultar EOL para RF: %s", rf)
@@ -236,7 +236,7 @@ class BuscarUsuarioEolView(APIView):
         if not nome and not email:
             return Response(
                 {'detail': 'Usuário não encontrado no EOL.'},
-                status=status.HTTP_404_NOT_FOUND,
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         return Response({'username': rf, 'nome': nome, 'email': email}, status=status.HTTP_200_OK)
