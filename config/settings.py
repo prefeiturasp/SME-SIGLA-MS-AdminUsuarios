@@ -208,3 +208,15 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=7),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
 }
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://qa-api-sigla.sme.prefeitura.sp.gov.br',
+    'https://hom-api-sigla.sme.prefeitura.sp.gov.br',
+    'https://qa-sigla.sme.prefeitura.sp.gov.br',
+    'https://hom-sigla.sme.prefeitura.sp.gov.br'
+]
+
+CORS_ALLOWED_ORIGINS = [
+    'https://qa-sigla.sme.prefeitura.sp.gov.br',
+    'https://hom-sigla.sme.prefeitura.sp.gov.br',
+]
