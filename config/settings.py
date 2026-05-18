@@ -205,6 +205,18 @@ MS_URL = os.environ.get('MS_URL', '')
 from datetime import timedelta
  
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=24),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=7),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
 }
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://qa-api-sigla.sme.prefeitura.sp.gov.br',
+    'https://hom-api-sigla.sme.prefeitura.sp.gov.br',
+    'https://qa-sigla.sme.prefeitura.sp.gov.br',
+    'https://hom-sigla.sme.prefeitura.sp.gov.br'
+]
+
+CORS_ALLOWED_ORIGINS = [
+    'https://qa-sigla.sme.prefeitura.sp.gov.br',
+    'https://hom-sigla.sme.prefeitura.sp.gov.br',
+]
