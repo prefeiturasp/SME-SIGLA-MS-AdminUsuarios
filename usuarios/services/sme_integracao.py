@@ -39,7 +39,7 @@ class SmeIntegracaoService:
             raise SmeIntegracaoException("Registro funcional e senha são obrigatórios")
 
         logger.info(
-            "Iniciando redefinição de senha no CoreSSO para usuário: %s", 
+            "Iniciando redefinição de senha no CoreSSO para usuário: %s",
             registro_funcional
         )
         data = {
@@ -56,6 +56,33 @@ class SmeIntegracaoService:
                 texto = response.content.decode('utf-8')
                 mensagem = texto.strip("{}'\"")
                 logger.info("Erro ao redefinir senha: %s", mensagem)
+                raise SmeIntegracaoException(mensagem)
+        except Exception as err:
+            raise SmeIntegracaoException(str(err))
+
+
+    @classmethod
+    def alterar_email(cls, registro_funcional, email):
+        if not registro_funcional or not email:
+            raise SmeIntegracaoException("Registro funcional e email são obrigatórios")
+
+        logger.info(
+            "Iniciando alteração de email no CoreSSO para usuário: %s",
+            registro_funcional
+        )
+        data = {
+            'Usuario': registro_funcional,
+            'Email': email
+        }
+        try:
+            url = f"{settings.SME_INTEGRACAO_URL}/api/AutenticacaoSgp/AlterarEmail"
+            response = requests.post(url, data=data, headers=cls.DEFAULT_HEADERS)
+            if response.status_code == status.HTTP_200_OK:
+                return "OK"
+            else:
+                texto = response.content.decode('utf-8')
+                mensagem = texto.strip("{}'\"")
+                logger.info("Erro ao alterar email: %s", mensagem)
                 raise SmeIntegracaoException(mensagem)
         except Exception as err:
             raise SmeIntegracaoException(str(err))

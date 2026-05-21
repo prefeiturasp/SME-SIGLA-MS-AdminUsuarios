@@ -104,6 +104,23 @@ def test_sme_integracao_redefine_senha_success_and_errors(monkeypatch):
         SmeIntegracaoService.redefine_senha("", "")
 
 
+def test_sme_integracao_alterar_email_success_and_errors(monkeypatch):
+    success_response = SimpleNamespace(status_code=200, content=b"")
+    fail_response = SimpleNamespace(status_code=400, content=b"{email invalido}")
+
+    monkeypatch.setattr("usuarios.services.sme_integracao.requests.post", lambda *a, **k: success_response)
+    assert SmeIntegracaoService.alterar_email("123", "novo@x.com") == "OK"
+
+    monkeypatch.setattr("usuarios.services.sme_integracao.requests.post", lambda *a, **k: fail_response)
+    with pytest.raises(SmeIntegracaoException, match="email invalido"):
+        SmeIntegracaoService.alterar_email("123", "novo@x.com")
+
+    with pytest.raises(SmeIntegracaoException, match="obrigatórios"):
+        SmeIntegracaoService.alterar_email("", "")
+    with pytest.raises(SmeIntegracaoException, match="obrigatórios"):
+        SmeIntegracaoService.alterar_email("123", "")
+
+
 def test_token_service_gerar_token_para_reset():
     user = User.objects.create_user(username="alice", first_name="Alice")
 

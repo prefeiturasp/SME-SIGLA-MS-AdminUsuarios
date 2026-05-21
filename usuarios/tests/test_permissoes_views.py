@@ -208,7 +208,11 @@ def test_usuarios_com_grupos_patch_user_not_found(rf):
     assert response.data["detail"] == "Usuário não encontrado"
 
 
-def test_usuarios_com_grupos_patch_updates_fields_and_groups(rf):
+def test_usuarios_com_grupos_patch_updates_fields_and_groups(rf, monkeypatch):
+    monkeypatch.setattr(
+        "usuarios.views.permissoes.SmeIntegracaoService.alterar_email",
+        lambda *_a, **_k: "OK",
+    )
     user = User.objects.create_user(username="alice", email="old@x.com", first_name="Old")
     g1 = Group.objects.create(name="G1")
     g2 = Group.objects.create(name="G2")
@@ -236,4 +240,53 @@ def test_usuarios_com_grupos_patch_email_unique_validation(rf):
     response = UsuariosComGruposView.as_view()(request)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "email" in response.data
+
+
+def test_patch_email_diferente_chama_sme_e_salva(rf, monkeypatch):
+    user = User.objects.create_user(username="alice", email="old@x.com")
+    chamadas = {"n": 0}
+
+    def _ok(*_a, **_k):
+        chamadas["n"] += 1
+        return "OK"
+
+    monkeypatch.setattr("usuarios.views.permissoes.SmeIntegracaoService.alterar_email", _ok)
+    request = rf.patch("/usuarios/grupos/", {"usuario": "alice", "email": "new@x.com"}, format="json")
+    response = UsuariosComGruposView.as_view()(request)
+    user.refresh_from_db()
+    assert response.status_code == status.HTTP_200_OK
+    assert user.email == "new@x.com"
+    assert chamadas["n"] == 1
+
+
+def test_patch_email_igual_nao_chama_sme(rf, monkeypatch):
+    User.objects.create_user(username="alice", email="same@x.com")
+    chamadas = {"n": 0}
+
+    def _spy(*_a, **_k):
+        chamadas["n"] += 1
+        return "OK"
+
+    monkeypatch.setattr("usuarios.views.permissoes.SmeIntegracaoService.alterar_email", _spy)
+    request = rf.patch("/usuarios/grupos/", {"usuario": "alice", "email": "SAME@x.com"}, format="json")
+    response = UsuariosComGruposView.as_view()(request)
+    assert response.status_code == status.HTTP_200_OK
+    assert chamadas["n"] == 0
+
+
+def test_patch_email_sme_falha_retorna_400_e_nao_salva(rf, monkeypatch):
+    from usuarios.exceptions import SmeIntegracaoException
+
+    user = User.objects.create_user(username="alice", email="old@x.com")
+
+    def _raise(*_a, **_k):
+        raise SmeIntegracaoException("email recusado")
+
+    monkeypatch.setattr("usuarios.views.permissoes.SmeIntegracaoService.alterar_email", _raise)
+    request = rf.patch("/usuarios/grupos/", {"usuario": "alice", "email": "new@x.com"}, format="json")
+    response = UsuariosComGruposView.as_view()(request)
+    user.refresh_from_db()
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "email recusado" in response.data["detail"]
+    assert user.email == "old@x.com"
 

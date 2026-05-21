@@ -5,6 +5,7 @@ from .usuarios import (
     CriarNovaSenhaView,
     MeusDadosView,
     AlterarSenhaView,
+    AlterarEmailView,
     BuscarUsuarioEolView,
 )
 from .permissoes import (
@@ -15,4 +16,4 @@ from .permissoes import (
     UsuariosComGruposView,
 )
 
-__all__ = ['SwaggerFromFileView', 'LoginView', 'EsqueciSenhaView', 'CriarNovaSenhaView', 'CriarUsuarioView', 'PermissoesDisponiveisView', 'GerenciarPermissoesUsuarioView', 'CriarPermissaoView', 'GruposDisponiveisView', 'PermissoesGrupoView', 'CriarGrupoView', 'GerenciarUsuariosGrupoView', 'UsuariosComGruposView']
+__all__ = ['SwaggerFromFileView', 'LoginView', 'EsqueciSenhaView', 'CriarNovaSenhaView', 'CriarUsuarioView', 'AlterarSenhaView', 'AlterarEmailView', 'PermissoesDisponiveisView', 'GerenciarPermissoesUsuarioView', 'CriarPermissaoView', 'GruposDisponiveisView', 'PermissoesGrupoView', 'CriarGrupoView', 'GerenciarUsuariosGrupoView', 'UsuariosComGruposView']
