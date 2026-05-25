@@ -20,6 +20,8 @@ from usuarios.serializers.permissoes_serializers import (
     UpdateGroupUsersSerializer,
     UpdateUsuarioSerializer,
 )
+from usuarios.services.sme_integracao import SmeIntegracaoService
+from usuarios.exceptions import SmeIntegracaoException
 
 logger = logging.getLogger(__name__)
 
@@ -297,8 +299,17 @@ class UsuariosComGruposView(APIView):
                 user.last_name = ""
 
         # Atualiza email (validação de unicidade já feita no serializer)
+        # Quando o email muda (case-insensitive), sincroniza com o SME Integração
+        # antes de salvar localmente. Email vazio limpa local sem chamar SME.
         if "email" in data:
-            user.email = (data.get("email") or "").strip()
+            novo_email = (data.get("email") or "").strip()
+            if novo_email and novo_email.lower() != (user.email or "").lower():
+                try:
+                    SmeIntegracaoService.alterar_email(user.username, novo_email)
+                except SmeIntegracaoException as e:
+                    logger.error(f"Falha ao alterar email no SME Integração: {e}")
+                    return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            user.email = novo_email
 
         # Ativa/desativa
         if "is_active" in data:
