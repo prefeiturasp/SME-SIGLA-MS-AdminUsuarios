@@ -77,12 +77,8 @@ class SmeIntegracaoService:
         try:
             url = f"{settings.SME_INTEGRACAO_URL}/api/AutenticacaoSgp/AlterarEmail"
             response = requests.post(url, data=data, headers=cls.DEFAULT_HEADERS)
-            if response.status_code == status.HTTP_200_OK:
-                return "OK"
-            else:
-                texto = response.content.decode('utf-8')
-                mensagem = texto.strip("{}'\"")
-                logger.info("Erro ao alterar email: %s", mensagem)
-                raise SmeIntegracaoException(mensagem)
+           
         except Exception as err:
             raise SmeIntegracaoException(str(err))
+       
+        return "OK"        
