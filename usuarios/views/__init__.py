@@ -1,19 +1,35 @@
-from .usuarios import (
-    CriarUsuarioView,
-    LoginView,
-    EsqueciSenhaView,
-    CriarNovaSenhaView,
-    MeusDadosView,
-    AlterarSenhaView,
-    AlterarEmailView,
-    BuscarUsuarioEolView,
-)
 from .permissoes import (
-    PermissoesDisponiveisView,
     GerenciarPermissoesUsuarioView,
-     GruposDisponiveisView,
+    GruposDisponiveisView,
+    PermissoesDisponiveisView,
     # PermissoesGrupoView,
     UsuariosComGruposView,
 )
+from .usuarios import (
+    AlterarEmailView,
+    AlterarSenhaView,
+    BuscarUsuarioEolView,
+    CriarNovaSenhaView,
+    CriarUsuarioView,
+    EsqueciSenhaView,
+    LoginView,
+    MeusDadosView,
+)
 
-__all__ = ['SwaggerFromFileView', 'LoginView', 'EsqueciSenhaView', 'CriarNovaSenhaView', 'CriarUsuarioView', 'AlterarSenhaView', 'AlterarEmailView', 'PermissoesDisponiveisView', 'GerenciarPermissoesUsuarioView', 'CriarPermissaoView', 'GruposDisponiveisView', 'PermissoesGrupoView', 'CriarGrupoView', 'GerenciarUsuariosGrupoView', 'UsuariosComGruposView']
+__all__ = [
+    "SwaggerFromFileView",
+    "LoginView",
+    "EsqueciSenhaView",
+    "CriarNovaSenhaView",
+    "CriarUsuarioView",
+    "AlterarSenhaView",
+    "AlterarEmailView",
+    "PermissoesDisponiveisView",
+    "GerenciarPermissoesUsuarioView",
+    "CriarPermissaoView",
+    "GruposDisponiveisView",
+    "PermissoesGrupoView",
+    "CriarGrupoView",
+    "GerenciarUsuariosGrupoView",
+    "UsuariosComGruposView",
+]

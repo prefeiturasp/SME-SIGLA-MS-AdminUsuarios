@@ -12,7 +12,6 @@ from usuarios.views.permissoes import (
     UsuariosComGruposView,
 )
 
-
 pytestmark = pytest.mark.django_db
 
 
@@ -58,8 +57,15 @@ def test_gerenciar_permissoes_usuario_not_found(rf):
     assert response.data["detail"] == "Usuário não encontrado"
 
 
-def test_gerenciar_permissoes_usuario_success_with_group_and_direct(rf, perm_direta, perm_grupo):
-    user = User.objects.create_user(username="alice", first_name="Alice", last_name="Silva", email="a@x.com")
+def test_gerenciar_permissoes_usuario_success_with_group_and_direct(
+    rf, perm_direta, perm_grupo
+):
+    user = User.objects.create_user(
+        username="alice",
+        first_name="Alice",
+        last_name="Silva",
+        email="a@x.com",
+    )
     user.user_permissions.add(perm_direta)
     grupo = Group.objects.create(name="Admins")
     grupo.permissions.add(perm_grupo)
@@ -129,7 +135,9 @@ def test_grupos_disponiveis_put_not_found(rf):
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_grupos_disponiveis_put_add_remove_permissions(rf, perm_direta, perm_grupo):
+def test_grupos_disponiveis_put_add_remove_permissions(
+    rf, perm_direta, perm_grupo
+):
     group = Group.objects.create(name="Gestores")
     group.permissions.add(perm_direta)
     request = rf.put(
@@ -144,13 +152,18 @@ def test_grupos_disponiveis_put_add_remove_permissions(rf, perm_direta, perm_gru
     response = GruposDisponiveisView.as_view()(request)
     group.refresh_from_db()
     assert response.status_code == status.HTTP_200_OK
-    assert set(group.permissions.values_list("codename", flat=True)) == {perm_grupo.codename}
+    assert set(group.permissions.values_list("codename", flat=True)) == {
+        perm_grupo.codename
+    }
 
 
 def test_grupos_disponiveis_post_creates_group(rf, perm_direta):
     request = rf.post(
         "/grupos/",
-        {"grupo": "Operadores", "permissoes_codenames": [perm_direta.codename]},
+        {
+            "grupo": "Operadores",
+            "permissoes_codenames": [perm_direta.codename],
+        },
         format="json",
     )
     response = GruposDisponiveisView.as_view()(request)
@@ -160,7 +173,11 @@ def test_grupos_disponiveis_post_creates_group(rf, perm_direta):
 
 
 def test_gerenciar_usuarios_grupo_group_not_found(rf):
-    request = rf.put("/grupos/usuarios/", {"grupo": "X", "adicionar_usuarios": ["u"]}, format="json")
+    request = rf.put(
+        "/grupos/usuarios/",
+        {"grupo": "X", "adicionar_usuarios": ["u"]},
+        format="json",
+    )
     response = GerenciarUsuariosGrupoView.as_view()(request)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.data["detail"] == "Grupo não encontrado"
@@ -169,12 +186,16 @@ def test_gerenciar_usuarios_grupo_group_not_found(rf):
 def test_gerenciar_usuarios_grupo_add_and_remove(rf):
     group = Group.objects.create(name="Equipe")
     u1 = User.objects.create_user(username="u1")
-    u2 = User.objects.create_user(username="u2")
+    User.objects.create_user(username="u2")
     group.user_set.add(u1)
 
     request = rf.put(
         "/grupos/usuarios/",
-        {"grupo": "Equipe", "adicionar_usuarios": ["u2"], "remover_usuarios": ["u1"]},
+        {
+            "grupo": "Equipe",
+            "adicionar_usuarios": ["u2"],
+            "remover_usuarios": ["u1"],
+        },
         format="json",
     )
     response = GerenciarUsuariosGrupoView.as_view()(request)
@@ -186,7 +207,7 @@ def test_gerenciar_usuarios_grupo_add_and_remove(rf):
 def test_usuarios_com_grupos_get_and_filter(rf):
     g = Group.objects.create(name="Equipe")
     u1 = User.objects.create_user(username="alice", first_name="Alice")
-    u2 = User.objects.create_user(username="bob")
+    User.objects.create_user(username="bob")
     u1.groups.add(g)
 
     all_request = rf.get("/usuarios/grupos/")
@@ -202,7 +223,9 @@ def test_usuarios_com_grupos_get_and_filter(rf):
 
 
 def test_usuarios_com_grupos_patch_user_not_found(rf):
-    request = rf.patch("/usuarios/grupos/", {"usuario": "naoexiste"}, format="json")
+    request = rf.patch(
+        "/usuarios/grupos/", {"usuario": "naoexiste"}, format="json"
+    )
     response = UsuariosComGruposView.as_view()(request)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.data["detail"] == "Usuário não encontrado"
@@ -213,14 +236,22 @@ def test_usuarios_com_grupos_patch_updates_fields_and_groups(rf, monkeypatch):
         "usuarios.views.permissoes.SmeIntegracaoService.alterar_email",
         lambda *_a, **_k: "OK",
     )
-    user = User.objects.create_user(username="alice", email="old@x.com", first_name="Old")
+    user = User.objects.create_user(
+        username="alice", email="old@x.com", first_name="Old"
+    )
     g1 = Group.objects.create(name="G1")
-    g2 = Group.objects.create(name="G2")
+    Group.objects.create(name="G2")
     user.groups.add(g1)
 
     request = rf.patch(
         "/usuarios/grupos/",
-        {"usuario": "alice", "nome": "Alice Silva", "email": "new@x.com", "is_active": False, "grupos": ["G2"]},
+        {
+            "usuario": "alice",
+            "nome": "Alice Silva",
+            "email": "new@x.com",
+            "is_active": False,
+            "grupos": ["G2"],
+        },
         format="json",
     )
     response = UsuariosComGruposView.as_view()(request)
@@ -236,7 +267,11 @@ def test_usuarios_com_grupos_patch_updates_fields_and_groups(rf, monkeypatch):
 def test_usuarios_com_grupos_patch_email_unique_validation(rf):
     User.objects.create_user(username="u1", email="same@x.com")
     User.objects.create_user(username="u2", email="u2@x.com")
-    request = rf.patch("/usuarios/grupos/", {"usuario": "u2", "email": "same@x.com"}, format="json")
+    request = rf.patch(
+        "/usuarios/grupos/",
+        {"usuario": "u2", "email": "same@x.com"},
+        format="json",
+    )
     response = UsuariosComGruposView.as_view()(request)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "email" in response.data
@@ -250,8 +285,14 @@ def test_patch_email_diferente_chama_sme_e_salva(rf, monkeypatch):
         chamadas["n"] += 1
         return "OK"
 
-    monkeypatch.setattr("usuarios.views.permissoes.SmeIntegracaoService.alterar_email", _ok)
-    request = rf.patch("/usuarios/grupos/", {"usuario": "alice", "email": "new@x.com"}, format="json")
+    monkeypatch.setattr(
+        "usuarios.views.permissoes.SmeIntegracaoService.alterar_email", _ok
+    )
+    request = rf.patch(
+        "/usuarios/grupos/",
+        {"usuario": "alice", "email": "new@x.com"},
+        format="json",
+    )
     response = UsuariosComGruposView.as_view()(request)
     user.refresh_from_db()
     assert response.status_code == status.HTTP_200_OK
@@ -267,8 +308,14 @@ def test_patch_email_igual_nao_chama_sme(rf, monkeypatch):
         chamadas["n"] += 1
         return "OK"
 
-    monkeypatch.setattr("usuarios.views.permissoes.SmeIntegracaoService.alterar_email", _spy)
-    request = rf.patch("/usuarios/grupos/", {"usuario": "alice", "email": "SAME@x.com"}, format="json")
+    monkeypatch.setattr(
+        "usuarios.views.permissoes.SmeIntegracaoService.alterar_email", _spy
+    )
+    request = rf.patch(
+        "/usuarios/grupos/",
+        {"usuario": "alice", "email": "SAME@x.com"},
+        format="json",
+    )
     response = UsuariosComGruposView.as_view()(request)
     assert response.status_code == status.HTTP_200_OK
     assert chamadas["n"] == 0
@@ -282,11 +329,16 @@ def test_patch_email_sme_falha_retorna_400_e_nao_salva(rf, monkeypatch):
     def _raise(*_a, **_k):
         raise SmeIntegracaoException("email recusado")
 
-    monkeypatch.setattr("usuarios.views.permissoes.SmeIntegracaoService.alterar_email", _raise)
-    request = rf.patch("/usuarios/grupos/", {"usuario": "alice", "email": "new@x.com"}, format="json")
+    monkeypatch.setattr(
+        "usuarios.views.permissoes.SmeIntegracaoService.alterar_email", _raise
+    )
+    request = rf.patch(
+        "/usuarios/grupos/",
+        {"usuario": "alice", "email": "new@x.com"},
+        format="json",
+    )
     response = UsuariosComGruposView.as_view()(request)
     user.refresh_from_db()
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "email recusado" in response.data["detail"]
     assert user.email == "old@x.com"
-
