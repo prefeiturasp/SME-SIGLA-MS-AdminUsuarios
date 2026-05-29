@@ -3,11 +3,11 @@ class AutenticacaoServiceError(Exception):
 
 
 class AutenticacaoRespostaInvalidaError(AutenticacaoServiceError):
-    """Resposta inválida (não JSON ou parse falhou) do serviço de autenticação."""
+    """Resposta inválida (não JSON ou parse falhou) do serviço."""
 
 
 class AutenticacaoRequisicaoError(AutenticacaoServiceError):
-    """Falha ao realizar requisição ao serviço de autenticação (rede, timeout, etc)."""
+    """Falha ao requisitar o serviço de autenticação (rede, timeout)."""
 
 
 class AutenticacaoCredenciaisInvalidasError(AutenticacaoServiceError):

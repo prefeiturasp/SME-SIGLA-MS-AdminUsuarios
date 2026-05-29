@@ -8,7 +8,6 @@ from django.core.management.base import CommandError
 
 from usuarios.management.commands.importar_usuarios import split_nome
 
-
 pytestmark = pytest.mark.django_db
 
 
@@ -20,11 +19,15 @@ def test_split_nome_handles_edge_cases():
 
 def test_criar_usuarios_creates_and_skips_existing():
     user_model = get_user_model()
-    user_model.objects.create_user(username="usuario1", email="usuario1@example.com", password="123456")
+    user_model.objects.create_user(
+        username="usuario1", email="usuario1@example.com", password="123456"
+    )
 
     call_command("criar_usuarios", count=3)
 
-    created_users = user_model.objects.filter(username__in=["usuario1", "usuario2", "usuario3"])
+    created_users = user_model.objects.filter(
+        username__in=["usuario1", "usuario2", "usuario3"]
+    )
     assert created_users.count() == 3
     assert user_model.objects.get(username="usuario2").check_password("123456")
 
@@ -39,11 +42,21 @@ def test_importar_usuarios_invalid_payload_raises():
 
 def test_importar_usuarios_creates_skips_and_collects_errors():
     user_model = get_user_model()
-    user_model.objects.create_user(username="existente", email="existente@example.com")
+    user_model.objects.create_user(
+        username="existente", email="existente@example.com"
+    )
 
     payload = [
-        {"username": "novo", "email": "novo@example.com", "nome": "Novo Usuario"},
-        {"username": "existente", "email": "existente@example.com", "nome": "Existente"},
+        {
+            "username": "novo",
+            "email": "novo@example.com",
+            "nome": "Novo Usuario",
+        },
+        {
+            "username": "existente",
+            "email": "existente@example.com",
+            "nome": "Existente",
+        },
         {"username": "sem-email"},
     ]
 
@@ -57,7 +70,9 @@ def test_importar_usuarios_creates_skips_and_collects_errors():
 
 def test_limpar_usuarios_keeps_superuser_and_deletes_regular():
     user_model = get_user_model()
-    user_model.objects.create_superuser(username="admin", email="admin@example.com", password="123456")
+    user_model.objects.create_superuser(
+        username="admin", email="admin@example.com", password="123456"
+    )
     user_model.objects.create_user(username="u1", email="u1@example.com")
     user_model.objects.create_user(username="u2", email="u2@example.com")
 

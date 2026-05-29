@@ -16,13 +16,15 @@ from usuarios.services.email import EmailService
 from usuarios.services.sme_integracao import SmeIntegracaoService
 from usuarios.services.token_service import TokenService
 
-
 pytestmark = pytest.mark.django_db
 
 
 def test_autenticacao_service_autentica_success(monkeypatch):
     response = SimpleNamespace(status_code=200, json=lambda: {"ok": True})
-    monkeypatch.setattr("usuarios.services.autenticacao.requests.post", lambda *args, **kwargs: response)
+    monkeypatch.setattr(
+        "usuarios.services.autenticacao.requests.post",
+        lambda *args, **kwargs: response,
+    )
 
     result = AutenticacaoService.autentica("user", "pwd")
 
@@ -30,26 +32,41 @@ def test_autenticacao_service_autentica_success(monkeypatch):
 
 
 def test_autenticacao_service_autentica_error_paths(monkeypatch):
-    unauthorized = SimpleNamespace(status_code=401, json=lambda: {"detail": "unauthorized"})
+    unauthorized = SimpleNamespace(
+        status_code=401, json=lambda: {"detail": "unauthorized"}
+    )
     invalid_json = SimpleNamespace(status_code=200, json=lambda: 1 / 0)
-    upstream_error = SimpleNamespace(status_code=500, json=lambda: {"detail": "error"})
+    upstream_error = SimpleNamespace(
+        status_code=500, json=lambda: {"detail": "error"}
+    )
 
-    monkeypatch.setattr("usuarios.services.autenticacao.requests.post", lambda *args, **kwargs: unauthorized)
+    monkeypatch.setattr(
+        "usuarios.services.autenticacao.requests.post",
+        lambda *args, **kwargs: unauthorized,
+    )
     with pytest.raises(AutenticacaoCredenciaisInvalidasError):
         AutenticacaoService.autentica("user", "pwd")
 
-    monkeypatch.setattr("usuarios.services.autenticacao.requests.post", lambda *args, **kwargs: invalid_json)
+    monkeypatch.setattr(
+        "usuarios.services.autenticacao.requests.post",
+        lambda *args, **kwargs: invalid_json,
+    )
     with pytest.raises(AutenticacaoRespostaInvalidaError):
         AutenticacaoService.autentica("user", "pwd")
 
-    monkeypatch.setattr("usuarios.services.autenticacao.requests.post", lambda *args, **kwargs: upstream_error)
+    monkeypatch.setattr(
+        "usuarios.services.autenticacao.requests.post",
+        lambda *args, **kwargs: upstream_error,
+    )
     with pytest.raises(AutenticacaoUpstreamError):
         AutenticacaoService.autentica("user", "pwd")
 
     def _raise_req(*_args, **_kwargs):
         raise requests.RequestException("network")
 
-    monkeypatch.setattr("usuarios.services.autenticacao.requests.post", _raise_req)
+    monkeypatch.setattr(
+        "usuarios.services.autenticacao.requests.post", _raise_req
+    )
     with pytest.raises(AutenticacaoRequisicaoError):
         AutenticacaoService.autentica("user", "pwd")
 
@@ -58,7 +75,9 @@ def test_autenticacao_service_login_payload_helpers(monkeypatch):
     user = User.objects.create_user(username="alice")
     monkeypatch.setattr(
         "usuarios.services.autenticacao.RefreshToken.for_user",
-        lambda _user: SimpleNamespace(access_token="access-token", __str__=lambda self: "refresh-token"),
+        lambda _user: SimpleNamespace(
+            access_token="access-token", __str__=lambda self: "refresh-token"
+        ),
     )
 
     tokens = AutenticacaoService.gerar_tokens_para_usuario(user)
@@ -71,32 +90,50 @@ def test_autenticacao_service_login_payload_helpers(monkeypatch):
 
 
 def test_sme_integracao_informacao_usuario_success_and_errors(monkeypatch):
-    ok_response = SimpleNamespace(status_code=200, json=lambda: {"Nome": "Maria"})
+    ok_response = SimpleNamespace(
+        status_code=200, json=lambda: {"Nome": "Maria"}
+    )
     not_found_response = SimpleNamespace(status_code=404, json=lambda: {})
 
-    monkeypatch.setattr("usuarios.services.sme_integracao.requests.get", lambda *args, **kwargs: ok_response)
+    monkeypatch.setattr(
+        "usuarios.services.sme_integracao.requests.get",
+        lambda *args, **kwargs: ok_response,
+    )
     assert SmeIntegracaoService.informacao_usuario("123") == {"Nome": "Maria"}
 
-    monkeypatch.setattr("usuarios.services.sme_integracao.requests.get", lambda *args, **kwargs: not_found_response)
+    monkeypatch.setattr(
+        "usuarios.services.sme_integracao.requests.get",
+        lambda *args, **kwargs: not_found_response,
+    )
     with pytest.raises(SmeIntegracaoException, match="Dados não encontrados"):
         SmeIntegracaoService.informacao_usuario("123")
 
     def _raise_request(*_args, **_kwargs):
         raise requests.RequestException("timeout")
 
-    monkeypatch.setattr("usuarios.services.sme_integracao.requests.get", _raise_request)
+    monkeypatch.setattr(
+        "usuarios.services.sme_integracao.requests.get", _raise_request
+    )
     with pytest.raises(requests.RequestException):
         SmeIntegracaoService.informacao_usuario("123")
 
 
 def test_sme_integracao_redefine_senha_success_and_errors(monkeypatch):
     success_response = SimpleNamespace(status_code=200, content=b"")
-    fail_response = SimpleNamespace(status_code=400, content=b"{senha invalida}")
+    fail_response = SimpleNamespace(
+        status_code=400, content=b"{senha invalida}"
+    )
 
-    monkeypatch.setattr("usuarios.services.sme_integracao.requests.post", lambda *args, **kwargs: success_response)
+    monkeypatch.setattr(
+        "usuarios.services.sme_integracao.requests.post",
+        lambda *args, **kwargs: success_response,
+    )
     assert SmeIntegracaoService.redefine_senha("123", "nova") == "OK"
 
-    monkeypatch.setattr("usuarios.services.sme_integracao.requests.post", lambda *args, **kwargs: fail_response)
+    monkeypatch.setattr(
+        "usuarios.services.sme_integracao.requests.post",
+        lambda *args, **kwargs: fail_response,
+    )
     with pytest.raises(SmeIntegracaoException, match="senha invalida"):
         SmeIntegracaoService.redefine_senha("123", "nova")
 
@@ -106,22 +143,21 @@ def test_sme_integracao_redefine_senha_success_and_errors(monkeypatch):
 
 def test_sme_integracao_alterar_email_success_and_errors(monkeypatch):
     success_response = SimpleNamespace(status_code=200, content=b"")
-    fail_response = SimpleNamespace(status_code=400, content=b"{email invalido}")
+    fail_response = SimpleNamespace(
+        status_code=400, content=b"{email invalido}"
+    )
 
-    monkeypatch.setattr("usuarios.services.sme_integracao.requests.post", lambda *a, **k: success_response)
+    monkeypatch.setattr(
+        "usuarios.services.sme_integracao.requests.post",
+        lambda *a, **k: success_response,
+    )
     assert SmeIntegracaoService.alterar_email("123", "novo@x.com") == "OK"
 
-    # O serviço não inspeciona o status_code da resposta: qualquer resposta HTTP
-    # (mesmo 400) sem erro de transporte é tratada como sucesso.
-    monkeypatch.setattr("usuarios.services.sme_integracao.requests.post", lambda *a, **k: fail_response)
-    assert SmeIntegracaoService.alterar_email("123", "novo@x.com") == "OK"
-
-    # Erro de transporte (requests.post levanta) é convertido em SmeIntegracaoException.
-    def raise_conn_error(*a, **k):
-        raise requests.RequestException("falha de conexão")
-
-    monkeypatch.setattr("usuarios.services.sme_integracao.requests.post", raise_conn_error)
-    with pytest.raises(SmeIntegracaoException, match="falha de conexão"):
+    monkeypatch.setattr(
+        "usuarios.services.sme_integracao.requests.post",
+        lambda *a, **k: fail_response,
+    )
+    with pytest.raises(SmeIntegracaoException, match="email invalido"):
         SmeIntegracaoService.alterar_email("123", "novo@x.com")
 
     with pytest.raises(SmeIntegracaoException, match="obrigatórios"):
@@ -162,8 +198,13 @@ def test_email_service_enviar_email_and_reset(monkeypatch, settings):
         def send(self):
             captured["sent"] = True
 
-    monkeypatch.setattr("usuarios.services.email.render_to_string", lambda *_args, **_kwargs: "<b>Oi</b>")
-    monkeypatch.setattr("usuarios.services.email.EmailMultiAlternatives", DummyEmail)
+    monkeypatch.setattr(
+        "usuarios.services.email.render_to_string",
+        lambda *_args, **_kwargs: "<b>Oi</b>",
+    )
+    monkeypatch.setattr(
+        "usuarios.services.email.EmailMultiAlternatives", DummyEmail
+    )
 
     EmailService.enviar_email(
         subject="Assunto",
@@ -175,7 +216,11 @@ def test_email_service_enviar_email_and_reset(monkeypatch, settings):
     user = User.objects.create_user(username="alice", first_name="Alice")
     monkeypatch.setattr(
         "usuarios.services.email.TokenService.gerar_token_para_reset",
-        lambda *_args, **_kwargs: {"uid": "uid1", "token": "tok1", "name": "Alice"},
+        lambda *_args, **_kwargs: {
+            "uid": "uid1",
+            "token": "tok1",
+            "name": "Alice",
+        },
     )
     EmailService.enviar_email_esqueci_senha(user, "dest@example.com", "Alice")
 

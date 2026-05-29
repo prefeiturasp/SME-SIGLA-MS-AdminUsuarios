@@ -1,12 +1,13 @@
 import logging
-from typing import Mapping, Optional, Sequence
+from collections.abc import Mapping, Sequence
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+
 from usuarios.services.token_service import TokenService
-from django.contrib.auth.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +21,8 @@ class EmailService:
         context: Mapping[str, object],
         recipients: Sequence[str],
         *,
-        from_email: Optional[str] = None,
-        headers: Optional[Mapping[str, str]] = None,
+        from_email: str | None = None,
+        headers: Mapping[str, str] | None = None,
     ) -> None:
         html_content = render_to_string(template_name, context)
         sender = from_email or getattr(settings, "DEFAULT_FROM_EMAIL", None)
@@ -37,21 +38,22 @@ class EmailService:
         email.attach_alternative(html_content, "text/html")
         email.send()
 
-
     @classmethod
-    def enviar_email_esqueci_senha(cls, user: User, email: str, nome: str) -> None:
+    def enviar_email_esqueci_senha(
+        cls, user: User, email: str, nome: str
+    ) -> None:
         logger.info("Gerando token de reset para usuário: %s", user.username)
         token_data = TokenService.gerar_token_para_reset(user, email)
 
-        link_reset = f"{settings.APLICACAO_URL}criar-nova-senha/{token_data['uid']}/{token_data['token']}"
+        link_reset = f"{settings.APLICACAO_URL}criar-nova-senha/{token_data['uid']}/{token_data['token']}"  # noqa: E501
         contexto_email = {
             "nome_usuario": nome,
             "link_reset": link_reset,
             "ms_url": settings.MS_URL,
         }
         cls.enviar_email(
-            subject='Esqueci minha senha - SIGLA',
-            template_name='reset_senha.html',
+            subject="Esqueci minha senha - SIGLA",
+            template_name="reset_senha.html",
             context=contexto_email,
             recipients=[email],
         )
