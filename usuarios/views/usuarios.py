@@ -22,6 +22,7 @@ from usuarios.serializers import (
     EsqueciSenhaSerializer,
     CriarNovaSenhaSerializer,
     AlterarSenhaSerializer,
+    AlterarEmailSerializer,
     CreateUserSerializer,
     BuscarUsuarioEolSerializer,
 )
@@ -290,4 +291,26 @@ class CriarUsuarioView(APIView):
             {'detail': 'Usuário criado com sucesso', 'user': user.username},
             status=status.HTTP_201_CREATED,
         )
+
+
+class AlterarEmailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = AlterarEmailSerializer(data=request.data, context={'user': request.user})
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        novo_email = serializer.validated_data['novo_email']
+
+        try:
+            SmeIntegracaoService.alterar_email(user.username, novo_email)
+        except SmeIntegracaoException as e:
+            logger.error(f"Falha ao alterar email no SME Integração: {e}")
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.email = novo_email
+        user.save(update_fields=['email'])
+
+        return Response({'detail': 'Email alterado com sucesso'}, status=status.HTTP_200_OK)
 

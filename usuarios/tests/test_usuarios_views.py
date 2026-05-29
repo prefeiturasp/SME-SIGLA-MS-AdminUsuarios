@@ -11,7 +11,9 @@ from usuarios.exceptions import (
     SmeIntegracaoException,
 )
 from usuarios.serializers.password import AlterarSenhaSerializer
+from usuarios.serializers.email import AlterarEmailSerializer
 from usuarios.views.usuarios import (
+    AlterarEmailView,
     AlterarSenhaView,
     CriarNovaSenhaView,
     CriarUsuarioView,
@@ -391,3 +393,85 @@ def test_alterar_senha_serializer_valido():
     }
     serializer = AlterarSenhaSerializer(data=data)
     assert serializer.is_valid(), serializer.errors
+
+
+# ── AlterarEmailSerializer ────────────────────────────────────────────────────
+
+def test_alterar_email_serializer_email_invalido():
+    user = User.objects.create_user(username="u1")
+    s = AlterarEmailSerializer(data={"novo_email": "naoehemail"}, context={"user": user})
+    assert not s.is_valid()
+    assert "novo_email" in s.errors
+
+
+def test_alterar_email_serializer_email_duplicado():
+    User.objects.create_user(username="u1", email="igual@x.com")
+    user2 = User.objects.create_user(username="u2", email="u2@x.com")
+    s = AlterarEmailSerializer(data={"novo_email": "IGUAL@x.com"}, context={"user": user2})
+    assert not s.is_valid()
+    assert "já está cadastrado" in str(s.errors)
+
+
+def test_alterar_email_serializer_permite_mesmo_email_do_proprio_user():
+    user = User.objects.create_user(username="u1", email="mine@x.com")
+    s = AlterarEmailSerializer(data={"novo_email": "mine@x.com"}, context={"user": user})
+    assert s.is_valid(), s.errors
+
+
+def test_alterar_email_serializer_valido():
+    user = User.objects.create_user(username="u1", email="old@x.com")
+    s = AlterarEmailSerializer(data={"novo_email": "new@x.com"}, context={"user": user})
+    assert s.is_valid(), s.errors
+
+
+# ── AlterarEmailView ──────────────────────────────────────────────────────────
+
+def test_alterar_email_unauthenticated(rf):
+    request = rf.post("/usuarios/alterar-email/", {}, format="json")
+    response = AlterarEmailView.as_view()(request)
+    assert response.status_code in (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN)
+
+
+def test_alterar_email_duplicado(rf):
+    User.objects.create_user(username="outro", email="igual@x.com")
+    user = User.objects.create_user(username="eu", email="meu@x.com")
+    request = rf.post("/usuarios/alterar-email/", {"novo_email": "igual@x.com"}, format="json")
+    request.user = user
+    response = AlterarEmailView.as_view()(request)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "novo_email" in response.data
+
+
+def test_alterar_email_sme_exception(rf, monkeypatch):
+    user = User.objects.create_user(username="eu", email="meu@x.com")
+
+    def _raise(*_a, **_k):
+        raise SmeIntegracaoException("email invalido")
+
+    monkeypatch.setattr("usuarios.views.usuarios.SmeIntegracaoService.alterar_email", _raise)
+    request = rf.post("/usuarios/alterar-email/", {"novo_email": "new@x.com"}, format="json")
+    request.user = user
+    response = AlterarEmailView.as_view()(request)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "email invalido" in response.data["detail"]
+    user.refresh_from_db()
+    assert user.email == "meu@x.com"
+
+
+def test_alterar_email_success(rf, monkeypatch):
+    user = User.objects.create_user(username="eu", email="meu@x.com")
+    chamadas = {"n": 0}
+
+    def _ok(*_a, **_k):
+        chamadas["n"] += 1
+        return "OK"
+
+    monkeypatch.setattr("usuarios.views.usuarios.SmeIntegracaoService.alterar_email", _ok)
+    request = rf.post("/usuarios/alterar-email/", {"novo_email": "new@x.com"}, format="json")
+    request.user = user
+    response = AlterarEmailView.as_view()(request)
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["detail"] == "Email alterado com sucesso"
+    user.refresh_from_db()
+    assert user.email == "new@x.com"
+    assert chamadas["n"] == 1

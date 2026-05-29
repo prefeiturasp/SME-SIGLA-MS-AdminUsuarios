@@ -85,7 +85,7 @@ class UpdateUsuarioSerializer(serializers.Serializer):
     """
 
     usuario = serializers.CharField(help_text="Username do usuário a ser atualizado.")
-    nome = serializers.CharField(required=False, allow_blank=True)
+    nome = serializers.CharField(required=False, allow_blank=False)
     email = serializers.EmailField(required=False, allow_blank=True)
     is_active = serializers.BooleanField(required=False)
     # Lista final desejada de grupos (substitui os atuais)

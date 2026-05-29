@@ -1,7 +1,13 @@
 import pytest
 from django.urls import resolve, reverse
 
-from usuarios.views import CriarNovaSenhaView, CriarUsuarioView, EsqueciSenhaView, LoginView
+from usuarios.views import (
+    AlterarEmailView,
+    CriarNovaSenhaView,
+    CriarUsuarioView,
+    EsqueciSenhaView,
+    LoginView,
+)
 from usuarios.views.permissoes import (
     GerenciarPermissoesUsuarioView,
     GerenciarUsuariosGrupoView,
@@ -18,6 +24,7 @@ from usuarios.views.permissoes import (
         ("usuario-esqueci-minha-senha", EsqueciSenhaView),
         ("usuario-criar-nova-senha", CriarNovaSenhaView),
         ("usuario-criar", CriarUsuarioView),
+        ("alterar-email", AlterarEmailView),
         ("permissoes-disponiveis", PermissoesDisponiveisView),
         ("grupos-disponiveis", GruposDisponiveisView),
         ("grupos-gerenciar-usuarios", GerenciarUsuariosGrupoView),
