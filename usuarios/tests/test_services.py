@@ -111,8 +111,17 @@ def test_sme_integracao_alterar_email_success_and_errors(monkeypatch):
     monkeypatch.setattr("usuarios.services.sme_integracao.requests.post", lambda *a, **k: success_response)
     assert SmeIntegracaoService.alterar_email("123", "novo@x.com") == "OK"
 
+    # O serviço não inspeciona o status_code da resposta: qualquer resposta HTTP
+    # (mesmo 400) sem erro de transporte é tratada como sucesso.
     monkeypatch.setattr("usuarios.services.sme_integracao.requests.post", lambda *a, **k: fail_response)
-    with pytest.raises(SmeIntegracaoException, match="email invalido"):
+    assert SmeIntegracaoService.alterar_email("123", "novo@x.com") == "OK"
+
+    # Erro de transporte (requests.post levanta) é convertido em SmeIntegracaoException.
+    def raise_conn_error(*a, **k):
+        raise requests.RequestException("falha de conexão")
+
+    monkeypatch.setattr("usuarios.services.sme_integracao.requests.post", raise_conn_error)
+    with pytest.raises(SmeIntegracaoException, match="falha de conexão"):
         SmeIntegracaoService.alterar_email("123", "novo@x.com")
 
     with pytest.raises(SmeIntegracaoException, match="obrigatórios"):
