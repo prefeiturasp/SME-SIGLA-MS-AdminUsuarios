@@ -15,4 +15,3 @@ class LoginSerializer(serializers.Serializer):
 
 class EsqueciSenhaSerializer(serializers.Serializer):
     rf = serializers.CharField()
-

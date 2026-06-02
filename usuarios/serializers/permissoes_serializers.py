@@ -1,10 +1,12 @@
-from rest_framework import serializers
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
+from rest_framework import serializers
 
 
 class PermissionSerializer(serializers.ModelSerializer):
-    app_label = serializers.CharField(source="content_type.app_label", read_only=True)
+    app_label = serializers.CharField(
+        source="content_type.app_label", read_only=True
+    )
     model = serializers.CharField(source="content_type.model", read_only=True)
 
     class Meta:
@@ -13,7 +15,9 @@ class PermissionSerializer(serializers.ModelSerializer):
 
 
 class GroupSerializer(serializers.ModelSerializer):
-    permissoes = PermissionSerializer(source="permissions", many=True, read_only=True)
+    permissoes = PermissionSerializer(
+        source="permissions", many=True, read_only=True
+    )
 
     class Meta:
         model = Group
@@ -28,21 +32,32 @@ class CreatePermissionSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         app_label, model = attrs["app_label"], attrs["model"]
-        ct = ContentType.objects.filter(app_label=app_label, model__iexact=model).first()
+        ct = ContentType.objects.filter(
+            app_label=app_label, model__iexact=model
+        ).first()
         if not ct:
-            raise serializers.ValidationError("ContentType não encontrado para app_label/model informados.")
-        if Permission.objects.filter(content_type=ct, codename=attrs["codename"]).exists():
-            raise serializers.ValidationError("Permissão já existe para este content type e codename.")
+            raise serializers.ValidationError(
+                "ContentType não encontrado para app_label/model informados."
+            )
+        if Permission.objects.filter(
+            content_type=ct, codename=attrs["codename"]
+        ).exists():
+            raise serializers.ValidationError(
+                "Permissão já existe para este content type e codename."
+            )
         attrs["content_type"] = ct
         return attrs
 
     def create(self, validated_data):
         validated_data.pop("content_type", None)
-        ct = ContentType.objects.get(app_label=self.validated_data["app_label"], model__iexact=self.validated_data["model"])
+        ct = ContentType.objects.get(
+            app_label=self.validated_data["app_label"],
+            model__iexact=self.validated_data["model"],
+        )
         perm = Permission.objects.create(
             name=validated_data["name"],
             codename=validated_data["codename"],
-            content_type=ct
+            content_type=ct,
         )
         return perm
 
@@ -69,14 +84,22 @@ class CreateGroupSerializer(serializers.Serializer):
 
 class UpdateGroupPermissionsSerializer(serializers.Serializer):
     grupo = serializers.CharField()
-    adicionar_codenames = serializers.ListField(child=serializers.CharField(), required=False)
-    remover_codenames = serializers.ListField(child=serializers.CharField(), required=False)
+    adicionar_codenames = serializers.ListField(
+        child=serializers.CharField(), required=False
+    )
+    remover_codenames = serializers.ListField(
+        child=serializers.CharField(), required=False
+    )
 
 
 class UpdateGroupUsersSerializer(serializers.Serializer):
     grupo = serializers.CharField()
-    adicionar_usuarios = serializers.ListField(child=serializers.CharField(), required=False)
-    remover_usuarios = serializers.ListField(child=serializers.CharField(), required=False)
+    adicionar_usuarios = serializers.ListField(
+        child=serializers.CharField(), required=False
+    )
+    remover_usuarios = serializers.ListField(
+        child=serializers.CharField(), required=False
+    )
 
 
 class UpdateUsuarioSerializer(serializers.Serializer):
@@ -84,14 +107,22 @@ class UpdateUsuarioSerializer(serializers.Serializer):
     Atualiza campos básicos do usuário nativo do Django.
     """
 
-    usuario = serializers.CharField(help_text="Username do usuário a ser atualizado.")
+    usuario = serializers.CharField(
+        help_text="Username do usuário a ser atualizado."
+    )
     nome = serializers.CharField(required=False, allow_blank=False)
     email = serializers.EmailField(required=False, allow_blank=True)
     is_active = serializers.BooleanField(required=False)
     # Lista final desejada de grupos (substitui os atuais)
-    grupos = serializers.ListField(child=serializers.CharField(), required=False)
-    adicionar_grupos = serializers.ListField(child=serializers.CharField(), required=False)
-    remover_grupos = serializers.ListField(child=serializers.CharField(), required=False)
+    grupos = serializers.ListField(
+        child=serializers.CharField(), required=False
+    )
+    adicionar_grupos = serializers.ListField(
+        child=serializers.CharField(), required=False
+    )
+    remover_grupos = serializers.ListField(
+        child=serializers.CharField(), required=False
+    )
 
     def validate_email(self, value: str) -> str:
         email = (value or "").strip()
@@ -101,8 +132,15 @@ class UpdateUsuarioSerializer(serializers.Serializer):
         # unicidade case-insensitive, ignorando o próprio usuário
         username = (self.initial_data or {}).get("usuario", "")
         user = User.objects.filter(username=username).only("id").first()
-        if user and User.objects.filter(email__iexact=email).exclude(id=user.id).exists():
-            raise serializers.ValidationError("Email já está em uso por outro usuário.")
+        if (
+            user
+            and User.objects.filter(email__iexact=email)
+            .exclude(id=user.id)
+            .exists()
+        ):
+            raise serializers.ValidationError(
+                "Email já está em uso por outro usuário."
+            )
         return email
 
     def validate(self, attrs):
@@ -117,11 +155,19 @@ class UpdateUsuarioSerializer(serializers.Serializer):
         grupos_informados.extend(adicionar)
         grupos_informados.extend(remover)
 
-        grupos_set = {g.strip() for g in grupos_informados if (g or "").strip()}
+        grupos_set = {
+            g.strip() for g in grupos_informados if (g or "").strip()
+        }
         if grupos_set:
-            existentes = set(Group.objects.filter(name__in=grupos_set).values_list("name", flat=True))
+            existentes = set(
+                Group.objects.filter(name__in=grupos_set).values_list(
+                    "name", flat=True
+                )
+            )
             faltando = sorted(grupos_set - existentes)
             if faltando:
-                raise serializers.ValidationError({"grupos": f"Grupos inexistentes: {', '.join(faltando)}"})
+                raise serializers.ValidationError(
+                    {"grupos": f"Grupos inexistentes: {', '.join(faltando)}"}
+                )
 
         return attrs

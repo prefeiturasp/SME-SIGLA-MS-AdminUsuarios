@@ -1,7 +1,7 @@
 # Makefile para o projeto SME-SIGLA-MS-Usuarios
 # Comandos úteis para desenvolvimento Django
 
-.PHONY: help makemigrations migrate runserver coverage test clean install
+.PHONY: help makemigrations migrate runserver coverage test clean install format lint check
 
 # Comando padrão - mostra ajuda
 help:
@@ -13,6 +13,9 @@ help:
 	@echo "  make test            - Executa todos os testes"
 	@echo "  make clean           - Remove arquivos temporários"
 	@echo "  make install         - Instala dependências"
+	@echo "  make format          - Formata o código com ruff (auto-fix)"
+	@echo "  make lint            - Verifica conformidade com PEP 8 (ruff)"
+	@echo "  make check           - Roda lint + testes"
 
 # Cria migrações do Django
 makemigrations:
@@ -53,3 +56,18 @@ clean:
 install:
 	@echo "Instalando dependências..."
 	pip install -r requirements/local.txt
+
+# Formata o código (ruff auto-fix + format)
+format:
+	@echo "Formatando código com ruff..."
+	ruff check --fix --unsafe-fixes .
+	ruff format .
+
+# Verifica conformidade PEP 8 sem alterar arquivos
+lint:
+	@echo "Verificando conformidade PEP 8..."
+	ruff check .
+	ruff format --check --diff .
+
+# Lint + testes
+check: lint test

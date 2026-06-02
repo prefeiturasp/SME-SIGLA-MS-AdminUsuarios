@@ -3,25 +3,30 @@ DRF views for the usuarios module.
 """
 
 import logging
+
+from django.contrib.auth.models import Group, Permission, User
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    OpenApiResponse,
+    extend_schema,
+)
 from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.contrib.auth.models import User, Permission, Group
 
+from usuarios.exceptions import SmeIntegracaoException
 from usuarios.serializers.permissoes_serializers import (
-    PermissionSerializer,
+    CreateGroupSerializer,
     CreatePermissionSerializer,
     GroupSerializer,
-    CreateGroupSerializer,
+    PermissionSerializer,
     UpdateGroupPermissionsSerializer,
     UpdateGroupUsersSerializer,
     UpdateUsuarioSerializer,
 )
 from usuarios.services.sme_integracao import SmeIntegracaoService
-from usuarios.exceptions import SmeIntegracaoException
 
 logger = logging.getLogger(__name__)
 
@@ -34,50 +39,69 @@ class GerenciarPermissoesUsuarioView(APIView):
         parameters=[
             OpenApiParameter(
                 name="usuario",
-                description="Nome de usuário para buscar as permissões (inclui diretas e herdadas).",
+                description="Nome de usuário para buscar as permissões (inclui diretas e herdadas).",  # noqa: E501
                 required=True,
                 type=str,
                 location=OpenApiParameter.QUERY,
             ),
             OpenApiParameter(
                 name="model",
-                description="(Opcional) Lista de modelos separados por vírgula para filtrar as permissões.",
+                description="(Opcional) Lista de modelos separados por vírgula para filtrar as permissões.",  # noqa: E501
                 required=False,
                 type=OpenApiTypes.STR,
                 location=OpenApiParameter.QUERY,
             ),
         ],
         responses={200: PermissionSerializer(many=True)},
-        description="Retorna as permissões (diretas e herdadas por grupo) do usuário.",
+        description="Retorna as permissões (diretas e herdadas por grupo) do usuário.",  # noqa: E501
     )
     def get(self, request):
         username = request.query_params.get("usuario", "").strip()
         model_param = request.query_params.get("model", "").strip()
 
         if not username:
-            return Response({"detail": "usuario é obrigatório"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "usuario é obrigatório"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         user = User.objects.filter(username=username).first()
         if not user:
-            return Response({"detail": "Usuário não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Usuário não encontrado"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
-            
-        permissoes_diretas = user.user_permissions.select_related("content_type")
+        permissoes_diretas = user.user_permissions.select_related(
+            "content_type"
+        )
 
-        
-        permissoes_grupos = Permission.objects.filter(group__user=user).select_related("content_type")
+        permissoes_grupos = Permission.objects.filter(
+            group__user=user
+        ).select_related("content_type")
 
-        
         permissoes = (permissoes_diretas | permissoes_grupos).distinct()
 
-
         if model_param:
-            models_filter = [m.strip().lower() for m in model_param.split(",") if m.strip()]
-            permissoes = permissoes.filter(content_type__model__in=models_filter)
+            models_filter = [
+                m.strip().lower() for m in model_param.split(",") if m.strip()
+            ]
+            permissoes = permissoes.filter(
+                content_type__model__in=models_filter
+            )
 
-        serializer = PermissionSerializer(permissoes.order_by("content_type__app_label", "codename"), many=True)
-        grupos = list(user.groups.order_by("name").values_list("name", flat=True))
-        nome = (f"{user.first_name} {user.last_name}".strip() if (user.first_name or user.last_name) else "") or None
+        serializer = PermissionSerializer(
+            permissoes.order_by("content_type__app_label", "codename"),
+            many=True,
+        )
+        grupos = list(
+            user.groups.order_by("name").values_list("name", flat=True)
+        )
+        nome = (
+            f"{user.first_name} {user.last_name}".strip()
+            if (user.first_name or user.last_name)
+            else ""
+        ) or None
         return Response(
             {
                 "usuario": user.username,
@@ -100,8 +124,10 @@ class PermissoesDisponiveisView(APIView):
         description="Retorna todas as permissões disponíveis no sistema.",
     )
     def get(self, request):
-        permissoes = Permission.objects.select_related("content_type").all().order_by(
-            "content_type__app_label", "id"
+        permissoes = (
+            Permission.objects.select_related("content_type")
+            .all()
+            .order_by("content_type__app_label", "id")
         )
         serializer = PermissionSerializer(permissoes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -115,7 +141,9 @@ class PermissoesDisponiveisView(APIView):
         serializer = CreatePermissionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         perm = serializer.save()
-        return Response(PermissionSerializer(perm).data, status=status.HTTP_201_CREATED)
+        return Response(
+            PermissionSerializer(perm).data, status=status.HTTP_201_CREATED
+        )
 
 
 class GruposDisponiveisView(APIView):
@@ -132,31 +160,31 @@ class GruposDisponiveisView(APIView):
                 required=False,
                 type=str,
             ),
- 
         ],
         responses={200: GroupSerializer(many=True)},
-        description="Retorna permissões de grupos (ou de um grupo específico).",
+        description="Retorna permissões de grupos (ou de um grupo específico).",  # noqa: E501
     )
     def get(self, request):
         grupo_name = request.query_params.get("grupo", "").strip()
- 
-        grupos_qs = Group.objects.prefetch_related("permissions__content_type").order_by("name")
+
+        grupos_qs = Group.objects.prefetch_related(
+            "permissions__content_type"
+        ).order_by("name")
         if grupo_name:
             grupos_qs = grupos_qs.filter(name=grupo_name)
             if not grupos_qs.exists():
-                return Response({"detail": "Grupo não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+                return Response(
+                    {"detail": "Grupo não encontrado"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
 
- 
         serializer = GroupSerializer(grupos_qs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-
 
     @extend_schema(
         request=UpdateGroupPermissionsSerializer,
         responses={200: GroupSerializer},
-        description="Adiciona e/ou remove permissões (por codename) de um grupo.",
+        description="Adiciona e/ou remove permissões (por codename) de um grupo.",  # noqa: E501
     )
     def put(self, request):
         serializer = UpdateGroupPermissionsSerializer(data=request.data)
@@ -165,7 +193,10 @@ class GruposDisponiveisView(APIView):
         grupo = Group.objects.filter(name=data["grupo"]).first()
 
         if not grupo:
-            return Response({"detail": "Grupo não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Grupo não encontrado"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         add_codenames = data.get("adicionar_codenames", [])
         remove_codenames = data.get("remover_codenames", [])
@@ -175,7 +206,9 @@ class GruposDisponiveisView(APIView):
             grupo.permissions.add(*perms_add)
 
         if remove_codenames:
-            perms_rem = Permission.objects.filter(codename__in=remove_codenames)
+            perms_rem = Permission.objects.filter(
+                codename__in=remove_codenames
+            )
             grupo.permissions.remove(*perms_rem)
 
         grupo.save()
@@ -190,10 +223,11 @@ class GruposDisponiveisView(APIView):
         serializer = CreateGroupSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         grupo = serializer.save()
-        return Response(GroupSerializer(grupo).data, status=status.HTTP_201_CREATED)
+        return Response(
+            GroupSerializer(grupo).data, status=status.HTTP_201_CREATED
+        )
 
 
- 
 class GerenciarUsuariosGrupoView(APIView):
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
@@ -201,7 +235,7 @@ class GerenciarUsuariosGrupoView(APIView):
     @extend_schema(
         request=UpdateGroupUsersSerializer,
         responses={200: GroupSerializer},
-        description="Adiciona e/ou remove usuários (por username) de um grupo.",
+        description="Adiciona e/ou remove usuários (por username) de um grupo.",  # noqa: E501
     )
     @action(detail=False, methods=["put"], url_path="usuarios")
     def put(self, request):
@@ -211,7 +245,10 @@ class GerenciarUsuariosGrupoView(APIView):
 
         grupo = Group.objects.filter(name=data["grupo"]).first()
         if not grupo:
-            return Response({"detail": "Grupo não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Grupo não encontrado"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         add_users = data.get("adicionar_usuarios", [])
         rem_users = data.get("remover_usuarios", [])
@@ -236,7 +273,7 @@ class UsuariosComGruposView(APIView):
         parameters=[
             OpenApiParameter(
                 name="usuario",
-                description="(Opcional) Filtra por username (case-insensitive).",
+                description="(Opcional) Filtra por username (case-insensitive).",  # noqa: E501
                 required=False,
                 type=str,
             ),
@@ -253,7 +290,11 @@ class UsuariosComGruposView(APIView):
 
         data = []
         for u in qs:
-            nome = (f"{u.first_name} {u.last_name}".strip() if (u.first_name or u.last_name) else "") or None
+            nome = (
+                f"{u.first_name} {u.last_name}".strip()
+                if (u.first_name or u.last_name)
+                else ""
+            ) or None
             data.append(
                 {
                     "usuario": u.username,
@@ -263,18 +304,22 @@ class UsuariosComGruposView(APIView):
                     "grupos": list(u.groups.values_list("name", flat=True)),
                 }
             )
-        return Response({"count": len(data), "results": data}, status=status.HTTP_200_OK)
+        return Response(
+            {"count": len(data), "results": data}, status=status.HTTP_200_OK
+        )
 
     @extend_schema(
         request=UpdateUsuarioSerializer,
         responses={
-            200: OpenApiResponse(description="Usuário atualizado com sucesso."),
+            200: OpenApiResponse(
+                description="Usuário atualizado com sucesso."
+            ),
             400: OpenApiResponse(description="Dados inválidos."),
             404: OpenApiResponse(description="Usuário não encontrado."),
         },
         description=(
-            "Atualiza campos do usuário (nome, email, is_active) e gerencia grupos. "
-            'Se "grupos" for enviado, ele representa a lista FINAL (inclusive pode ser [] para remover todos). '
+            "Atualiza campos do usuário (nome, email, is_active) e gerencia grupos. "  # noqa: E501
+            'Se "grupos" for enviado, ele representa a lista FINAL (inclusive pode ser [] para remover todos). '  # noqa: E501
             "Email deve ser único."
         ),
     )
@@ -283,9 +328,16 @@ class UsuariosComGruposView(APIView):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        user = User.objects.filter(username=data["usuario"]).prefetch_related("groups").first()
+        user = (
+            User.objects.filter(username=data["usuario"])
+            .prefetch_related("groups")
+            .first()
+        )
         if not user:
-            return Response({"detail": "Usuário não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Usuário não encontrado"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         # Atualiza nome (mapeia para first_name/last_name)
         if "nome" in data:
@@ -299,16 +351,22 @@ class UsuariosComGruposView(APIView):
                 user.last_name = ""
 
         # Atualiza email (validação de unicidade já feita no serializer)
-        # Quando o email muda (case-insensitive), sincroniza com o SME Integração
+        # Quando o email muda (case-insensitive), sincroniza com o SME Integração  # noqa: E501
         # antes de salvar localmente. Email vazio limpa local sem chamar SME.
         if "email" in data:
             novo_email = (data.get("email") or "").strip()
             if novo_email and novo_email.lower() != (user.email or "").lower():
                 try:
-                    SmeIntegracaoService.alterar_email(user.username, novo_email)
+                    SmeIntegracaoService.alterar_email(
+                        user.username, novo_email
+                    )
                 except SmeIntegracaoException as e:
-                    logger.error(f"Falha ao alterar email no SME Integração: {e}")
-                    return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                    logger.error(
+                        f"Falha ao alterar email no SME Integração: {e}"
+                    )
+                    return Response(
+                        {"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST
+                    )
             user.email = novo_email
 
         # Ativa/desativa
@@ -319,9 +377,13 @@ class UsuariosComGruposView(APIView):
 
         # Grupos:
         # - Se vier "grupos", ele representa a lista FINAL (mantém só esses).
-        # - Caso contrário, usa adicionar_grupos/remover_grupos como patch incremental.
+        # - Caso contrário, usa adicionar_grupos/remover_grupos como patch incremental.  # noqa: E501
         if "grupos" in data:
-            grupos_desejados = [g.strip() for g in (data.get("grupos") or []) if (g or "").strip()]
+            grupos_desejados = [
+                g.strip()
+                for g in (data.get("grupos") or [])
+                if (g or "").strip()
+            ]
             desired_set = set(grupos_desejados)
             current_set = set(user.groups.values_list("name", flat=True))
 
@@ -337,8 +399,10 @@ class UsuariosComGruposView(APIView):
                 user.groups.remove(*grupos_rem)
 
         nome_resp = (
-            (f"{user.first_name} {user.last_name}".strip() if (user.first_name or user.last_name) else "") or None
-        )
+            f"{user.first_name} {user.last_name}".strip()
+            if (user.first_name or user.last_name)
+            else ""
+        ) or None
         payload = {
             "usuario": user.username,
             "nome": nome_resp,

@@ -1,4 +1,5 @@
 import re
+
 from rest_framework import serializers
 
 
@@ -21,23 +22,38 @@ class AlterarSenhaSerializer(serializers.Serializer):
 
     def validate_nova_senha(self, value):
         if len(value) < 8 or len(value) > 12:
-            raise serializers.ValidationError("A senha deve ter entre 8 e 12 caracteres.")
-        if not re.search(r'[A-Z]', value):
-            raise serializers.ValidationError("A senha deve conter ao menos uma letra maiúscula.")
-        if not re.search(r'[a-z]', value):
-            raise serializers.ValidationError("A senha deve conter ao menos uma letra minúscula.")
-        if not re.search(r'[0-9]', value):
-            raise serializers.ValidationError("A senha deve conter ao menos um número.")
-        if not re.search(r'[^A-Za-z0-9]', value):
-            raise serializers.ValidationError("A senha deve conter ao menos um símbolo.")
-        if re.search(r'\s', value):
-            raise serializers.ValidationError("A senha não deve conter espaços em branco.")
-        if re.search(r'[À-ÿ]', value):
-            raise serializers.ValidationError("A senha não deve conter caracteres acentuados.")
+            raise serializers.ValidationError(
+                "A senha deve ter entre 8 e 12 caracteres."
+            )
+        if not re.search(r"[A-Z]", value):
+            raise serializers.ValidationError(
+                "A senha deve conter ao menos uma letra maiúscula."
+            )
+        if not re.search(r"[a-z]", value):
+            raise serializers.ValidationError(
+                "A senha deve conter ao menos uma letra minúscula."
+            )
+        if not re.search(r"[0-9]", value):
+            raise serializers.ValidationError(
+                "A senha deve conter ao menos um número."
+            )
+        if not re.search(r"[^A-Za-z0-9]", value):
+            raise serializers.ValidationError(
+                "A senha deve conter ao menos um símbolo."
+            )
+        if re.search(r"\s", value):
+            raise serializers.ValidationError(
+                "A senha não deve conter espaços em branco."
+            )
+        if re.search(r"[À-ÿ]", value):
+            raise serializers.ValidationError(
+                "A senha não deve conter caracteres acentuados."
+            )
         return value
 
     def validate(self, attrs):
-        if attrs['nova_senha'] != attrs['confirmacao_nova_senha']:
-            raise serializers.ValidationError({"confirmacao_nova_senha": "As senhas não conferem."})
+        if attrs["nova_senha"] != attrs["confirmacao_nova_senha"]:
+            raise serializers.ValidationError(
+                {"confirmacao_nova_senha": "As senhas não conferem."}
+            )
         return attrs
-
