@@ -1,3 +1,4 @@
+"""Módulo views/__init__."""
 from .permissoes import (
     GerenciarPermissoesUsuarioView,
     GruposDisponiveisView,

@@ -1,4 +1,5 @@
 # URL configuration for the usuarios module.
+"""Módulo urls."""
 from django.urls import path
 
 from usuarios.views import (
