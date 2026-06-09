@@ -1,4 +1,5 @@
 """Módulo services/email."""
+
 import logging
 from collections.abc import Mapping, Sequence
 
@@ -15,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 class EmailService:
     """Define EmailService."""
+
     @classmethod
     def enviar_email(
         cls,
@@ -27,19 +29,19 @@ class EmailService:
         headers: Mapping[str, str] | None = None,
     ) -> None:
         """Executa enviar email.
-        
+
         Args:
             cls: Classe referenciada.
-            subject: Parâmetro subject da operação.
-            template_name: Parâmetro template name da operação.
+            subject: Parâmetro subject.
+            template_name: Parâmetro template name.
             context: Contexto de renderização ou serialização.
-            recipients: Parâmetro recipients da operação.
-            from_email: Parâmetro from email da operação.
-            headers: Parâmetro headers da operação.
-        
+            recipients: Parâmetro recipients.
+            from_email: Parâmetro from email.
+            headers: Parâmetro headers.
+
         Returns:
             Não retorna valor.
-        
+
         Raises:
             Nenhuma exceção específica documentada.
         """
@@ -62,16 +64,16 @@ class EmailService:
         cls, user: User, email: str, nome: str
     ) -> None:
         """Executa enviar email esqueci senha.
-        
+
         Args:
             cls: Classe referenciada.
-            user: Parâmetro user da operação.
-            email: Parâmetro email da operação.
-            nome: Parâmetro nome da operação.
-        
+            user: Parâmetro user.
+            email: Parâmetro email.
+            nome: Parâmetro nome.
+
         Returns:
             Não retorna valor.
-        
+
         Raises:
             Nenhuma exceção específica documentada.
         """

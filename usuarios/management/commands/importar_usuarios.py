@@ -6,82 +6,94 @@ Uso:
 O payload deve ser um JSON com lista de objetos contendo
 ``nome``, ``username`` e ``email``.
 """
+
 from __future__ import annotations
-from typing import Any
+
 import json
+from typing import Any
+
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 
+
 def split_nome(full_name: str) -> tuple[str, str]:
     """Executa split nome.
-    
+
     Args:
-        full_name: Parâmetro full name da operação.
-    
+        full_name: Parâmetro full name.
+
     Returns:
         Resultado da operação.
-    
+
     Raises:
         Nenhuma exceção específica documentada.
     """
     if not full_name:
-        return ('', '')
+        return ("", "")
     parts = str(full_name).strip().split()
     if len(parts) == 1:
-        return (parts[0], '')
-    return (parts[0], ' '.join(parts[1:]))
+        return (parts[0], "")
+    return (parts[0], " ".join(parts[1:]))
+
 
 class Command(BaseCommand):
     """Define Command."""
-    help = 'Importa usuários a partir de uma string JSON.'
+
+    help = "Importa usuários a partir de uma string JSON."
 
     def add_arguments(self, parser: Any) -> None:
         """Registra argumentos da linha de comando.
-        
+
         Args:
             self: Instância do objeto.
-            parser: Parâmetro parser da operação.
-        
+            parser: Parâmetro parser.
+
         Returns:
             Não retorna valor.
-        
+
         Raises:
             Nenhuma exceção específica documentada.
         """
-        parser.add_argument('data', type=str, help='String JSON com lista de usuários')
+        parser.add_argument(
+            "data", type=str, help="String JSON com lista de usuários"
+        )
 
     def handle(self, *args: Any, **options: Any) -> None:
         """Executa a lógica principal do comando.
-        
+
         Args:
             self: Instância do objeto.
             *args: Argumentos posicionais variáveis.
             **options: Parâmetro options da operação.
-        
+
         Returns:
             Não retorna valor.
-        
+
         Raises:
             CommandError: Se ocorrer erro nesta operação.
         """
-        data_str = options.get('data')
+        data_str = options.get("data")
         try:
             payload = json.loads(data_str)  # type: ignore[arg-type]
         except Exception as exc:
-            raise CommandError(f'Não foi possível ler o JSON: {exc}') from exc
+            raise CommandError(f"Não foi possível ler o JSON: {exc}") from exc
         if not isinstance(payload, list):
-            raise CommandError('O JSON deve ser uma lista de objetos de usuários.')
+            raise CommandError(
+                "O JSON deve ser uma lista de objetos de usuários."
+            )
         User = get_user_model()
         criados: list[str] = []
         pulados: list[str] = []
         erros: list[str] = []
-        self.stdout.write(self.style.SUCCESS(f'Processando {len(payload)} registros...'))
+        self.stdout.write(
+            self.style.SUCCESS(f"Processando {len(payload)} registros...")
+        )
         for idx, item in enumerate(payload, start=1):
-            username = (item or {}).get('username')
-            email = (item or {}).get('email')
-            nome = (item or {}).get('nome')
+            username = (item or {}).get("username")
+            email = (item or {}).get("email")
+            nome = (item or {}).get("nome")
             if not username or not email:
-                erros.append(f'#{idx} - Faltando username/email')
+                erros.append(f"#{idx} - Faltando username/email")
                 continue
             first_name, last_name = split_nome(nome)  # type: ignore[arg-type]
             try:
@@ -89,19 +101,27 @@ class Command(BaseCommand):
                 if user:
                     pulados.append(username)
                 else:
-                    user = User.objects.create_user(username=username, email=email, password=None, first_name=first_name, last_name=last_name)
+                    user = User.objects.create_user(
+                        username=username,
+                        email=email,
+                        password=None,
+                        first_name=first_name,
+                        last_name=last_name,
+                    )
                     criados.append(user.username)
             except Exception as exc:
                 erros.append(f'#{idx} - {username or '<sem-username>'}: {exc}')
-        self.stdout.write('')
-        self.stdout.write(self.style.SUCCESS('Resumo de Importação'))
-        self.stdout.write(self.style.SUCCESS(f'  ✅ Criados: {len(criados)}'))
-        self.stdout.write(self.style.WARNING(f'  ↩️  Pulados (já existiam): {len(pulados)}'))
-        self.stdout.write(self.style.ERROR(f'  ❌ Erros: {len(erros)}'))
+        self.stdout.write("")
+        self.stdout.write(self.style.SUCCESS("Resumo de Importação"))
+        self.stdout.write(self.style.SUCCESS(f"  ✅ Criados: {len(criados)}"))
+        self.stdout.write(
+            self.style.WARNING(f"  ↩️  Pulados (já existiam): {len(pulados)}")
+        )
+        self.stdout.write(self.style.ERROR(f"  ❌ Erros: {len(erros)}"))
         if criados:
             self.stdout.write(self.style.SUCCESS(f'  + {', '.join(criados)}'))
         if pulados:
             self.stdout.write(self.style.WARNING(f'  = {', '.join(pulados)}'))
         if erros:
             for e in erros:
-                self.stdout.write(self.style.ERROR(f'    - {e}'))
+                self.stdout.write(self.style.ERROR(f"    - {e}"))

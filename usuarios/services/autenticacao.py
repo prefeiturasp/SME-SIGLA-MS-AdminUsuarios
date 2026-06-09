@@ -1,86 +1,114 @@
 """Módulo services/autenticacao."""
+
 from __future__ import annotations
+
 import logging
 from typing import Any
+
 import requests
 from django.conf import settings
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
-from usuarios.exceptions import AutenticacaoCredenciaisInvalidasError, AutenticacaoRequisicaoError, AutenticacaoRespostaInvalidaError, AutenticacaoUpstreamError
+
+from usuarios.exceptions import (
+    AutenticacaoCredenciaisInvalidasError,
+    AutenticacaoRequisicaoError,
+    AutenticacaoRespostaInvalidaError,
+    AutenticacaoUpstreamError,
+)
+
 logger = logging.getLogger(__name__)
+
 
 class AutenticacaoService:
     """Define AutenticacaoService."""
-    DEFAULT_HEADERS = {'Content-Type': 'application/json', 'x-api-eol-key': settings.SME_INTEGRACAO_TOKEN}
+
+    DEFAULT_HEADERS = {
+        "Content-Type": "application/json",
+        "x-api-eol-key": settings.SME_INTEGRACAO_TOKEN,
+    }
     DEFAULT_TIMEOUT = 100
 
     @classmethod
     def autentica(cls, login: Any, senha: Any) -> dict[str, Any]:
         """Executa autentica.
-        
+
         Args:
             cls: Classe referenciada.
-            login: Parâmetro login da operação.
-            senha: Parâmetro senha da operação.
-        
+            login: Parâmetro login.
+            senha: Parâmetro senha.
+
         Returns:
             Dicionário com os dados processados.
-        
+
         Raises:
-            AutenticacaoCredenciaisInvalidasError: Se ocorrer erro nesta operação.
+            AutenticacaoCredenciaisInvalidasError: Fixture do teste.
             AutenticacaoUpstreamError: Se ocorrer erro nesta operação.
             AutenticacaoRequisicaoError: Se ocorrer erro nesta operação.
             AutenticacaoRespostaInvalidaError: Se ocorrer erro nesta operação.
         """
-        payload = {'usuario': login, 'senha': senha, 'codigoSistema': 1}
+        payload = {"usuario": login, "senha": senha, "codigoSistema": 1}
         try:
-            logger.info('Autenticando no coresso. Login: %s', login)
-            response = requests.post(f'{settings.SME_INTEGRACAO_URL}/api/v1/autenticacao/externa', headers=cls.DEFAULT_HEADERS, timeout=cls.DEFAULT_TIMEOUT, json=payload)
+            logger.info("Autenticando no coresso. Login: %s", login)
+            response = requests.post(
+                f"{settings.SME_INTEGRACAO_URL}/api/v1/autenticacao/externa",
+                headers=cls.DEFAULT_HEADERS,
+                timeout=cls.DEFAULT_TIMEOUT,
+                json=payload,
+            )
             try:
                 data = response.json()
             except Exception as exc:
-                raise AutenticacaoRespostaInvalidaError('Resposta inválida do serviço de autenticação') from exc
+                raise AutenticacaoRespostaInvalidaError(
+                    "Resposta inválida do serviço de autenticação"
+                ) from exc
             if response.status_code == 401:
-                raise AutenticacaoCredenciaisInvalidasError('Credenciais inválidas')
+                raise AutenticacaoCredenciaisInvalidasError(
+                    "Credenciais inválidas"
+                )
             if response.status_code < 200 or response.status_code >= 300:
-                raise AutenticacaoUpstreamError('Erro no serviço de autenticação')
+                raise AutenticacaoUpstreamError(
+                    "Erro no serviço de autenticação"
+                )
             return data  # type: ignore[no-any-return]
         except requests.RequestException as exc:
-            logger.info('ERROR request - %s', str(exc))
-            raise AutenticacaoRequisicaoError('Falha ao conectar com serviço de autenticação') from exc
+            logger.info("ERROR request - %s", str(exc))
+            raise AutenticacaoRequisicaoError(
+                "Falha ao conectar com serviço de autenticação"
+            ) from exc
         except Exception as exc:
-            logger.info('ERROR - %s', str(exc))
+            logger.info("ERROR - %s", str(exc))
             raise
 
     @classmethod
     def gerar_tokens_para_usuario(cls, user: User) -> dict[str, str]:
         """Gera par de tokens JWT (access/refresh) para o usuário informado.
-        
+
         Args:
             cls: Classe referenciada.
-            user: Parâmetro user da operação.
-        
+            user: Parâmetro user.
+
         Returns:
             Dicionário com os dados processados.
-        
+
         Raises:
             Nenhuma exceção específica documentada.
         """
         refresh = RefreshToken.for_user(user)
-        return {'access': str(refresh.access_token), 'refresh': str(refresh)}
+        return {"access": str(refresh.access_token), "refresh": str(refresh)}
 
     @classmethod
     def montar_resposta_login(cls, dados: Any, user: User) -> dict[str, Any]:
         """Monta resposta do login com dados externos e tokens locais.
-        
+
         Args:
             cls: Classe referenciada.
-            dados: Parâmetro dados da operação.
-            user: Parâmetro user da operação.
-        
+            dados: Parâmetro dados.
+            user: Parâmetro user.
+
         Returns:
             Dicionário com os dados processados.
-        
+
         Raises:
             Nenhuma exceção específica documentada.
         """
@@ -88,49 +116,51 @@ class AutenticacaoService:
         if isinstance(dados, dict):
             resposta.update(dados)
         tokens = cls.gerar_tokens_para_usuario(user)
-        resposta['token'] = tokens['access']
+        resposta["token"] = tokens["access"]
         return resposta
 
     @classmethod
-    def atualizar_usuario_com_dados_autenticacao(cls, *, user: User, dados: Any, senha: str) -> User:
+    def atualizar_usuario_com_dados_autenticacao(
+        cls, *, user: User, dados: Any, senha: str
+    ) -> User:
         """Atualiza campos do User (nome/email) com base nos dados.
-        
+
         Args:
             cls: Classe referenciada.
-            user: Parâmetro user da operação.
-            dados: Parâmetro dados da operação.
-            senha: Parâmetro senha da operação.
-        
+            user: Parâmetro user.
+            dados: Parâmetro dados.
+            senha: Parâmetro senha.
+
         Returns:
             Resultado da operação.
-        
+
         Raises:
             Nenhuma exceção específica documentada.
         """
         if not isinstance(dados, dict):
             return user
-        nome = dados.get('nome')
-        email = dados.get('email')
+        nome = dados.get("nome")
+        email = dados.get("email")
         update_fields = []
         if isinstance(nome, str):
             nome = nome.strip()
             if nome:
-                parts = [p for p in nome.split(' ') if p]
-                first_name = parts[0] if parts else ''
-                last_name = ' '.join(parts[1:]) if len(parts) > 1 else ''
+                parts = [p for p in nome.split(" ") if p]
+                first_name = parts[0] if parts else ""
+                last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
                 if first_name and user.first_name != first_name:
                     user.first_name = first_name
-                    update_fields.append('first_name')
+                    update_fields.append("first_name")
                 if user.last_name != last_name:
                     user.last_name = last_name
-                    update_fields.append('last_name')
+                    update_fields.append("last_name")
         if isinstance(email, str):
             email = email.strip()
             if email and user.email != email:
                 user.email = email
-                update_fields.append('email')
+                update_fields.append("email")
         user.set_password(senha)
-        update_fields.append('password')
+        update_fields.append("password")
         if update_fields:
             user.save(update_fields=update_fields)
         return user

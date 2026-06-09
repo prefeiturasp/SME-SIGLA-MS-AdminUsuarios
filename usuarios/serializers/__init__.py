@@ -1,4 +1,5 @@
 """Módulo serializers/__init__."""
+
 from .email import AlterarEmailSerializer
 from .login import (
     EsqueciSenhaSerializer,
