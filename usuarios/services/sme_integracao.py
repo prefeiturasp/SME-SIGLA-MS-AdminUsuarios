@@ -15,7 +15,19 @@ class SmeIntegracaoService:
 
     @classmethod
     def informacao_usuario(cls, username: Any) -> Any:
-        """Executa informacao usuario."""
+        """Executa informacao usuario.
+        
+        Args:
+            cls: Classe referenciada.
+            username: Parâmetro username da operação.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            SmeIntegracaoException: Se ocorrer erro nesta operação.
+            RequestException: Se ocorrer erro nesta operação.
+        """
         logger.info(f'Consultando dados na API externa para: {username}')
         try:
             url = f'{settings.SME_INTEGRACAO_URL}/api/AutenticacaoSgp/{username}/dados'
@@ -31,7 +43,19 @@ class SmeIntegracaoService:
 
     @classmethod
     def redefine_senha(cls, registro_funcional: Any, senha: Any) -> Any:
-        """Executa redefine senha."""
+        """Executa redefine senha.
+        
+        Args:
+            cls: Classe referenciada.
+            registro_funcional: Parâmetro registro funcional da operação.
+            senha: Parâmetro senha da operação.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            SmeIntegracaoException: Se ocorrer erro nesta operação.
+        """
         if not registro_funcional or not senha:
             raise SmeIntegracaoException('Registro funcional e senha são obrigatórios')
         logger.info('Iniciando redefinição de senha no CoreSSO para usuário: %s', registro_funcional)
@@ -52,7 +76,19 @@ class SmeIntegracaoService:
 
     @classmethod
     def alterar_email(cls, registro_funcional: Any, email: Any) -> Any:
-        """Executa alterar email."""
+        """Executa alterar email.
+        
+        Args:
+            cls: Classe referenciada.
+            registro_funcional: Parâmetro registro funcional da operação.
+            email: Parâmetro email da operação.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            SmeIntegracaoException: Se ocorrer erro nesta operação.
+        """
         if not registro_funcional or not email:
             raise SmeIntegracaoException('Registro funcional e email são obrigatórios')
         logger.info('Iniciando alteração de email no CoreSSO para usuário: %s', registro_funcional)

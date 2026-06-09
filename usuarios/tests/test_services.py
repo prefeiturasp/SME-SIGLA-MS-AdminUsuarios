@@ -13,14 +13,34 @@ from usuarios.services.token_service import TokenService
 pytestmark = pytest.mark.django_db
 
 def test_autenticacao_service_autentica_success(monkeypatch: Any) -> None:
-    """Verifica autenticacao service autentica success."""
+    """Verifica autenticacao service autentica success.
+    
+    Args:
+        monkeypatch: Fixture do pytest para substituir objetos.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     response = SimpleNamespace(status_code=200, json=lambda: {'ok': True})
     monkeypatch.setattr('usuarios.services.autenticacao.requests.post', lambda *args, **kwargs: response)
     result = AutenticacaoService.autentica('user', 'pwd')
     assert result == {'ok': True}
 
 def test_autenticacao_service_autentica_error_paths(monkeypatch: Any) -> None:
-    """Verifica autenticacao service autentica error paths."""
+    """Verifica autenticacao service autentica error paths.
+    
+    Args:
+        monkeypatch: Fixture do pytest para substituir objetos.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        RequestException: Se ocorrer erro nesta operação.
+    """
     unauthorized = SimpleNamespace(status_code=401, json=lambda: {'detail': 'unauthorized'})
     invalid_json = SimpleNamespace(status_code=200, json=lambda: 1 / 0)
     upstream_error = SimpleNamespace(status_code=500, json=lambda: {'detail': 'error'})
@@ -35,14 +55,35 @@ def test_autenticacao_service_autentica_error_paths(monkeypatch: Any) -> None:
         AutenticacaoService.autentica('user', 'pwd')
 
     def _raise_req(*_args: Any, **_kwargs: Any) -> None:
-        """Executa  raise req."""
+        """Executa  raise req.
+        
+        Args:
+            *_args: Parâmetro  args da operação.
+            **_kwargs: Parâmetro  kwargs da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            RequestException: Se ocorrer erro nesta operação.
+        """
         raise requests.RequestException('network')
     monkeypatch.setattr('usuarios.services.autenticacao.requests.post', _raise_req)
     with pytest.raises(AutenticacaoRequisicaoError):
         AutenticacaoService.autentica('user', 'pwd')
 
 def test_autenticacao_service_login_payload_helpers(monkeypatch: Any) -> None:
-    """Verifica autenticacao service login payload helpers."""
+    """Verifica autenticacao service login payload helpers.
+    
+    Args:
+        monkeypatch: Fixture do pytest para substituir objetos.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     user = User.objects.create_user(username='alice')
     monkeypatch.setattr('usuarios.services.autenticacao.RefreshToken.for_user', lambda _user: SimpleNamespace(access_token='access-token', __str__=lambda self: 'refresh-token'))
     tokens = AutenticacaoService.gerar_tokens_para_usuario(user)
@@ -53,7 +94,17 @@ def test_autenticacao_service_login_payload_helpers(monkeypatch: Any) -> None:
     assert resposta['token'] == 'access-token'
 
 def test_sme_integracao_informacao_usuario_success_and_errors(monkeypatch: Any) -> None:
-    """Verifica sme integracao informacao usuario success and errors."""
+    """Verifica sme integracao informacao usuario success and errors.
+    
+    Args:
+        monkeypatch: Fixture do pytest para substituir objetos.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        RequestException: Se ocorrer erro nesta operação.
+    """
     ok_response = SimpleNamespace(status_code=200, json=lambda: {'Nome': 'Maria'})
     not_found_response = SimpleNamespace(status_code=404, json=lambda: {})
     monkeypatch.setattr('usuarios.services.sme_integracao.requests.get', lambda *args, **kwargs: ok_response)
@@ -63,14 +114,35 @@ def test_sme_integracao_informacao_usuario_success_and_errors(monkeypatch: Any) 
         SmeIntegracaoService.informacao_usuario('123')
 
     def _raise_request(*_args: Any, **_kwargs: Any) -> None:
-        """Executa  raise request."""
+        """Executa  raise request.
+        
+        Args:
+            *_args: Parâmetro  args da operação.
+            **_kwargs: Parâmetro  kwargs da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            RequestException: Se ocorrer erro nesta operação.
+        """
         raise requests.RequestException('timeout')
     monkeypatch.setattr('usuarios.services.sme_integracao.requests.get', _raise_request)
     with pytest.raises(requests.RequestException):
         SmeIntegracaoService.informacao_usuario('123')
 
 def test_sme_integracao_redefine_senha_success_and_errors(monkeypatch: Any) -> None:
-    """Verifica sme integracao redefine senha success and errors."""
+    """Verifica sme integracao redefine senha success and errors.
+    
+    Args:
+        monkeypatch: Fixture do pytest para substituir objetos.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     success_response = SimpleNamespace(status_code=200, content=b'')
     fail_response = SimpleNamespace(status_code=400, content=b'{senha invalida}')
     monkeypatch.setattr('usuarios.services.sme_integracao.requests.post', lambda *args, **kwargs: success_response)
@@ -82,7 +154,17 @@ def test_sme_integracao_redefine_senha_success_and_errors(monkeypatch: Any) -> N
         SmeIntegracaoService.redefine_senha('', '')
 
 def test_sme_integracao_alterar_email_success_and_errors(monkeypatch: Any) -> None:
-    """Verifica sme integracao alterar email success and errors."""
+    """Verifica sme integracao alterar email success and errors.
+    
+    Args:
+        monkeypatch: Fixture do pytest para substituir objetos.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     success_response = SimpleNamespace(status_code=200, content=b'')
     fail_response = SimpleNamespace(status_code=400, content=b'{email invalido}')
     monkeypatch.setattr('usuarios.services.sme_integracao.requests.post', lambda *a, **k: success_response)
@@ -96,7 +178,14 @@ def test_sme_integracao_alterar_email_success_and_errors(monkeypatch: Any) -> No
         SmeIntegracaoService.alterar_email('123', '')
 
 def test_token_service_gerar_token_para_reset() -> None:
-    """Verifica token service gerar token para reset."""
+    """Verifica token service gerar token para reset.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     user = User.objects.create_user(username='alice', first_name='Alice')
     data = TokenService.gerar_token_para_reset(user, 'alice@example.com')
     assert data['name'] == 'Alice'
@@ -104,7 +193,18 @@ def test_token_service_gerar_token_para_reset() -> None:
     assert data['token']
 
 def test_email_service_enviar_email_and_reset(monkeypatch: Any, settings: Any) -> None:
-    """Verifica email service enviar email and reset."""
+    """Verifica email service enviar email and reset.
+    
+    Args:
+        monkeypatch: Fixture do pytest para substituir objetos.
+        settings: Parâmetro settings da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     settings.DEFAULT_FROM_EMAIL = 'default@example.com'
     settings.APLICACAO_URL = 'http://frontend.local'
     settings.MS_URL = 'http://ms.local'
@@ -114,7 +214,19 @@ def test_email_service_enviar_email_and_reset(monkeypatch: Any, settings: Any) -
         """Define DummyEmail."""
 
         def __init__(self, subject: Any, body: Any, from_email: Any, to: Any, headers: Any) -> None:
-            """Executa   init  ."""
+            """Executa   init  .
+            
+            Args:
+                self: Instância do objeto.
+                subject: Parâmetro subject da operação.
+                body: Parâmetro body da operação.
+                from_email: Parâmetro from email da operação.
+                to: Parâmetro to da operação.
+                headers: Parâmetro headers da operação.
+            
+            Raises:
+                Nenhuma exceção específica documentada.
+            """
             captured['subject'] = subject
             captured['body'] = body
             captured['from_email'] = from_email
@@ -123,11 +235,33 @@ def test_email_service_enviar_email_and_reset(monkeypatch: Any, settings: Any) -
             captured['alternatives'] = []
 
         def attach_alternative(self, html: Any, content_type: Any) -> None:
-            """Executa attach alternative."""
+            """Executa attach alternative.
+            
+            Args:
+                self: Instância do objeto.
+                html: Parâmetro html da operação.
+                content_type: Parâmetro content type da operação.
+            
+            Returns:
+                Não retorna valor.
+            
+            Raises:
+                Nenhuma exceção específica documentada.
+            """
             captured['alternatives'].append((html, content_type))
 
         def send(self) -> None:
-            """Executa send."""
+            """Executa send.
+            
+            Args:
+                self: Instância do objeto.
+            
+            Returns:
+                Não retorna valor.
+            
+            Raises:
+                Nenhuma exceção específica documentada.
+            """
             captured['sent'] = True
     monkeypatch.setattr('usuarios.services.email.render_to_string', lambda *_args, **_kwargs: '<b>Oi</b>')
     monkeypatch.setattr('usuarios.services.email.EmailMultiAlternatives', DummyEmail)

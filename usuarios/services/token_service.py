@@ -14,9 +14,16 @@ class TokenService:
     @classmethod
     def gerar_token_para_usuario(cls, user: User) -> Any:
         """Gera token e UID para reset de senha.
-
-        :param user: Usuário
-        :return: UID e token.
+        
+        Args:
+            cls: Classe referenciada.
+            user: Parâmetro user da operação.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
@@ -25,10 +32,17 @@ class TokenService:
     @classmethod
     def gerar_token_para_reset(cls, user: User, email: str) -> Any:
         """Busca usuário pelo username e retorna dados para reset de senha.
-
-        :param user: Usuário
-        :param email: Email do usuário
-        :return: UID e token.
+        
+        Args:
+            cls: Classe referenciada.
+            user: Parâmetro user da operação.
+            email: Parâmetro email da operação.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         logger.info(f'Iniciando geração de token para usuário: {user.username}')
         uid, token = cls.gerar_token_para_usuario(user)

@@ -26,7 +26,23 @@ class EmailService:
         from_email: str | None = None,
         headers: Mapping[str, str] | None = None,
     ) -> None:
-        """Executa enviar email."""
+        """Executa enviar email.
+        
+        Args:
+            cls: Classe referenciada.
+            subject: Parâmetro subject da operação.
+            template_name: Parâmetro template name da operação.
+            context: Contexto de renderização ou serialização.
+            recipients: Parâmetro recipients da operação.
+            from_email: Parâmetro from email da operação.
+            headers: Parâmetro headers da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         html_content = render_to_string(template_name, context)
         sender = from_email or getattr(settings, "DEFAULT_FROM_EMAIL", None)
         text_body = strip_tags(html_content)
@@ -45,7 +61,20 @@ class EmailService:
     def enviar_email_esqueci_senha(
         cls, user: User, email: str, nome: str
     ) -> None:
-        """Executa enviar email esqueci senha."""
+        """Executa enviar email esqueci senha.
+        
+        Args:
+            cls: Classe referenciada.
+            user: Parâmetro user da operação.
+            email: Parâmetro email da operação.
+            nome: Parâmetro nome da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         logger.info("Gerando token de reset para usuário: %s", user.username)
         token_data = TokenService.gerar_token_para_reset(user, email)
 

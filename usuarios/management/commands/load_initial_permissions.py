@@ -12,13 +12,36 @@ class Command(BaseCommand):
     help = 'Carrega permissões e grupos iniciais a partir dos arquivos JSON'
 
     def add_arguments(self, parser: Any) -> None:
-        """Registra argumentos da linha de comando."""
+        """Registra argumentos da linha de comando.
+        
+        Args:
+            self: Instância do objeto.
+            parser: Parâmetro parser da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         parser.add_argument('--permissions', type=str, default='usuarios/management/commands/json/permissions.json', help='Caminho do arquivo JSON de permissões')
         parser.add_argument('--groups', type=str, default='usuarios/management/commands/json/groups.json', help='Caminho do arquivo JSON de grupos')
 
     @transaction.atomic
     def handle(self, *args: Any, **options: Any) -> None:
-        """Executa a lógica principal do comando."""
+        """Executa a lógica principal do comando.
+        
+        Args:
+            self: Instância do objeto.
+            *args: Argumentos posicionais variáveis.
+            **options: Parâmetro options da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         permissions_file = options['permissions']
         groups_file = options['groups']
         self.stdout.write(self.style.MIGRATE_HEADING('🧩 Carregando permissões iniciais...'))

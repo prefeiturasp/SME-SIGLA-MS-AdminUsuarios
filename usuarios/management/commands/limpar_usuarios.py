@@ -9,7 +9,19 @@ class Command(BaseCommand):
     help = 'Remove todos os usuários que não são superusuários'
 
     def handle(self, *args: Any, **options: Any) -> None:
-        """Executa a lógica principal do comando."""
+        """Executa a lógica principal do comando.
+        
+        Args:
+            self: Instância do objeto.
+            *args: Argumentos posicionais variáveis.
+            **options: Parâmetro options da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         total_registros = User.objects.filter(is_superuser=False).count()
         self.stdout.write(self.style.SUCCESS(f'Removendo {total_registros} usuários (não superusers)...'))
         try:

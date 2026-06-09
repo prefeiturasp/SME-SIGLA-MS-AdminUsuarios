@@ -11,13 +11,27 @@ from usuarios.management.commands.importar_usuarios import split_nome
 pytestmark = pytest.mark.django_db
 
 def test_split_nome_handles_edge_cases() -> None:
-    """Verifica split nome handles edge cases."""
+    """Verifica split nome handles edge cases.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     assert split_nome('') == ('', '')
     assert split_nome('Maria') == ('Maria', '')
     assert split_nome('Maria da Silva') == ('Maria', 'da Silva')
 
 def test_criar_usuarios_creates_and_skips_existing() -> None:
-    """Verifica criar usuarios creates and skips existing."""
+    """Verifica criar usuarios creates and skips existing.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     user_model = get_user_model()
     user_model.objects.create_user(username='usuario1', email='usuario1@example.com', password='123456')
     call_command('criar_usuarios', count=3)
@@ -26,14 +40,28 @@ def test_criar_usuarios_creates_and_skips_existing() -> None:
     assert user_model.objects.get(username='usuario2').check_password('123456')
 
 def test_importar_usuarios_invalid_payload_raises() -> None:
-    """Verifica importar usuarios invalid payload raises."""
+    """Verifica importar usuarios invalid payload raises.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     with pytest.raises(CommandError, match='Não foi possível ler o JSON'):
         call_command('importar_usuarios', 'nao-e-json')
     with pytest.raises(CommandError, match='deve ser uma lista'):
         call_command('importar_usuarios', json.dumps({'username': 'u1'}))
 
 def test_importar_usuarios_creates_skips_and_collects_errors() -> None:
-    """Verifica importar usuarios creates skips and collects errors."""
+    """Verifica importar usuarios creates skips and collects errors.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     user_model = get_user_model()
     user_model.objects.create_user(username='existente', email='existente@example.com')
     payload = [{'username': 'novo', 'email': 'novo@example.com', 'nome': 'Novo Usuario'}, {'username': 'existente', 'email': 'existente@example.com', 'nome': 'Existente'}, {'username': 'sem-email'}]
@@ -44,7 +72,14 @@ def test_importar_usuarios_creates_skips_and_collects_errors() -> None:
     assert novo.has_usable_password() is False
 
 def test_limpar_usuarios_keeps_superuser_and_deletes_regular() -> None:
-    """Verifica limpar usuarios keeps superuser and deletes regular."""
+    """Verifica limpar usuarios keeps superuser and deletes regular.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     user_model = get_user_model()
     user_model.objects.create_superuser(username='admin', email='admin@example.com', password='123456')
     user_model.objects.create_user(username='u1', email='u1@example.com')
@@ -54,7 +89,17 @@ def test_limpar_usuarios_keeps_superuser_and_deletes_regular() -> None:
     assert not user_model.objects.filter(username__in=['u1', 'u2']).exists()
 
 def test_load_initial_permissions_creates_groups_and_permissions(tmp_path: Any) -> None:
-    """Verifica load initial permissions creates groups and permissions."""
+    """Verifica load initial permissions creates groups and permissions.
+    
+    Args:
+        tmp_path: Parâmetro tmp path da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     permissions_file = tmp_path / 'permissions.json'
     groups_file = tmp_path / 'groups.json'
     permissions_file.write_text(json.dumps([{'app_label': 'auth', 'model': 'user', 'codename': 'can_manage_users', 'name': 'Can manage users'}]), encoding='utf-8')

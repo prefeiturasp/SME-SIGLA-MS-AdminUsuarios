@@ -13,7 +13,17 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 
 def split_nome(full_name: str) -> tuple[str, str]:
-    """Executa split nome."""
+    """Executa split nome.
+    
+    Args:
+        full_name: Parâmetro full name da operação.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     if not full_name:
         return ('', '')
     parts = str(full_name).strip().split()
@@ -26,11 +36,34 @@ class Command(BaseCommand):
     help = 'Importa usuários a partir de uma string JSON.'
 
     def add_arguments(self, parser: Any) -> None:
-        """Registra argumentos da linha de comando."""
+        """Registra argumentos da linha de comando.
+        
+        Args:
+            self: Instância do objeto.
+            parser: Parâmetro parser da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         parser.add_argument('data', type=str, help='String JSON com lista de usuários')
 
     def handle(self, *args: Any, **options: Any) -> None:
-        """Executa a lógica principal do comando."""
+        """Executa a lógica principal do comando.
+        
+        Args:
+            self: Instância do objeto.
+            *args: Argumentos posicionais variáveis.
+            **options: Parâmetro options da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            CommandError: Se ocorrer erro nesta operação.
+        """
         data_str = options.get('data')
         try:
             payload = json.loads(data_str)  # type: ignore[arg-type]

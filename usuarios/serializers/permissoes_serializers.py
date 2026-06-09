@@ -32,7 +32,18 @@ class CreatePermissionSerializer(serializers.Serializer):
     name = serializers.CharField()
 
     def validate(self, attrs: Any) -> Any:
-        """Executa validate."""
+        """Executa validate.
+        
+        Args:
+            self: Instância do objeto.
+            attrs: Atributos em validação.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            ValidationError: Se ocorrer erro nesta operação.
+        """
         app_label, model = (attrs['app_label'], attrs['model'])
         ct = ContentType.objects.filter(app_label=app_label, model__iexact=model).first()
         if not ct:
@@ -43,7 +54,18 @@ class CreatePermissionSerializer(serializers.Serializer):
         return attrs
 
     def create(self, validated_data: Any) -> Any:
-        """Executa create."""
+        """Executa create.
+        
+        Args:
+            self: Instância do objeto.
+            validated_data: Dados validados pelo serializer.
+        
+        Returns:
+            Resposta HTTP com os dados serializados.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         validated_data.pop('content_type', None)
         ct = ContentType.objects.get(app_label=self.validated_data['app_label'], model__iexact=self.validated_data['model'])
         perm = Permission.objects.create(name=validated_data['name'], codename=validated_data['codename'], content_type=ct)
@@ -55,13 +77,35 @@ class CreateGroupSerializer(serializers.Serializer):
     permissoes_codenames = serializers.ListField(child=serializers.CharField(), required=False)
 
     def validate_grupo(self, value: Any) -> Any:
-        """Executa validate grupo."""
+        """Executa validate grupo.
+        
+        Args:
+            self: Instância do objeto.
+            value: Valor recebido para validação.
+        
+        Returns:
+            Valor validado do campo grupo.
+        
+        Raises:
+            ValidationError: Se ocorrer erro nesta operação.
+        """
         if Group.objects.filter(name=value).exists():
             raise serializers.ValidationError('Grupo já existe.')
         return value
 
     def create(self, validated_data: Any) -> Any:
-        """Executa create."""
+        """Executa create.
+        
+        Args:
+            self: Instância do objeto.
+            validated_data: Dados validados pelo serializer.
+        
+        Returns:
+            Resposta HTTP com os dados serializados.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         grupo = Group.objects.create(name=validated_data['grupo'])
         codenames = validated_data.get('permissoes_codenames', [])
         if codenames:
@@ -92,7 +136,18 @@ class UpdateUsuarioSerializer(serializers.Serializer):
     remover_grupos = serializers.ListField(child=serializers.CharField(), required=False)
 
     def validate_email(self, value: str) -> str:
-        """Executa validate email."""
+        """Executa validate email.
+        
+        Args:
+            self: Instância do objeto.
+            value: Valor recebido para validação.
+        
+        Returns:
+            Texto resultante da operação.
+        
+        Raises:
+            ValidationError: Se ocorrer erro nesta operação.
+        """
         email = (value or '').strip()
         if not email:
             return ''
@@ -103,7 +158,18 @@ class UpdateUsuarioSerializer(serializers.Serializer):
         return email
 
     def validate(self, attrs: Any) -> Any:
-        """Executa validate."""
+        """Executa validate.
+        
+        Args:
+            self: Instância do objeto.
+            attrs: Atributos em validação.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            ValidationError: Se ocorrer erro nesta operação.
+        """
         grupos_final = attrs.get('grupos')
         adicionar = attrs.get('adicionar_grupos') or []
         remover = attrs.get('remover_grupos') or []

@@ -23,7 +23,18 @@ class AlterarSenhaSerializer(serializers.Serializer):
     confirmacao_nova_senha = serializers.CharField(write_only=True)
 
     def validate_nova_senha(self, value: Any) -> Any:
-        """Executa validate nova senha."""
+        """Executa validate nova senha.
+        
+        Args:
+            self: Instância do objeto.
+            value: Valor recebido para validação.
+        
+        Returns:
+            Valor validado do campo nova senha.
+        
+        Raises:
+            ValidationError: Se ocorrer erro nesta operação.
+        """
         if len(value) < 8 or len(value) > 12:
             raise serializers.ValidationError('A senha deve ter entre 8 e 12 caracteres.')
         if not re.search('[A-Z]', value):
@@ -41,7 +52,18 @@ class AlterarSenhaSerializer(serializers.Serializer):
         return value
 
     def validate(self, attrs: Any) -> Any:
-        """Executa validate."""
+        """Executa validate.
+        
+        Args:
+            self: Instância do objeto.
+            attrs: Atributos em validação.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            ValidationError: Se ocorrer erro nesta operação.
+        """
         if attrs['nova_senha'] != attrs['confirmacao_nova_senha']:
             raise serializers.ValidationError({'confirmacao_nova_senha': 'As senhas não conferem.'})
         return attrs

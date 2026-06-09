@@ -18,7 +18,17 @@ from usuarios.services.sme_integracao import SmeIntegracaoService
 logger = logging.getLogger(__name__)
 
 def _mask_email(email: str) -> str:
-    """Executa  mask email."""
+    """Executa  mask email.
+    
+    Args:
+        email: Parâmetro email da operação.
+    
+    Returns:
+        Texto resultante da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     try:
         local, domain = email.split('@', 1)
     except ValueError:
@@ -38,7 +48,18 @@ class LoginView(TokenObtainPairView):
 
     @extend_schema(request=LoginSerializer)
     def post(self, request: Any) -> Any:
-        """Trata requisição HTTP POST."""
+        """Trata requisição HTTP POST.
+        
+        Args:
+            self: Instância do objeto.
+            request: Requisição HTTP recebida.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         usuario = User.objects.filter(username=serializer.validated_data['usuario']).first()
@@ -60,7 +81,18 @@ class EsqueciSenhaView(APIView):
     authentication_classes = []
 
     def post(self, request: Any) -> Any:
-        """Trata requisição HTTP POST."""
+        """Trata requisição HTTP POST.
+        
+        Args:
+            self: Instância do objeto.
+            request: Requisição HTTP recebida.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         serializer = EsqueciSenhaSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         usuario = serializer.validated_data['rf']
@@ -87,7 +119,18 @@ class CriarNovaSenhaView(APIView):
     authentication_classes = []
 
     def post(self, request: Any) -> Any:
-        """Trata requisição HTTP POST."""
+        """Trata requisição HTTP POST.
+        
+        Args:
+            self: Instância do objeto.
+            request: Requisição HTTP recebida.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         serializer = CriarNovaSenhaSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         uidb64 = serializer.validated_data['uid']
@@ -114,7 +157,18 @@ class MeusDadosView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request: Any) -> Any:
-        """Trata requisição HTTP GET."""
+        """Trata requisição HTTP GET.
+        
+        Args:
+            self: Instância do objeto.
+            request: Requisição HTTP recebida.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         user = request.user
         nome_completo = f'{user.first_name} {user.last_name}'.strip()
         grupos = list(user.groups.values_list('name', flat=True))
@@ -125,7 +179,18 @@ class AlterarSenhaView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request: Any) -> Any:
-        """Trata requisição HTTP POST."""
+        """Trata requisição HTTP POST.
+        
+        Args:
+            self: Instância do objeto.
+            request: Requisição HTTP recebida.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         serializer = AlterarSenhaSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = request.user
@@ -149,7 +214,18 @@ class BuscarUsuarioEolView(APIView):
 
     @extend_schema(request=BuscarUsuarioEolSerializer, responses={200: OpenApiResponse(description='Dados do usuário no EOL'), 400: OpenApiResponse(description='Usuário já cadastrado no SIGLA'), 404: OpenApiResponse(description='Usuário não encontrado no EOL')}, description='Busca dados do usuário no EOL via RF. Retorna 400 se já existir no SIGLA.')
     def post(self, request: Any) -> Any:
-        """Trata requisição HTTP POST."""
+        """Trata requisição HTTP POST.
+        
+        Args:
+            self: Instância do objeto.
+            request: Requisição HTTP recebida.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         serializer = BuscarUsuarioEolSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         rf = serializer.validated_data['rf']
@@ -175,7 +251,18 @@ class CriarUsuarioView(APIView):
 
     @extend_schema(request=CreateUserSerializer, responses={201: OpenApiResponse(description='Usuário criado com sucesso'), 400: OpenApiResponse(description='Dados inválidos'), 409: OpenApiResponse(description='Usuário já cadastrado')}, description='Cria um novo usuário a partir de username, nome e email.')
     def post(self, request: Any) -> Any:
-        """Trata requisição HTTP POST."""
+        """Trata requisição HTTP POST.
+        
+        Args:
+            self: Instância do objeto.
+            request: Requisição HTTP recebida.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         serializer = CreateUserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         username = serializer.validated_data['username']
@@ -196,7 +283,18 @@ class AlterarEmailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request: Any) -> Any:
-        """Trata requisição HTTP POST."""
+        """Trata requisição HTTP POST.
+        
+        Args:
+            self: Instância do objeto.
+            request: Requisição HTTP recebida.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         serializer = AlterarEmailSerializer(data=request.data, context={'user': request.user})
         serializer.is_valid(raise_exception=True)
         user = request.user

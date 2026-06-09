@@ -21,7 +21,18 @@ class GerenciarPermissoesUsuarioView(APIView):
 
     @extend_schema(parameters=[OpenApiParameter(name='usuario', description='Nome de usuário para buscar as permissões (inclui diretas e herdadas).', required=True, type=str, location=OpenApiParameter.QUERY), OpenApiParameter(name='model', description='(Opcional) Lista de modelos separados por vírgula para filtrar as permissões.', required=False, type=OpenApiTypes.STR, location=OpenApiParameter.QUERY)], responses={200: PermissionSerializer(many=True)}, description='Retorna as permissões (diretas e herdadas por grupo) do usuário.')
     def get(self, request: Any) -> Any:
-        """Trata requisição HTTP GET."""
+        """Trata requisição HTTP GET.
+        
+        Args:
+            self: Instância do objeto.
+            request: Requisição HTTP recebida.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         username = request.query_params.get('usuario', '').strip()
         model_param = request.query_params.get('model', '').strip()
         if not username:
@@ -47,14 +58,36 @@ class PermissoesDisponiveisView(APIView):
 
     @extend_schema(responses={200: PermissionSerializer(many=True)}, description='Retorna todas as permissões disponíveis no sistema.')
     def get(self, request: Any) -> Any:
-        """Trata requisição HTTP GET."""
+        """Trata requisição HTTP GET.
+        
+        Args:
+            self: Instância do objeto.
+            request: Requisição HTTP recebida.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         permissoes = Permission.objects.select_related('content_type').all().order_by('content_type__app_label', 'id')
         serializer = PermissionSerializer(permissoes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @extend_schema(request=CreatePermissionSerializer, responses={201: PermissionSerializer}, description='Cria uma nova permissão vinculada a um ContentType.')
     def post(self, request: Any) -> Any:
-        """Trata requisição HTTP POST."""
+        """Trata requisição HTTP POST.
+        
+        Args:
+            self: Instância do objeto.
+            request: Requisição HTTP recebida.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         serializer = CreatePermissionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         perm = serializer.save()
@@ -69,7 +102,18 @@ class GruposDisponiveisView(APIView):
 
     @extend_schema(parameters=[OpenApiParameter(name='grupo', description='(Opcional) Nome do grupo para filtrar.', required=False, type=str)], responses={200: GroupSerializer(many=True)}, description='Retorna permissões de grupos (ou de um grupo específico).')
     def get(self, request: Any) -> Any:
-        """Trata requisição HTTP GET."""
+        """Trata requisição HTTP GET.
+        
+        Args:
+            self: Instância do objeto.
+            request: Requisição HTTP recebida.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         grupo_name = request.query_params.get('grupo', '').strip()
         grupos_qs = Group.objects.prefetch_related('permissions__content_type').order_by('name')
         if grupo_name:
@@ -81,7 +125,18 @@ class GruposDisponiveisView(APIView):
 
     @extend_schema(request=UpdateGroupPermissionsSerializer, responses={200: GroupSerializer}, description='Adiciona e/ou remove permissões (por codename) de um grupo.')
     def put(self, request: Any) -> Any:
-        """Trata requisição HTTP PUT."""
+        """Trata requisição HTTP PUT.
+        
+        Args:
+            self: Instância do objeto.
+            request: Requisição HTTP recebida.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         serializer = UpdateGroupPermissionsSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -101,7 +156,18 @@ class GruposDisponiveisView(APIView):
 
     @extend_schema(request=CreateGroupSerializer, responses={201: GroupSerializer}, description='Cria um grupo e associa permissões usando codenames.')
     def post(self, request: Any) -> Any:
-        """Trata requisição HTTP POST."""
+        """Trata requisição HTTP POST.
+        
+        Args:
+            self: Instância do objeto.
+            request: Requisição HTTP recebida.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         serializer = CreateGroupSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         grupo = serializer.save()
@@ -115,7 +181,18 @@ class GerenciarUsuariosGrupoView(APIView):
     @extend_schema(request=UpdateGroupUsersSerializer, responses={200: GroupSerializer}, description='Adiciona e/ou remove usuários (por username) de um grupo.')
     @action(detail=False, methods=['put'], url_path='usuarios')
     def put(self, request: Any) -> Any:
-        """Trata requisição HTTP PUT."""
+        """Trata requisição HTTP PUT.
+        
+        Args:
+            self: Instância do objeto.
+            request: Requisição HTTP recebida.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         serializer = UpdateGroupUsersSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -140,7 +217,18 @@ class UsuariosComGruposView(APIView):
 
     @extend_schema(parameters=[OpenApiParameter(name='usuario', description='(Opcional) Filtra por username (case-insensitive).', required=False, type=str)], responses={200: GroupSerializer(many=True)}, description='Retorna todos os usuários com os grupos a que pertencem.')
     def get(self, request: Any) -> Any:
-        """Trata requisição HTTP GET."""
+        """Trata requisição HTTP GET.
+        
+        Args:
+            self: Instância do objeto.
+            request: Requisição HTTP recebida.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         usuario_filtro = request.query_params.get('usuario', '').strip()
         qs = User.objects.all().prefetch_related('groups').order_by('username')
         if usuario_filtro:
@@ -153,7 +241,18 @@ class UsuariosComGruposView(APIView):
 
     @extend_schema(request=UpdateUsuarioSerializer, responses={200: OpenApiResponse(description='Usuário atualizado com sucesso.'), 400: OpenApiResponse(description='Dados inválidos.'), 404: OpenApiResponse(description='Usuário não encontrado.')}, description='Atualiza campos do usuário (nome, email, is_active) e gerencia grupos. Se "grupos" for enviado, ele representa a lista FINAL (inclusive pode ser [] para remover todos). Email deve ser único.')
     def patch(self, request: Any) -> Any:
-        """Trata requisição HTTP PATCH."""
+        """Trata requisição HTTP PATCH.
+        
+        Args:
+            self: Instância do objeto.
+            request: Requisição HTTP recebida.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         serializer = UpdateUsuarioSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data

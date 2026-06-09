@@ -11,40 +11,106 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def rf() -> Any:
-    """Executa rf."""
+    """Executa rf.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return APIRequestFactory()
 
 @pytest.fixture
 def ct_user() -> Any:
-    """Executa ct user."""
+    """Executa ct user.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return ContentType.objects.get_for_model(User)
 
 @pytest.fixture
 def perm_direta(ct_user: Any) -> Any:
-    """Executa perm direta."""
+    """Executa perm direta.
+    
+    Args:
+        ct_user: Parâmetro ct user da operação.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return Permission.objects.create(codename='pode_ver_dashboard', name='Pode ver dashboard', content_type=ct_user)
 
 @pytest.fixture
 def perm_grupo(ct_user: Any) -> Any:
-    """Executa perm grupo."""
+    """Executa perm grupo.
+    
+    Args:
+        ct_user: Parâmetro ct user da operação.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return Permission.objects.create(codename='pode_editar_grupo', name='Pode editar grupo', content_type=ct_user)
 
 def test_gerenciar_permissoes_usuario_requires_param(rf: Any) -> None:
-    """Verifica gerenciar permissoes usuario requires param."""
+    """Verifica gerenciar permissoes usuario requires param.
+    
+    Args:
+        rf: Factory de requisições do Django.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     request = rf.get('/usuarios/permissoes/')
     response = GerenciarPermissoesUsuarioView.as_view()(request)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.data['detail'] == 'usuario é obrigatório'
 
 def test_gerenciar_permissoes_usuario_not_found(rf: Any) -> None:
-    """Verifica gerenciar permissoes usuario not found."""
+    """Verifica gerenciar permissoes usuario not found.
+    
+    Args:
+        rf: Factory de requisições do Django.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     request = rf.get('/usuarios/permissoes/?usuario=naoexiste')
     response = GerenciarPermissoesUsuarioView.as_view()(request)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.data['detail'] == 'Usuário não encontrado'
 
 def test_gerenciar_permissoes_usuario_success_with_group_and_direct(rf: Any, perm_direta: Any, perm_grupo: Any) -> None:
-    """Verifica gerenciar permissoes usuario success with group and direct."""
+    """Verifica gerenciar permissoes usuario success with group and direct.
+    
+    Args:
+        rf: Factory de requisições do Django.
+        perm_direta: Parâmetro perm direta da operação.
+        perm_grupo: Parâmetro perm grupo da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     user = User.objects.create_user(username='alice', first_name='Alice', last_name='Silva', email='a@x.com')
     user.user_permissions.add(perm_direta)
     grupo = Group.objects.create(name='Admins')
@@ -59,7 +125,18 @@ def test_gerenciar_permissoes_usuario_success_with_group_and_direct(rf: Any, per
     assert set(response.data['grupos']) == {'Admins'}
 
 def test_gerenciar_permissoes_usuario_filters_model(rf: Any, perm_direta: Any) -> None:
-    """Verifica gerenciar permissoes usuario filters model."""
+    """Verifica gerenciar permissoes usuario filters model.
+    
+    Args:
+        rf: Factory de requisições do Django.
+        perm_direta: Parâmetro perm direta da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     user = User.objects.create_user(username='alice')
     user.user_permissions.add(perm_direta)
     request = rf.get('/usuarios/permissoes/?usuario=alice&model=user')
@@ -68,28 +145,70 @@ def test_gerenciar_permissoes_usuario_filters_model(rf: Any, perm_direta: Any) -
     assert response.data['total_permissoes'] == 1
 
 def test_permissoes_disponiveis_get_returns_permissions(rf: Any, perm_direta: Any) -> None:
-    """Verifica permissoes disponiveis get returns permissions."""
+    """Verifica permissoes disponiveis get returns permissions.
+    
+    Args:
+        rf: Factory de requisições do Django.
+        perm_direta: Parâmetro perm direta da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     request = rf.get('/permissoes/')
     response = PermissoesDisponiveisView.as_view()(request)
     assert response.status_code == status.HTTP_200_OK
     assert any((p['codename'] == perm_direta.codename for p in response.data))
 
 def test_permissoes_disponiveis_post_creates_permission(rf: Any, ct_user: Any) -> None:
-    """Verifica permissoes disponiveis post creates permission."""
+    """Verifica permissoes disponiveis post creates permission.
+    
+    Args:
+        rf: Factory de requisições do Django.
+        ct_user: Parâmetro ct user da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     request = rf.post('/permissoes/', {'app_label': ct_user.app_label, 'model': ct_user.model, 'codename': 'pode_exportar', 'name': 'Pode exportar'}, format='json')
     response = PermissoesDisponiveisView.as_view()(request)
     assert response.status_code == status.HTTP_201_CREATED
     assert response.data['codename'] == 'pode_exportar'
 
 def test_grupos_disponiveis_get_not_found_by_name(rf: Any) -> None:
-    """Verifica grupos disponiveis get not found by name."""
+    """Verifica grupos disponiveis get not found by name.
+    
+    Args:
+        rf: Factory de requisições do Django.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     request = rf.get('/grupos/?grupo=Inexistente')
     response = GruposDisponiveisView.as_view()(request)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.data['detail'] == 'Grupo não encontrado'
 
 def test_grupos_disponiveis_get_all(rf: Any) -> None:
-    """Verifica grupos disponiveis get all."""
+    """Verifica grupos disponiveis get all.
+    
+    Args:
+        rf: Factory de requisições do Django.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     Group.objects.create(name='A')
     Group.objects.create(name='B')
     request = rf.get('/grupos/')
@@ -98,13 +217,35 @@ def test_grupos_disponiveis_get_all(rf: Any) -> None:
     assert len(response.data) == 2
 
 def test_grupos_disponiveis_put_not_found(rf: Any) -> None:
-    """Verifica grupos disponiveis put not found."""
+    """Verifica grupos disponiveis put not found.
+    
+    Args:
+        rf: Factory de requisições do Django.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     request = rf.put('/grupos/', {'grupo': 'Inexistente'}, format='json')
     response = GruposDisponiveisView.as_view()(request)
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 def test_grupos_disponiveis_put_add_remove_permissions(rf: Any, perm_direta: Any, perm_grupo: Any) -> None:
-    """Verifica grupos disponiveis put add remove permissions."""
+    """Verifica grupos disponiveis put add remove permissions.
+    
+    Args:
+        rf: Factory de requisições do Django.
+        perm_direta: Parâmetro perm direta da operação.
+        perm_grupo: Parâmetro perm grupo da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     group = Group.objects.create(name='Gestores')
     group.permissions.add(perm_direta)
     request = rf.put('/grupos/', {'grupo': 'Gestores', 'adicionar_codenames': [perm_grupo.codename], 'remover_codenames': [perm_direta.codename]}, format='json')
@@ -114,7 +255,18 @@ def test_grupos_disponiveis_put_add_remove_permissions(rf: Any, perm_direta: Any
     assert set(group.permissions.values_list('codename', flat=True)) == {perm_grupo.codename}
 
 def test_grupos_disponiveis_post_creates_group(rf: Any, perm_direta: Any) -> None:
-    """Verifica grupos disponiveis post creates group."""
+    """Verifica grupos disponiveis post creates group.
+    
+    Args:
+        rf: Factory de requisições do Django.
+        perm_direta: Parâmetro perm direta da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     request = rf.post('/grupos/', {'grupo': 'Operadores', 'permissoes_codenames': [perm_direta.codename]}, format='json')
     response = GruposDisponiveisView.as_view()(request)
     assert response.status_code == status.HTTP_201_CREATED
@@ -122,14 +274,34 @@ def test_grupos_disponiveis_post_creates_group(rf: Any, perm_direta: Any) -> Non
     assert group.permissions.filter(codename=perm_direta.codename).exists()
 
 def test_gerenciar_usuarios_grupo_group_not_found(rf: Any) -> None:
-    """Verifica gerenciar usuarios grupo group not found."""
+    """Verifica gerenciar usuarios grupo group not found.
+    
+    Args:
+        rf: Factory de requisições do Django.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     request = rf.put('/grupos/usuarios/', {'grupo': 'X', 'adicionar_usuarios': ['u']}, format='json')
     response = GerenciarUsuariosGrupoView.as_view()(request)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.data['detail'] == 'Grupo não encontrado'
 
 def test_gerenciar_usuarios_grupo_add_and_remove(rf: Any) -> None:
-    """Verifica gerenciar usuarios grupo add and remove."""
+    """Verifica gerenciar usuarios grupo add and remove.
+    
+    Args:
+        rf: Factory de requisições do Django.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     group = Group.objects.create(name='Equipe')
     u1 = User.objects.create_user(username='u1')
     User.objects.create_user(username='u2')
@@ -141,7 +313,17 @@ def test_gerenciar_usuarios_grupo_add_and_remove(rf: Any) -> None:
     assert set(group.user_set.values_list('username', flat=True)) == {'u2'}
 
 def test_usuarios_com_grupos_get_and_filter(rf: Any) -> None:
-    """Verifica usuarios com grupos get and filter."""
+    """Verifica usuarios com grupos get and filter.
+    
+    Args:
+        rf: Factory de requisições do Django.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     g = Group.objects.create(name='Equipe')
     u1 = User.objects.create_user(username='alice', first_name='Alice')
     User.objects.create_user(username='bob')
@@ -157,14 +339,35 @@ def test_usuarios_com_grupos_get_and_filter(rf: Any) -> None:
     assert filtered_response.data['results'][0]['usuario'] == 'alice'
 
 def test_usuarios_com_grupos_patch_user_not_found(rf: Any) -> None:
-    """Verifica usuarios com grupos patch user not found."""
+    """Verifica usuarios com grupos patch user not found.
+    
+    Args:
+        rf: Factory de requisições do Django.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     request = rf.patch('/usuarios/grupos/', {'usuario': 'naoexiste'}, format='json')
     response = UsuariosComGruposView.as_view()(request)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.data['detail'] == 'Usuário não encontrado'
 
 def test_usuarios_com_grupos_patch_updates_fields_and_groups(rf: Any, monkeypatch: Any) -> None:
-    """Verifica usuarios com grupos patch updates fields and groups."""
+    """Verifica usuarios com grupos patch updates fields and groups.
+    
+    Args:
+        rf: Factory de requisições do Django.
+        monkeypatch: Fixture do pytest para substituir objetos.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     monkeypatch.setattr('usuarios.views.permissoes.SmeIntegracaoService.alterar_email', lambda *_a, **_k: 'OK')
     user = User.objects.create_user(username='alice', email='old@x.com', first_name='Old')
     g1 = Group.objects.create(name='G1')
@@ -181,7 +384,17 @@ def test_usuarios_com_grupos_patch_updates_fields_and_groups(rf: Any, monkeypatc
     assert set(user.groups.values_list('name', flat=True)) == {'G2'}
 
 def test_usuarios_com_grupos_patch_email_unique_validation(rf: Any) -> None:
-    """Verifica usuarios com grupos patch email unique validation."""
+    """Verifica usuarios com grupos patch email unique validation.
+    
+    Args:
+        rf: Factory de requisições do Django.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     User.objects.create_user(username='u1', email='same@x.com')
     User.objects.create_user(username='u2', email='u2@x.com')
     request = rf.patch('/usuarios/grupos/', {'usuario': 'u2', 'email': 'same@x.com'}, format='json')
@@ -190,12 +403,34 @@ def test_usuarios_com_grupos_patch_email_unique_validation(rf: Any) -> None:
     assert 'email' in response.data
 
 def test_patch_email_diferente_chama_sme_e_salva(rf: Any, monkeypatch: Any) -> Any:
-    """Verifica patch email diferente chama sme e salva."""
+    """Verifica patch email diferente chama sme e salva.
+    
+    Args:
+        rf: Factory de requisições do Django.
+        monkeypatch: Fixture do pytest para substituir objetos.
+    
+    Returns:
+        Nenhum valor; valida comportamento via asserções.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     user = User.objects.create_user(username='alice', email='old@x.com')
     chamadas = {'n': 0}
 
     def _ok(*_a: Any, **_k: Any) -> Any:
-        """Executa  ok."""
+        """Executa  ok.
+        
+        Args:
+            *_a: Parâmetro  a da operação.
+            **_k: Parâmetro  k da operação.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         chamadas['n'] += 1
         return 'OK'
     monkeypatch.setattr('usuarios.views.permissoes.SmeIntegracaoService.alterar_email', _ok)
@@ -207,12 +442,34 @@ def test_patch_email_diferente_chama_sme_e_salva(rf: Any, monkeypatch: Any) -> A
     assert chamadas['n'] == 1
 
 def test_patch_email_igual_nao_chama_sme(rf: Any, monkeypatch: Any) -> Any:
-    """Verifica patch email igual nao chama sme."""
+    """Verifica patch email igual nao chama sme.
+    
+    Args:
+        rf: Factory de requisições do Django.
+        monkeypatch: Fixture do pytest para substituir objetos.
+    
+    Returns:
+        Nenhum valor; valida comportamento via asserções.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     User.objects.create_user(username='alice', email='same@x.com')
     chamadas = {'n': 0}
 
     def _spy(*_a: Any, **_k: Any) -> Any:
-        """Executa  spy."""
+        """Executa  spy.
+        
+        Args:
+            *_a: Parâmetro  a da operação.
+            **_k: Parâmetro  k da operação.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         chamadas['n'] += 1
         return 'OK'
     monkeypatch.setattr('usuarios.views.permissoes.SmeIntegracaoService.alterar_email', _spy)
@@ -222,12 +479,34 @@ def test_patch_email_igual_nao_chama_sme(rf: Any, monkeypatch: Any) -> Any:
     assert chamadas['n'] == 0
 
 def test_patch_email_sme_falha_retorna_400_e_nao_salva(rf: Any, monkeypatch: Any) -> None:
-    """Verifica patch email sme falha retorna 400 e nao salva."""
+    """Verifica patch email sme falha retorna 400 e nao salva.
+    
+    Args:
+        rf: Factory de requisições do Django.
+        monkeypatch: Fixture do pytest para substituir objetos.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        SmeIntegracaoException: Se ocorrer erro nesta operação.
+    """
     from usuarios.exceptions import SmeIntegracaoException
     user = User.objects.create_user(username='alice', email='old@x.com')
 
     def _raise(*_a: Any, **_k: Any) -> None:
-        """Executa  raise."""
+        """Executa  raise.
+        
+        Args:
+            *_a: Parâmetro  a da operação.
+            **_k: Parâmetro  k da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            SmeIntegracaoException: Se ocorrer erro nesta operação.
+        """
         raise SmeIntegracaoException('email recusado')
     monkeypatch.setattr('usuarios.views.permissoes.SmeIntegracaoService.alterar_email', _raise)
     request = rf.patch('/usuarios/grupos/', {'usuario': 'alice', 'email': 'new@x.com'}, format='json')
