@@ -23,19 +23,19 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def rf() -> Any:
-    """Executa rf."""
+    """Rf."""
     return APIRequestFactory()
 
 
 @pytest.fixture
 def ct_user() -> Any:
-    """Executa ct user."""
+    """Ct user."""
     return ContentType.objects.get_for_model(User)
 
 
 @pytest.fixture
 def perm_direta(ct_user: Any) -> Any:
-    """Executa perm direta."""
+    """Perm direta."""
     return Permission.objects.create(
         codename="pode_ver_dashboard",
         name="Pode ver dashboard",
@@ -45,7 +45,7 @@ def perm_direta(ct_user: Any) -> Any:
 
 @pytest.fixture
 def perm_grupo(ct_user: Any) -> Any:
-    """Executa perm grupo."""
+    """Perm grupo."""
     return Permission.objects.create(
         codename="pode_editar_grupo",
         name="Pode editar grupo",
@@ -316,7 +316,7 @@ def test_patch_email_diferente_chama_sme_e_salva(
     chamadas = {"n": 0}
 
     def _ok(*_a: Any, **_k: Any) -> Any:
-        """Executa  ok."""
+        """Ok."""
         chamadas["n"] += 1
         return "OK"
 
@@ -341,7 +341,7 @@ def test_patch_email_igual_nao_chama_sme(rf: Any, monkeypatch: Any) -> Any:
     chamadas = {"n": 0}
 
     def _spy(*_a: Any, **_k: Any) -> Any:
-        """Executa  spy."""
+        """Spy."""
         chamadas["n"] += 1
         return "OK"
 
@@ -367,7 +367,7 @@ def test_patch_email_sme_falha_retorna_400_e_nao_salva(
     user = User.objects.create_user(username="alice", email="old@x.com")
 
     def _raise(*_a: Any, **_k: Any) -> None:
-        """Executa  raise."""
+        """Raise."""
         raise SmeIntegracaoException("email recusado")
 
     monkeypatch.setattr(

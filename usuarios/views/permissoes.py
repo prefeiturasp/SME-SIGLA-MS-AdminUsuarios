@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 
 class GerenciarPermissoesUsuarioView(APIView):
-    """Define GerenciarPermissoesUsuarioView."""
+    """Representa GerenciarPermissoesUsuarioView."""
 
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
@@ -67,17 +67,14 @@ class GerenciarPermissoesUsuarioView(APIView):
         ),
     )
     def get(self, request: Any) -> Any:
-        """Trata requisição HTTP GET.
+        """Consulta o recurso solicitado.
 
         Args:
             self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         username = request.query_params.get("usuario", "").strip()
         model_param = request.query_params.get("model", "").strip()
@@ -132,7 +129,7 @@ class GerenciarPermissoesUsuarioView(APIView):
 
 
 class PermissoesDisponiveisView(APIView):
-    """Define PermissoesDisponiveisView."""
+    """Representa PermissoesDisponiveisView."""
 
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
@@ -142,17 +139,14 @@ class PermissoesDisponiveisView(APIView):
         description="Retorna todas as permissões disponíveis no sistema.",
     )
     def get(self, request: Any) -> Any:
-        """Trata requisição HTTP GET.
+        """Consulta o recurso solicitado.
 
         Args:
             self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         permissoes = (
             Permission.objects.select_related("content_type")
@@ -168,17 +162,14 @@ class PermissoesDisponiveisView(APIView):
         description="Cria uma nova permissão vinculada a um ContentType.",
     )
     def post(self, request: Any) -> Any:
-        """Trata requisição HTTP POST.
+        """Registra ou processa o recurso solicitado.
 
         Args:
             self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         serializer = CreatePermissionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -189,7 +180,7 @@ class PermissoesDisponiveisView(APIView):
 
 
 class GruposDisponiveisView(APIView):
-    """Define GruposDisponiveisView."""
+    """Representa GruposDisponiveisView."""
 
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
@@ -209,17 +200,14 @@ class GruposDisponiveisView(APIView):
         description="Retorna permissões de grupos (ou de um grupo).",
     )
     def get(self, request: Any) -> Any:
-        """Trata requisição HTTP GET.
+        """Consulta o recurso solicitado.
 
         Args:
             self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         grupo_name = request.query_params.get("grupo", "").strip()
         grupos_qs = Group.objects.prefetch_related(
@@ -241,17 +229,14 @@ class GruposDisponiveisView(APIView):
         description="Adiciona ou remove permissões (codename) de um grupo.",
     )
     def put(self, request: Any) -> Any:
-        """Trata requisição HTTP PUT.
+        """Atualiza o recurso solicitado.
 
         Args:
             self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         serializer = UpdateGroupPermissionsSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -281,17 +266,14 @@ class GruposDisponiveisView(APIView):
         description="Cria um grupo e associa permissões usando codenames.",
     )
     def post(self, request: Any) -> Any:
-        """Trata requisição HTTP POST.
+        """Registra ou processa o recurso solicitado.
 
         Args:
             self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         serializer = CreateGroupSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -302,7 +284,7 @@ class GruposDisponiveisView(APIView):
 
 
 class GerenciarUsuariosGrupoView(APIView):
-    """Define GerenciarUsuariosGrupoView."""
+    """Representa GerenciarUsuariosGrupoView."""
 
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
@@ -314,17 +296,14 @@ class GerenciarUsuariosGrupoView(APIView):
     )
     @action(detail=False, methods=["put"], url_path="usuarios")
     def put(self, request: Any) -> Any:
-        """Trata requisição HTTP PUT.
+        """Atualiza o recurso solicitado.
 
         Args:
             self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         serializer = UpdateGroupUsersSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -348,7 +327,7 @@ class GerenciarUsuariosGrupoView(APIView):
 
 
 class UsuariosComGruposView(APIView):
-    """Define UsuariosComGruposView."""
+    """Representa UsuariosComGruposView."""
 
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
@@ -366,17 +345,14 @@ class UsuariosComGruposView(APIView):
         description="Retorna todos os usuários com os grupos a que pertencem.",
     )
     def get(self, request: Any) -> Any:
-        """Trata requisição HTTP GET.
+        """Consulta o recurso solicitado.
 
         Args:
             self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         usuario_filtro = request.query_params.get("usuario", "").strip()
         qs = User.objects.all().prefetch_related("groups").order_by("username")
@@ -418,17 +394,14 @@ class UsuariosComGruposView(APIView):
         ),
     )
     def patch(self, request: Any) -> Any:
-        """Trata requisição HTTP PATCH.
+        """Altera parcialmente o recurso solicitado.
 
         Args:
             self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         serializer = UpdateUsuarioSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

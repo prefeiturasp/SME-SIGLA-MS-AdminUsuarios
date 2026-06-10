@@ -38,16 +38,13 @@ logger = logging.getLogger(__name__)
 
 
 def _mask_email(email: str) -> str:
-    """Executa  mask email.
+    """Mask email.
 
     Args:
-        email: Parâmetro email.
+        email: Email utilizado na operação.
 
     Returns:
         Texto resultante da operação.
-
-    Raises:
-        Nenhuma exceção específica documentada.
     """
     try:
         local, domain = email.split("@", 1)
@@ -63,24 +60,21 @@ def _mask_email(email: str) -> str:
 
 
 class LoginView(TokenObtainPairView):
-    """Define LoginView."""
+    """Representa LoginView."""
 
     permission_classes = [permissions.AllowAny]  # type: ignore[assignment]
     authentication_classes = []  # type: ignore[assignment]
 
     @extend_schema(request=LoginSerializer)
     def post(self, request: Any) -> Any:
-        """Trata requisição HTTP POST.
+        """Registra ou processa o recurso solicitado.
 
         Args:
             self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -121,23 +115,20 @@ class LoginView(TokenObtainPairView):
 
 
 class EsqueciSenhaView(APIView):
-    """Define EsqueciSenhaView."""
+    """Representa EsqueciSenhaView."""
 
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
 
     def post(self, request: Any) -> Any:
-        """Trata requisição HTTP POST.
+        """Registra ou processa o recurso solicitado.
 
         Args:
             self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         serializer = EsqueciSenhaSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -186,23 +177,20 @@ class EsqueciSenhaView(APIView):
 
 
 class CriarNovaSenhaView(APIView):
-    """Define CriarNovaSenhaView."""
+    """Representa CriarNovaSenhaView."""
 
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
 
     def post(self, request: Any) -> Any:
-        """Trata requisição HTTP POST.
+        """Registra ou processa o recurso solicitado.
 
         Args:
             self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         serializer = CriarNovaSenhaSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -237,22 +225,19 @@ class CriarNovaSenhaView(APIView):
 
 
 class MeusDadosView(APIView):
-    """Define MeusDadosView."""
+    """Representa MeusDadosView."""
 
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request: Any) -> Any:
-        """Trata requisição HTTP GET.
+        """Consulta o recurso solicitado.
 
         Args:
             self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         user = request.user
         nome_completo = f"{user.first_name} {user.last_name}".strip()
@@ -269,22 +254,19 @@ class MeusDadosView(APIView):
 
 
 class AlterarSenhaView(APIView):
-    """Define AlterarSenhaView."""
+    """Representa AlterarSenhaView."""
 
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request: Any) -> Any:
-        """Trata requisição HTTP POST.
+        """Registra ou processa o recurso solicitado.
 
         Args:
             self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         serializer = AlterarSenhaSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -311,7 +293,7 @@ class AlterarSenhaView(APIView):
 
 
 class BuscarUsuarioEolView(APIView):
-    """Define BuscarUsuarioEolView."""
+    """Representa BuscarUsuarioEolView."""
 
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
@@ -326,17 +308,14 @@ class BuscarUsuarioEolView(APIView):
         description="Busca dados do usuário no EOL via RF. Retorna 400 se já existir no SIGLA.",  # noqa: E501
     )
     def post(self, request: Any) -> Any:
-        """Trata requisição HTTP POST.
+        """Registra ou processa o recurso solicitado.
 
         Args:
             self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         serializer = BuscarUsuarioEolSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -373,7 +352,7 @@ class BuscarUsuarioEolView(APIView):
 
 
 class CriarUsuarioView(APIView):
-    """Define CriarUsuarioView."""
+    """Representa CriarUsuarioView."""
 
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
@@ -388,17 +367,14 @@ class CriarUsuarioView(APIView):
         description="Cria um novo usuário a partir de username, nome e email.",
     )
     def post(self, request: Any) -> Any:
-        """Trata requisição HTTP POST.
+        """Registra ou processa o recurso solicitado.
 
         Args:
             self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         serializer = CreateUserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -431,22 +407,19 @@ class CriarUsuarioView(APIView):
 
 
 class AlterarEmailView(APIView):
-    """Define AlterarEmailView."""
+    """Representa AlterarEmailView."""
 
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request: Any) -> Any:
-        """Trata requisição HTTP POST.
+        """Registra ou processa o recurso solicitado.
 
         Args:
             self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         serializer = AlterarEmailSerializer(
             data=request.data, context={"user": request.user}

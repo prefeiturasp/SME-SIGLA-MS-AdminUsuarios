@@ -17,16 +17,13 @@ from django.core.management.base import BaseCommand, CommandError
 
 
 def split_nome(full_name: str) -> tuple[str, str]:
-    """Executa split nome.
+    """Split nome.
 
     Args:
-        full_name: Parâmetro full name.
+        full_name: Full name utilizado na operação.
 
     Returns:
-        Resultado da operação.
-
-    Raises:
-        Nenhuma exceção específica documentada.
+        Tupla com os objetos criados ou atualizados.
     """
     if not full_name:
         return ("", "")
@@ -37,7 +34,7 @@ def split_nome(full_name: str) -> tuple[str, str]:
 
 
 class Command(BaseCommand):
-    """Define Command."""
+    """Representa Command."""
 
     help = "Importa usuários a partir de uma string JSON."
 
@@ -46,28 +43,25 @@ class Command(BaseCommand):
 
         Args:
             self: Instância do objeto.
-            parser: Parâmetro parser.
+            parser: Parser utilizado na operação.
 
         Returns:
-            Não retorna valor.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Nenhum valor.
         """
         parser.add_argument(
             "data", type=str, help="String JSON com lista de usuários"
         )
 
     def handle(self, *args: Any, **options: Any) -> None:
-        """Executa a lógica principal do comando.
+        """A lógica principal do comando.
 
         Args:
             self: Instância do objeto.
             *args: Argumentos posicionais variáveis.
-            **options: Parâmetro options da operação.
+            **options: Opções do comando de management.
 
         Returns:
-            Não retorna valor.
+            Nenhum valor.
 
         Raises:
             CommandError: Se ocorrer erro nesta operação.

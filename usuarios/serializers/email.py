@@ -9,12 +9,12 @@ from rest_framework import serializers
 
 
 class AlterarEmailSerializer(serializers.Serializer):
-    """Define AlterarEmailSerializer."""
+    """Serializer do modelo AlterarEmail."""
 
     novo_email = serializers.EmailField()
 
     def validate_novo_email(self, value: Any) -> Any:
-        """Executa validate novo email.
+        """Validate novo email.
 
         Args:
             self: Instância do objeto.
@@ -24,7 +24,7 @@ class AlterarEmailSerializer(serializers.Serializer):
             Valor validado do campo novo email.
 
         Raises:
-            ValidationError: Se ocorrer erro nesta operação.
+            ValidationError: Se os dados não passarem na validação.
         """
         user = self.context.get("user")
         if user is None:

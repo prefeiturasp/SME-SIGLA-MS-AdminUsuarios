@@ -9,7 +9,7 @@ from rest_framework import serializers
 
 
 class ChangePasswordSerializer(serializers.Serializer):
-    """Define ChangePasswordSerializer."""
+    """Serializer do modelo ChangePassword."""
 
     user_id = serializers.CharField()
     old_password = serializers.CharField(write_only=True)
@@ -17,7 +17,7 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 
 class CriarNovaSenhaSerializer(serializers.Serializer):
-    """Define CriarNovaSenhaSerializer."""
+    """Serializer do modelo CriarNovaSenha."""
 
     uid = serializers.CharField()
     token = serializers.CharField()
@@ -25,14 +25,14 @@ class CriarNovaSenhaSerializer(serializers.Serializer):
 
 
 class AlterarSenhaSerializer(serializers.Serializer):
-    """Define AlterarSenhaSerializer."""
+    """Serializer do modelo AlterarSenha."""
 
     senha_atual = serializers.CharField(write_only=True)
     nova_senha = serializers.CharField(write_only=True)
     confirmacao_nova_senha = serializers.CharField(write_only=True)
 
     def validate_nova_senha(self, value: Any) -> Any:
-        """Executa validate nova senha.
+        """Validate nova senha.
 
         Args:
             self: Instância do objeto.
@@ -42,7 +42,7 @@ class AlterarSenhaSerializer(serializers.Serializer):
             Valor validado do campo nova senha.
 
         Raises:
-            ValidationError: Se ocorrer erro nesta operação.
+            ValidationError: Se os dados não passarem na validação.
         """
         if len(value) < 8 or len(value) > 12:
             raise serializers.ValidationError(
@@ -75,17 +75,17 @@ class AlterarSenhaSerializer(serializers.Serializer):
         return value
 
     def validate(self, attrs: Any) -> Any:
-        """Executa validate.
+        """Validate.
 
         Args:
             self: Instância do objeto.
             attrs: Atributos em validação.
 
         Returns:
-            Resultado da operação.
+            Valor calculado conforme a regra aplicada.
 
         Raises:
-            ValidationError: Se ocorrer erro nesta operação.
+            ValidationError: Se os dados não passarem na validação.
         """
         if attrs["nova_senha"] != attrs["confirmacao_nova_senha"]:
             raise serializers.ValidationError(

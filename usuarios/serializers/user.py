@@ -4,13 +4,13 @@ from rest_framework import serializers
 
 
 class BuscarUsuarioEolSerializer(serializers.Serializer):
-    """Define BuscarUsuarioEolSerializer."""
+    """Serializer do modelo BuscarUsuarioEol."""
 
     rf = serializers.CharField()
 
 
 class CreateUserSerializer(serializers.Serializer):
-    """Define CreateUserSerializer."""
+    """Serializer do modelo CreateUser."""
 
     username = serializers.CharField()
     nome = serializers.CharField()

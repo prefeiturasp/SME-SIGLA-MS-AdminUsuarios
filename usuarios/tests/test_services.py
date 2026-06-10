@@ -64,7 +64,7 @@ def test_autenticacao_service_autentica_error_paths(monkeypatch: Any) -> None:
         AutenticacaoService.autentica("user", "pwd")
 
     def _raise_req(*_args: Any, **_kwargs: Any) -> None:
-        """Executa  raise req."""
+        """Raise req."""
         raise requests.RequestException("network")
 
     monkeypatch.setattr(
@@ -112,7 +112,7 @@ def test_sme_integracao_informacao_usuario_success_and_errors(
         SmeIntegracaoService.informacao_usuario("123")
 
     def _raise_request(*_args: Any, **_kwargs: Any) -> None:
-        """Executa  raise request."""
+        """Raise request."""
         raise requests.RequestException("timeout")
 
     monkeypatch.setattr(
@@ -189,7 +189,7 @@ def test_email_service_enviar_email_and_reset(
     captured = {}
 
     class DummyEmail:
-        """Define DummyEmail."""
+        """Representa DummyEmail."""
 
         def __init__(
             self,
@@ -199,7 +199,7 @@ def test_email_service_enviar_email_and_reset(
             to: Any,
             headers: Any,
         ) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             captured["subject"] = subject
             captured["body"] = body
             captured["from_email"] = from_email
@@ -208,11 +208,11 @@ def test_email_service_enviar_email_and_reset(
             captured["alternatives"] = []
 
         def attach_alternative(self, html: Any, content_type: Any) -> None:
-            """Executa attach alternative."""
+            """Attach alternative."""
             captured["alternatives"].append((html, content_type))
 
         def send(self) -> None:
-            """Executa send."""
+            """Send."""
             captured["sent"] = True
 
     monkeypatch.setattr(

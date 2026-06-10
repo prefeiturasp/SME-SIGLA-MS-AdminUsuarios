@@ -34,7 +34,7 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def rf() -> Any:
-    """Executa rf."""
+    """Rf."""
     return APIRequestFactory()
 
 
@@ -67,7 +67,7 @@ def test_login_invalid_credentials_returns_401(
     User.objects.create_user(username="rf123", password="segredo")
 
     def _raise_invalid(*_args: Any, **_kwargs: Any) -> None:
-        """Executa  raise invalid."""
+        """Raise invalid."""
         raise AutenticacaoCredenciaisInvalidasError()
 
     monkeypatch.setattr(
@@ -88,7 +88,7 @@ def test_login_upstream_error_returns_400(rf: Any, monkeypatch: Any) -> None:
     User.objects.create_user(username="rf123", password="segredo")
 
     def _raise_upstream(*_args: Any, **_kwargs: Any) -> None:
-        """Executa  raise upstream."""
+        """Raise upstream."""
         raise AutenticacaoRequisicaoError("falha")
 
     monkeypatch.setattr(
@@ -115,7 +115,7 @@ def test_login_success_returns_payload(rf: Any, monkeypatch: Any) -> Any:
     called = {"count": 0}
 
     def _montar(*_args: Any, **_kwargs: Any) -> Any:
-        """Executa  montar."""
+        """Montar."""
         called["count"] += 1
         return {"access": "ok", "user": {"username": user.username}}
 
@@ -149,7 +149,7 @@ def test_esqueci_senha_sme_failure(rf: Any, monkeypatch: Any) -> None:
     User.objects.create_user(username="123")
 
     def _raise(*_args: Any, **_kwargs: Any) -> None:
-        """Executa  raise."""
+        """Raise."""
         raise Exception("erro")
 
     monkeypatch.setattr(
@@ -191,7 +191,7 @@ def test_esqueci_senha_email_send_failure(rf: Any, monkeypatch: Any) -> None:
     )
 
     def _raise_send(*_args: Any, **_kwargs: Any) -> None:
-        """Executa  raise send."""
+        """Raise send."""
         raise Exception("smtp")
 
     monkeypatch.setattr(
@@ -262,12 +262,12 @@ def test_criar_nova_senha_sme_exception(rf: Any, monkeypatch: Any) -> Any:
     called = {"count": 0}
 
     def _check_token(*_args: Any, **_kwargs: Any) -> Any:
-        """Executa  check token."""
+        """Check token."""
         called["count"] += 1
         return True
 
     def _raise_sme(*_args: Any, **_kwargs: Any) -> None:
-        """Executa  raise sme."""
+        """Raise sme."""
         raise SmeIntegracaoException("erro")
 
     monkeypatch.setattr(
@@ -452,7 +452,7 @@ def test_alterar_senha_sme_exception(rf: Any, monkeypatch: Any) -> None:
     )
 
     def _raise_sme(*_args: Any, **_kwargs: Any) -> None:
-        """Executa  raise sme."""
+        """Raise sme."""
         raise SmeIntegracaoException("senha fraca")
 
     monkeypatch.setattr(
@@ -622,7 +622,7 @@ def test_alterar_email_sme_exception(rf: Any, monkeypatch: Any) -> None:
     user = User.objects.create_user(username="eu", email="meu@x.com")
 
     def _raise(*_a: Any, **_k: Any) -> None:
-        """Executa  raise."""
+        """Raise."""
         raise SmeIntegracaoException("email invalido")
 
     monkeypatch.setattr(
@@ -645,7 +645,7 @@ def test_alterar_email_success(rf: Any, monkeypatch: Any) -> Any:
     chamadas = {"n": 0}
 
     def _ok(*_a: Any, **_k: Any) -> Any:
-        """Executa  ok."""
+        """Ok."""
         chamadas["n"] += 1
         return "OK"
 

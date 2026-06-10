@@ -12,7 +12,7 @@ from django.db import transaction
 
 
 class Command(BaseCommand):
-    """Define Command."""
+    """Representa Command."""
 
     help = "Carrega permissões e grupos iniciais a partir dos arquivos JSON"
 
@@ -21,13 +21,10 @@ class Command(BaseCommand):
 
         Args:
             self: Instância do objeto.
-            parser: Parâmetro parser.
+            parser: Parser utilizado na operação.
 
         Returns:
-            Não retorna valor.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Nenhum valor.
         """
         parser.add_argument(
             "--permissions",
@@ -44,18 +41,15 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args: Any, **options: Any) -> None:
-        """Executa a lógica principal do comando.
+        """A lógica principal do comando.
 
         Args:
             self: Instância do objeto.
             *args: Argumentos posicionais variáveis.
-            **options: Parâmetro options da operação.
+            **options: Opções do comando de management.
 
         Returns:
-            Não retorna valor.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Nenhum valor.
         """
         permissions_file = options["permissions"]
         groups_file = options["groups"]

@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class SmeIntegracaoService:
-    """Define SmeIntegracaoService."""
+    """Serviço para operações de smeintegracao."""
 
     DEFAULT_HEADERS = {
         "accept": "application/json",
@@ -25,18 +25,18 @@ class SmeIntegracaoService:
 
     @classmethod
     def informacao_usuario(cls, username: Any) -> Any:
-        """Executa informacao usuario.
+        """Informacao usuario.
 
         Args:
             cls: Classe referenciada.
-            username: Parâmetro username.
+            username: Username utilizado na operação.
 
         Returns:
-            Resultado da operação.
+            Valor calculado conforme a regra aplicada.
 
         Raises:
             SmeIntegracaoException: Se ocorrer erro nesta operação.
-            RequestException: Se ocorrer erro nesta operação.
+            RequestException: Se a chamada HTTP falhar.
         """
         logger.info(f"Consultando dados na API externa para: {username}")
         try:
@@ -57,15 +57,15 @@ class SmeIntegracaoService:
 
     @classmethod
     def redefine_senha(cls, registro_funcional: Any, senha: Any) -> Any:
-        """Executa redefine senha.
+        """Redefine senha.
 
         Args:
             cls: Classe referenciada.
-            registro_funcional: Parâmetro registro funcional.
-            senha: Parâmetro senha.
+            registro_funcional: Registro funcional utilizado na operação.
+            senha: Senha informada para autenticação.
 
         Returns:
-            Resultado da operação.
+            Valor calculado conforme a regra aplicada.
 
         Raises:
             SmeIntegracaoException: Se ocorrer erro nesta operação.
@@ -97,15 +97,15 @@ class SmeIntegracaoService:
 
     @classmethod
     def alterar_email(cls, registro_funcional: Any, email: Any) -> Any:
-        """Executa alterar email.
+        """Alterar email.
 
         Args:
             cls: Classe referenciada.
-            registro_funcional: Parâmetro registro funcional.
-            email: Parâmetro email.
+            registro_funcional: Registro funcional utilizado na operação.
+            email: Email utilizado na operação.
 
         Returns:
-            Resultado da operação.
+            Valor calculado conforme a regra aplicada.
 
         Raises:
             SmeIntegracaoException: Se ocorrer erro nesta operação.

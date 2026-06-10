@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class AutenticacaoService:
-    """Define AutenticacaoService."""
+    """Serviço para operações de autenticacao."""
 
     DEFAULT_HEADERS = {
         "Content-Type": "application/json",
@@ -31,21 +31,21 @@ class AutenticacaoService:
 
     @classmethod
     def autentica(cls, login: Any, senha: Any) -> dict[str, Any]:
-        """Executa autentica.
+        """Autentica o usuário no serviço externo.
 
         Args:
             cls: Classe referenciada.
-            login: Parâmetro login.
-            senha: Parâmetro senha.
+            login: Identificador de login do usuário.
+            senha: Senha informada para autenticação.
 
         Returns:
-            Dicionário com os dados processados.
+            Dicionário com os dados retornados pela operação.
 
         Raises:
-            AutenticacaoCredenciaisInvalidasError: Fixture do teste.
-            AutenticacaoUpstreamError: Se ocorrer erro nesta operação.
-            AutenticacaoRequisicaoError: Se ocorrer erro nesta operação.
-            AutenticacaoRespostaInvalidaError: Se ocorrer erro nesta operação.
+            AutenticacaoCredenciaisInvalidasError: Login ou senha incorretos.
+            AutenticacaoUpstreamError: Erro retornado pelo serviço externo.
+            AutenticacaoRequisicaoError: Falha de conexão com o serviço.
+            AutenticacaoRespostaInvalidaError: Resposta inválida do serviço.
         """
         payload = {"usuario": login, "senha": senha, "codigoSistema": 1}
         try:
@@ -82,35 +82,29 @@ class AutenticacaoService:
 
     @classmethod
     def gerar_tokens_para_usuario(cls, user: User) -> dict[str, str]:
-        """Gera par de tokens JWT (access/refresh) para o usuário informado.
+        """Gera tokens para usuario.
 
         Args:
             cls: Classe referenciada.
-            user: Parâmetro user.
+            user: User utilizado na operação.
 
         Returns:
-            Dicionário com os dados processados.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Dicionário com os dados retornados pela operação.
         """
         refresh = RefreshToken.for_user(user)
         return {"access": str(refresh.access_token), "refresh": str(refresh)}
 
     @classmethod
     def montar_resposta_login(cls, dados: Any, user: User) -> dict[str, Any]:
-        """Monta resposta do login com dados externos e tokens locais.
+        """Monta resposta login.
 
         Args:
             cls: Classe referenciada.
-            dados: Parâmetro dados.
-            user: Parâmetro user.
+            dados: Dados utilizado na operação.
+            user: User utilizado na operação.
 
         Returns:
-            Dicionário com os dados processados.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Dicionário com os dados retornados pela operação.
         """
         resposta: dict[str, Any] = {}
         if isinstance(dados, dict):
@@ -123,19 +117,16 @@ class AutenticacaoService:
     def atualizar_usuario_com_dados_autenticacao(
         cls, *, user: User, dados: Any, senha: str
     ) -> User:
-        """Atualiza campos do User (nome/email) com base nos dados.
+        """Atualiza usuario com dados autenticacao.
 
         Args:
             cls: Classe referenciada.
-            user: Parâmetro user.
-            dados: Parâmetro dados.
-            senha: Parâmetro senha.
+            user: User utilizado na operação.
+            dados: Dados utilizado na operação.
+            senha: Senha informada para autenticação.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         if not isinstance(dados, dict):
             return user

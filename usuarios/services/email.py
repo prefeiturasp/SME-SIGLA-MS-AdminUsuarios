@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class EmailService:
-    """Define EmailService."""
+    """Serviço para operações de email."""
 
     @classmethod
     def enviar_email(
@@ -28,22 +28,19 @@ class EmailService:
         from_email: str | None = None,
         headers: Mapping[str, str] | None = None,
     ) -> None:
-        """Executa enviar email.
+        """Envia email.
 
         Args:
             cls: Classe referenciada.
-            subject: Parâmetro subject.
-            template_name: Parâmetro template name.
-            context: Contexto de renderização ou serialização.
-            recipients: Parâmetro recipients.
-            from_email: Parâmetro from email.
-            headers: Parâmetro headers.
+            subject: Subject utilizado na operação.
+            template_name: Template name utilizado na operação.
+            context: Contexto de serialização ou renderização.
+            recipients: Recipients utilizado na operação.
+            from_email: From email utilizado na operação.
+            headers: Headers utilizado na operação.
 
         Returns:
-            Não retorna valor.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Nenhum valor.
         """
         html_content = render_to_string(template_name, context)
         sender = from_email or getattr(settings, "DEFAULT_FROM_EMAIL", None)
@@ -63,19 +60,16 @@ class EmailService:
     def enviar_email_esqueci_senha(
         cls, user: User, email: str, nome: str
     ) -> None:
-        """Executa enviar email esqueci senha.
+        """Envia email esqueci senha.
 
         Args:
             cls: Classe referenciada.
-            user: Parâmetro user.
-            email: Parâmetro email.
-            nome: Parâmetro nome.
+            user: User utilizado na operação.
+            email: Email utilizado na operação.
+            nome: Nome utilizado na operação.
 
         Returns:
-            Não retorna valor.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Nenhum valor.
         """
         logger.info("Gerando token de reset para usuário: %s", user.username)
         token_data = TokenService.gerar_token_para_reset(user, email)
