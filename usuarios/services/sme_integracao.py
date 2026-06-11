@@ -25,17 +25,17 @@ class SmeIntegracaoService:
 
     @classmethod
     def informacao_usuario(cls, username: Any) -> Any:
-        """Informacao usuario.
+        """Consulta dados do usuário na API SME.
 
         Args:
-            cls: Classe referenciada.
-            username: Username utilizado na operação.
+            username: Login ou matrícula do usuário na SME.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Dicionário com os dados consultados.
 
         Raises:
-            SmeIntegracaoException: Se ocorrer erro nesta operação.
+            SmeIntegracaoException: Quando a API SME falha ou não encontra
+            dados.
             RequestException: Se a chamada HTTP falhar.
         """
         logger.info(f"Consultando dados na API externa para: {username}")
@@ -60,15 +60,15 @@ class SmeIntegracaoService:
         """Redefine senha.
 
         Args:
-            cls: Classe referenciada.
-            registro_funcional: Registro funcional utilizado na operação.
-            senha: Senha informada para autenticação.
+            registro_funcional: Registro funcional do servidor.
+            senha: Nova senha a ser definida.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Confirmação de que a alteração foi aceita.
 
         Raises:
-            SmeIntegracaoException: Se ocorrer erro nesta operação.
+            SmeIntegracaoException: Quando a API SME falha ou não encontra
+            dados.
         """
         if not registro_funcional or not senha:
             raise SmeIntegracaoException(
@@ -97,18 +97,18 @@ class SmeIntegracaoService:
 
     @classmethod
     def alterar_email(cls, registro_funcional: Any, email: Any) -> Any:
-        """Alterar email.
+        """Altera o e-mail do usuário na API SME.
 
         Args:
-            cls: Classe referenciada.
-            registro_funcional: Registro funcional utilizado na operação.
-            email: Email utilizado na operação.
+            registro_funcional: Registro funcional do servidor.
+            email: Endereço de e-mail a ser atualizado.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Confirmação de que a alteração foi aceita.
 
         Raises:
-            SmeIntegracaoException: Se ocorrer erro nesta operação.
+            SmeIntegracaoException: Quando a API SME falha ou não encontra
+            dados.
         """
         if not registro_funcional or not email:
             raise SmeIntegracaoException(

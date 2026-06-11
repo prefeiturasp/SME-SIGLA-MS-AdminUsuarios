@@ -70,11 +70,10 @@ class GerenciarPermissoesUsuarioView(APIView):
         """Consulta o recurso solicitado.
 
         Args:
-            self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Resposta HTTP com os dados solicitados.
         """
         username = request.query_params.get("usuario", "").strip()
         model_param = request.query_params.get("model", "").strip()
@@ -142,11 +141,10 @@ class PermissoesDisponiveisView(APIView):
         """Consulta o recurso solicitado.
 
         Args:
-            self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Resposta HTTP com os dados solicitados.
         """
         permissoes = (
             Permission.objects.select_related("content_type")
@@ -165,11 +163,10 @@ class PermissoesDisponiveisView(APIView):
         """Registra ou processa o recurso solicitado.
 
         Args:
-            self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Resposta HTTP com os dados solicitados.
         """
         serializer = CreatePermissionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -203,11 +200,10 @@ class GruposDisponiveisView(APIView):
         """Consulta o recurso solicitado.
 
         Args:
-            self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Resposta HTTP com os dados solicitados.
         """
         grupo_name = request.query_params.get("grupo", "").strip()
         grupos_qs = Group.objects.prefetch_related(
@@ -232,11 +228,10 @@ class GruposDisponiveisView(APIView):
         """Atualiza o recurso solicitado.
 
         Args:
-            self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Resposta HTTP com os dados solicitados.
         """
         serializer = UpdateGroupPermissionsSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -269,11 +264,10 @@ class GruposDisponiveisView(APIView):
         """Registra ou processa o recurso solicitado.
 
         Args:
-            self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Resposta HTTP com os dados solicitados.
         """
         serializer = CreateGroupSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -299,11 +293,10 @@ class GerenciarUsuariosGrupoView(APIView):
         """Atualiza o recurso solicitado.
 
         Args:
-            self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Resposta HTTP com os dados solicitados.
         """
         serializer = UpdateGroupUsersSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -348,11 +341,10 @@ class UsuariosComGruposView(APIView):
         """Consulta o recurso solicitado.
 
         Args:
-            self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Resposta HTTP com os dados solicitados.
         """
         usuario_filtro = request.query_params.get("usuario", "").strip()
         qs = User.objects.all().prefetch_related("groups").order_by("username")
@@ -397,11 +389,10 @@ class UsuariosComGruposView(APIView):
         """Altera parcialmente o recurso solicitado.
 
         Args:
-            self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Resposta HTTP com os dados solicitados.
         """
         serializer = UpdateUsuarioSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

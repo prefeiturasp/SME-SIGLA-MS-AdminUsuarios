@@ -47,18 +47,7 @@ class CreatePermissionSerializer(serializers.Serializer):
     name = serializers.CharField()
 
     def validate(self, attrs: Any) -> Any:
-        """Validate.
-
-        Args:
-            self: Instância do objeto.
-            attrs: Atributos em validação.
-
-        Returns:
-            Valor calculado conforme a regra aplicada.
-
-        Raises:
-            ValidationError: Se os dados não passarem na validação.
-        """
+        """Validate."""
         app_label, model = (attrs["app_label"], attrs["model"])
         ct = ContentType.objects.filter(
             app_label=app_label, model__iexact=model
@@ -80,7 +69,6 @@ class CreatePermissionSerializer(serializers.Serializer):
         """Create.
 
         Args:
-            self: Instância do objeto.
             validated_data: Dados validados pelo serializer.
 
         Returns:
@@ -108,18 +96,7 @@ class CreateGroupSerializer(serializers.Serializer):
     )
 
     def validate_grupo(self, value: Any) -> Any:
-        """Validate grupo.
-
-        Args:
-            self: Instância do objeto.
-            value: Valor recebido para validação.
-
-        Returns:
-            Valor validado do campo grupo.
-
-        Raises:
-            ValidationError: Se os dados não passarem na validação.
-        """
+        """Valida grupo."""
         if Group.objects.filter(name=value).exists():
             raise serializers.ValidationError("Grupo já existe.")
         return value
@@ -128,7 +105,6 @@ class CreateGroupSerializer(serializers.Serializer):
         """Create.
 
         Args:
-            self: Instância do objeto.
             validated_data: Dados validados pelo serializer.
 
         Returns:
@@ -186,18 +162,7 @@ class UpdateUsuarioSerializer(serializers.Serializer):
     )
 
     def validate_email(self, value: str) -> str:
-        """Validate email.
-
-        Args:
-            self: Instância do objeto.
-            value: Valor recebido para validação.
-
-        Returns:
-            Texto resultante da operação.
-
-        Raises:
-            ValidationError: Se os dados não passarem na validação.
-        """
+        """Valida email."""
         email = (value or "").strip()
         if not email:
             return ""
@@ -215,18 +180,7 @@ class UpdateUsuarioSerializer(serializers.Serializer):
         return email
 
     def validate(self, attrs: Any) -> Any:
-        """Validate.
-
-        Args:
-            self: Instância do objeto.
-            attrs: Atributos em validação.
-
-        Returns:
-            Valor calculado conforme a regra aplicada.
-
-        Raises:
-            ValidationError: Se os dados não passarem na validação.
-        """
+        """Validate."""
         grupos_final = attrs.get("grupos")
         adicionar = attrs.get("adicionar_grupos") or []
         remover = attrs.get("remover_grupos") or []

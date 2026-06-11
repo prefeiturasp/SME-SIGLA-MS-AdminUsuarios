@@ -17,15 +17,7 @@ class Command(BaseCommand):
     help = "Carrega permissões e grupos iniciais a partir dos arquivos JSON"
 
     def add_arguments(self, parser: Any) -> None:
-        """Registra argumentos da linha de comando.
-
-        Args:
-            self: Instância do objeto.
-            parser: Parser utilizado na operação.
-
-        Returns:
-            Nenhum valor.
-        """
+        """Registra os argumentos da linha de comando."""
         parser.add_argument(
             "--permissions",
             type=str,
@@ -41,16 +33,7 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args: Any, **options: Any) -> None:
-        """A lógica principal do comando.
-
-        Args:
-            self: Instância do objeto.
-            *args: Argumentos posicionais variáveis.
-            **options: Opções do comando de management.
-
-        Returns:
-            Nenhum valor.
-        """
+        """Roda a lógica principal do comando."""
         permissions_file = options["permissions"]
         groups_file = options["groups"]
         self.stdout.write(

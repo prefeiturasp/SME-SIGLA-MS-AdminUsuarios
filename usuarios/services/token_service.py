@@ -21,11 +21,10 @@ class TokenService:
         """Gera token para usuario.
 
         Args:
-            cls: Classe referenciada.
-            user: User utilizado na operação.
+            user: User.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Dicionário com os dados processados.
         """
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
@@ -36,12 +35,11 @@ class TokenService:
         """Gera token para reset.
 
         Args:
-            cls: Classe referenciada.
-            user: User utilizado na operação.
-            email: Email utilizado na operação.
+            user: User.
+            email: Endereço de e-mail a ser atualizado.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Dicionário com os dados processados.
         """
         logger.info(
             f"Iniciando geração de token para usuário: {user.username}"

@@ -31,13 +31,12 @@ class EmailService:
         """Envia email.
 
         Args:
-            cls: Classe referenciada.
-            subject: Subject utilizado na operação.
-            template_name: Template name utilizado na operação.
-            context: Contexto de serialização ou renderização.
-            recipients: Recipients utilizado na operação.
-            from_email: From email utilizado na operação.
-            headers: Headers utilizado na operação.
+            subject: Subject.
+            template_name: Template name.
+            context: Dados de contexto usados na renderização.
+            recipients: Recipients.
+            from_email: From email.
+            headers: Cabeçalhos HTTP da requisição.
 
         Returns:
             Nenhum valor.
@@ -63,10 +62,9 @@ class EmailService:
         """Envia email esqueci senha.
 
         Args:
-            cls: Classe referenciada.
-            user: User utilizado na operação.
-            email: Email utilizado na operação.
-            nome: Nome utilizado na operação.
+            user: User.
+            email: Endereço de e-mail a ser atualizado.
+            nome: Nome.
 
         Returns:
             Nenhum valor.

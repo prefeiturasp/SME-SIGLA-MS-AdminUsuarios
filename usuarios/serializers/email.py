@@ -14,18 +14,7 @@ class AlterarEmailSerializer(serializers.Serializer):
     novo_email = serializers.EmailField()
 
     def validate_novo_email(self, value: Any) -> Any:
-        """Validate novo email.
-
-        Args:
-            self: Instância do objeto.
-            value: Valor recebido para validação.
-
-        Returns:
-            Valor validado do campo novo email.
-
-        Raises:
-            ValidationError: Se os dados não passarem na validação.
-        """
+        """Valida novo email."""
         user = self.context.get("user")
         if user is None:
             raise serializers.ValidationError(

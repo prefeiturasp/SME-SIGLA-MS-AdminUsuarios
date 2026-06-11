@@ -34,12 +34,11 @@ class AutenticacaoService:
         """Autentica o usuário no serviço externo.
 
         Args:
-            cls: Classe referenciada.
-            login: Identificador de login do usuário.
-            senha: Senha informada para autenticação.
+            login: Login.
+            senha: Nova senha a ser definida.
 
         Returns:
-            Dicionário com os dados retornados pela operação.
+            Dicionário com os dados processados.
 
         Raises:
             AutenticacaoCredenciaisInvalidasError: Login ou senha incorretos.
@@ -85,11 +84,10 @@ class AutenticacaoService:
         """Gera tokens para usuario.
 
         Args:
-            cls: Classe referenciada.
-            user: User utilizado na operação.
+            user: User.
 
         Returns:
-            Dicionário com os dados retornados pela operação.
+            Dicionário com os dados processados.
         """
         refresh = RefreshToken.for_user(user)
         return {"access": str(refresh.access_token), "refresh": str(refresh)}
@@ -99,12 +97,11 @@ class AutenticacaoService:
         """Monta resposta login.
 
         Args:
-            cls: Classe referenciada.
-            dados: Dados utilizado na operação.
-            user: User utilizado na operação.
+            dados: Dados.
+            user: User.
 
         Returns:
-            Dicionário com os dados retornados pela operação.
+            Dicionário com os dados processados.
         """
         resposta: dict[str, Any] = {}
         if isinstance(dados, dict):
@@ -120,13 +117,12 @@ class AutenticacaoService:
         """Atualiza usuario com dados autenticacao.
 
         Args:
-            cls: Classe referenciada.
-            user: User utilizado na operação.
-            dados: Dados utilizado na operação.
-            senha: Senha informada para autenticação.
+            user: User.
+            dados: Dados.
+            senha: Nova senha a ser definida.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Resultado da operação.
         """
         if not isinstance(dados, dict):
             return user

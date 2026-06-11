@@ -41,10 +41,10 @@ def _mask_email(email: str) -> str:
     """Mask email.
 
     Args:
-        email: Email utilizado na operação.
+        email: Endereço de e-mail a ser atualizado.
 
     Returns:
-        Texto resultante da operação.
+        Conteúdo textual gerado.
     """
     try:
         local, domain = email.split("@", 1)
@@ -70,11 +70,10 @@ class LoginView(TokenObtainPairView):
         """Registra ou processa o recurso solicitado.
 
         Args:
-            self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Resposta HTTP com os dados solicitados.
         """
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -124,11 +123,10 @@ class EsqueciSenhaView(APIView):
         """Registra ou processa o recurso solicitado.
 
         Args:
-            self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Resposta HTTP com os dados solicitados.
         """
         serializer = EsqueciSenhaSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -186,11 +184,10 @@ class CriarNovaSenhaView(APIView):
         """Registra ou processa o recurso solicitado.
 
         Args:
-            self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Resposta HTTP com os dados solicitados.
         """
         serializer = CriarNovaSenhaSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -233,11 +230,10 @@ class MeusDadosView(APIView):
         """Consulta o recurso solicitado.
 
         Args:
-            self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Resposta HTTP com os dados solicitados.
         """
         user = request.user
         nome_completo = f"{user.first_name} {user.last_name}".strip()
@@ -262,11 +258,10 @@ class AlterarSenhaView(APIView):
         """Registra ou processa o recurso solicitado.
 
         Args:
-            self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Resposta HTTP com os dados solicitados.
         """
         serializer = AlterarSenhaSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -311,11 +306,10 @@ class BuscarUsuarioEolView(APIView):
         """Registra ou processa o recurso solicitado.
 
         Args:
-            self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Resposta HTTP com os dados solicitados.
         """
         serializer = BuscarUsuarioEolSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -370,11 +364,10 @@ class CriarUsuarioView(APIView):
         """Registra ou processa o recurso solicitado.
 
         Args:
-            self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Resposta HTTP com os dados solicitados.
         """
         serializer = CreateUserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -415,11 +408,10 @@ class AlterarEmailView(APIView):
         """Registra ou processa o recurso solicitado.
 
         Args:
-            self: Instância do objeto.
             request: Requisição HTTP recebida.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Resposta HTTP com os dados solicitados.
         """
         serializer = AlterarEmailSerializer(
             data=request.data, context={"user": request.user}
