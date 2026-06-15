@@ -23,19 +23,16 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def rf() -> Any:
-    """Rf."""
     return APIRequestFactory()
 
 
 @pytest.fixture
 def ct_user() -> Any:
-    """Ct user."""
     return ContentType.objects.get_for_model(User)
 
 
 @pytest.fixture
 def perm_direta(ct_user: Any) -> Any:
-    """Perm direta."""
     return Permission.objects.create(
         codename="pode_ver_dashboard",
         name="Pode ver dashboard",
@@ -45,7 +42,6 @@ def perm_direta(ct_user: Any) -> Any:
 
 @pytest.fixture
 def perm_grupo(ct_user: Any) -> Any:
-    """Perm grupo."""
     return Permission.objects.create(
         codename="pode_editar_grupo",
         name="Pode editar grupo",

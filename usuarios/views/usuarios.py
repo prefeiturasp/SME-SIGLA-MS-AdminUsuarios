@@ -67,14 +67,7 @@ class LoginView(TokenObtainPairView):
 
     @extend_schema(request=LoginSerializer)
     def post(self, request: Any) -> Any:
-        """Registra ou processa o recurso solicitado.
-
-        Args:
-            request: Requisição HTTP recebida.
-
-        Returns:
-            Resposta HTTP com os dados solicitados.
-        """
+        """Autentica o usuário e retorna os dados de acesso."""
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         usuario = User.objects.filter(
@@ -120,14 +113,7 @@ class EsqueciSenhaView(APIView):
     authentication_classes = []
 
     def post(self, request: Any) -> Any:
-        """Registra ou processa o recurso solicitado.
-
-        Args:
-            request: Requisição HTTP recebida.
-
-        Returns:
-            Resposta HTTP com os dados solicitados.
-        """
+        """Solicita envio de e-mail para recuperação de senha."""
         serializer = EsqueciSenhaSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         usuario = serializer.validated_data["rf"]
@@ -181,14 +167,7 @@ class CriarNovaSenhaView(APIView):
     authentication_classes = []
 
     def post(self, request: Any) -> Any:
-        """Registra ou processa o recurso solicitado.
-
-        Args:
-            request: Requisição HTTP recebida.
-
-        Returns:
-            Resposta HTTP com os dados solicitados.
-        """
+        """Redefine a senha com base no token de recuperação."""
         serializer = CriarNovaSenhaSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         uidb64 = serializer.validated_data["uid"]
@@ -227,14 +206,7 @@ class MeusDadosView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request: Any) -> Any:
-        """Consulta o recurso solicitado.
-
-        Args:
-            request: Requisição HTTP recebida.
-
-        Returns:
-            Resposta HTTP com os dados solicitados.
-        """
+        """Retorna perfil e dados do usuário autenticado."""
         user = request.user
         nome_completo = f"{user.first_name} {user.last_name}".strip()
         grupos = list(user.groups.values_list("name", flat=True))
@@ -255,14 +227,7 @@ class AlterarSenhaView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request: Any) -> Any:
-        """Registra ou processa o recurso solicitado.
-
-        Args:
-            request: Requisição HTTP recebida.
-
-        Returns:
-            Resposta HTTP com os dados solicitados.
-        """
+        """Altera a senha do usuário autenticado."""
         serializer = AlterarSenhaSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = request.user
@@ -303,14 +268,7 @@ class BuscarUsuarioEolView(APIView):
         description="Busca dados do usuário no EOL via RF. Retorna 400 se já existir no SIGLA.",  # noqa: E501
     )
     def post(self, request: Any) -> Any:
-        """Registra ou processa o recurso solicitado.
-
-        Args:
-            request: Requisição HTTP recebida.
-
-        Returns:
-            Resposta HTTP com os dados solicitados.
-        """
+        """Consulta dados do servidor no EOL pelo RF informado."""
         serializer = BuscarUsuarioEolSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         rf = serializer.validated_data["rf"]
@@ -361,14 +319,7 @@ class CriarUsuarioView(APIView):
         description="Cria um novo usuário a partir de username, nome e email.",
     )
     def post(self, request: Any) -> Any:
-        """Registra ou processa o recurso solicitado.
-
-        Args:
-            request: Requisição HTTP recebida.
-
-        Returns:
-            Resposta HTTP com os dados solicitados.
-        """
+        """Cadastra um novo usuário no SIGLA."""
         serializer = CreateUserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         username = serializer.validated_data["username"]
@@ -405,14 +356,7 @@ class AlterarEmailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request: Any) -> Any:
-        """Registra ou processa o recurso solicitado.
-
-        Args:
-            request: Requisição HTTP recebida.
-
-        Returns:
-            Resposta HTTP com os dados solicitados.
-        """
+        """Atualiza o e-mail do usuário autenticado."""
         serializer = AlterarEmailSerializer(
             data=request.data, context={"user": request.user}
         )

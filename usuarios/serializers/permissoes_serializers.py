@@ -47,7 +47,7 @@ class CreatePermissionSerializer(serializers.Serializer):
     name = serializers.CharField()
 
     def validate(self, attrs: Any) -> Any:
-        """Validate."""
+        """Valida content type informado e codename livre para cadastro."""
         app_label, model = (attrs["app_label"], attrs["model"])
         ct = ContentType.objects.filter(
             app_label=app_label, model__iexact=model
@@ -66,14 +66,7 @@ class CreatePermissionSerializer(serializers.Serializer):
         return attrs
 
     def create(self, validated_data: Any) -> Any:
-        """Create.
-
-        Args:
-            validated_data: Dados validados pelo serializer.
-
-        Returns:
-            Resposta HTTP com os dados serializados.
-        """
+        """Cria a permissão vinculada ao content type informado."""
         validated_data.pop("content_type", None)
         ct = ContentType.objects.get(
             app_label=self.validated_data["app_label"],
@@ -96,20 +89,13 @@ class CreateGroupSerializer(serializers.Serializer):
     )
 
     def validate_grupo(self, value: Any) -> Any:
-        """Valida grupo."""
+        """Impede cadastro de grupo com nome já existente."""
         if Group.objects.filter(name=value).exists():
             raise serializers.ValidationError("Grupo já existe.")
         return value
 
     def create(self, validated_data: Any) -> Any:
-        """Create.
-
-        Args:
-            validated_data: Dados validados pelo serializer.
-
-        Returns:
-            Resposta HTTP com os dados serializados.
-        """
+        """Cria o grupo e vincula as permissões informadas."""
         grupo = Group.objects.create(name=validated_data["grupo"])
         codenames = validated_data.get("permissoes_codenames", [])
         if codenames:
@@ -162,7 +148,7 @@ class UpdateUsuarioSerializer(serializers.Serializer):
     )
 
     def validate_email(self, value: str) -> str:
-        """Valida email."""
+        """Confere se o e-mail não está em uso por outro usuário."""
         email = (value or "").strip()
         if not email:
             return ""
@@ -180,7 +166,7 @@ class UpdateUsuarioSerializer(serializers.Serializer):
         return email
 
     def validate(self, attrs: Any) -> Any:
-        """Validate."""
+        """Confere se os grupos informados existem no cadastro."""
         grupos_final = attrs.get("grupos")
         adicionar = attrs.get("adicionar_grupos") or []
         remover = attrs.get("remover_grupos") or []

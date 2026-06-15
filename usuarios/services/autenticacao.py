@@ -114,16 +114,7 @@ class AutenticacaoService:
     def atualizar_usuario_com_dados_autenticacao(
         cls, *, user: User, dados: Any, senha: str
     ) -> User:
-        """Atualiza usuario com dados autenticacao.
-
-        Args:
-            user: User.
-            dados: Dados.
-            senha: Nova senha a ser definida.
-
-        Returns:
-            Resultado da operação.
-        """
+        """Atualiza usuario com dados de autenticação."""
         if not isinstance(dados, dict):
             return user
         nome = dados.get("nome")

@@ -42,10 +42,12 @@ class TokenService:
             Dicionário com os dados processados.
         """
         logger.info(
-            f"Iniciando geração de token para usuário: {user.username}"
+            f"Iniciando geração de token para usuário: " f"{user.username}"
         )
         uid, token = cls.gerar_token_para_usuario(user)
         name = user.first_name
         resultado = {"token": token, "uid": uid, "name": name}
-        logger.info(f"Token de reset gerado com sucesso para {user.username}")
+        logger.info(
+            f"Token de reset gerado com sucesso para " f"{user.username}"
+        )
         return resultado

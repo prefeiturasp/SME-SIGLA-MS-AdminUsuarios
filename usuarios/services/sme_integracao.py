@@ -40,7 +40,10 @@ class SmeIntegracaoService:
         """
         logger.info(f"Consultando dados na API externa para: {username}")
         try:
-            url = f"{settings.SME_INTEGRACAO_URL}/api/AutenticacaoSgp/{username}/dados"  # noqa: E501
+            url = (
+                f"{settings.SME_INTEGRACAO_URL}"
+                f"/api/AutenticacaoSgp/{username}/dados"
+            )
             response = requests.get(
                 url, headers=cls.DEFAULT_HEADERS, timeout=10
             )
@@ -80,7 +83,10 @@ class SmeIntegracaoService:
         )
         data = {"Usuario": registro_funcional, "Senha": senha}
         try:
-            url = f"{settings.SME_INTEGRACAO_URL}/api/AutenticacaoSgp/AlterarSenha"  # noqa: E501
+            url = (
+                f"{settings.SME_INTEGRACAO_URL}"
+                f"/api/AutenticacaoSgp/AlterarSenha"
+            )
             response = requests.post(
                 url, data=data, headers=cls.DEFAULT_HEADERS
             )
@@ -120,7 +126,10 @@ class SmeIntegracaoService:
         )
         data = {"Usuario": registro_funcional, "Email": email}
         try:
-            url = f"{settings.SME_INTEGRACAO_URL}/api/AutenticacaoSgp/AlterarEmail"  # noqa: E501
+            url = (
+                f"{settings.SME_INTEGRACAO_URL}"
+                f"/api/AutenticacaoSgp/AlterarEmail"
+            )
             response = requests.post(
                 url, data=data, headers=cls.DEFAULT_HEADERS
             )

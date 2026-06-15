@@ -37,9 +37,6 @@ class EmailService:
             recipients: Recipients.
             from_email: From email.
             headers: Cabeçalhos HTTP da requisição.
-
-        Returns:
-            Nenhum valor.
         """
         html_content = render_to_string(template_name, context)
         sender = from_email or getattr(settings, "DEFAULT_FROM_EMAIL", None)
@@ -65,9 +62,6 @@ class EmailService:
             user: User.
             email: Endereço de e-mail a ser atualizado.
             nome: Nome.
-
-        Returns:
-            Nenhum valor.
         """
         logger.info("Gerando token de reset para usuário: %s", user.username)
         token_data = TokenService.gerar_token_para_reset(user, email)
