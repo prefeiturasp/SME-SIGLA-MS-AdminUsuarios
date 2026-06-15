@@ -1,3 +1,5 @@
+"""Módulo services/email."""
+
 import logging
 from collections.abc import Mapping, Sequence
 
@@ -13,6 +15,8 @@ logger = logging.getLogger(__name__)
 
 
 class EmailService:
+    """Serviço para operações de email."""
+
     @classmethod
     def enviar_email(
         cls,
@@ -24,6 +28,16 @@ class EmailService:
         from_email: str | None = None,
         headers: Mapping[str, str] | None = None,
     ) -> None:
+        """Envia email.
+
+        Args:
+            subject: Subject.
+            template_name: Template name.
+            context: Dados de contexto usados na renderização.
+            recipients: Recipients.
+            from_email: From email.
+            headers: Cabeçalhos HTTP da requisição.
+        """
         html_content = render_to_string(template_name, context)
         sender = from_email or getattr(settings, "DEFAULT_FROM_EMAIL", None)
         text_body = strip_tags(html_content)
@@ -33,7 +47,7 @@ class EmailService:
             body=text_body,
             from_email=sender,
             to=list(recipients),
-            headers=headers,
+            headers=headers,  # type: ignore[arg-type]
         )
         email.attach_alternative(html_content, "text/html")
         email.send()
@@ -42,6 +56,13 @@ class EmailService:
     def enviar_email_esqueci_senha(
         cls, user: User, email: str, nome: str
     ) -> None:
+        """Envia email esqueci senha.
+
+        Args:
+            user: User.
+            email: Endereço de e-mail a ser atualizado.
+            nome: Nome.
+        """
         logger.info("Gerando token de reset para usuário: %s", user.username)
         token_data = TokenService.gerar_token_para_reset(user, email)
 

@@ -1,4 +1,9 @@
+"""Módulo services/sme_integracao."""
+
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 import requests
 from django.conf import settings
@@ -10,6 +15,8 @@ logger = logging.getLogger(__name__)
 
 
 class SmeIntegracaoService:
+    """Serviço para operações de smeintegracao."""
+
     DEFAULT_HEADERS = {
         "accept": "application/json",
         "x-api-eol-key": settings.SME_INTEGRACAO_TOKEN,
@@ -17,21 +24,34 @@ class SmeIntegracaoService:
     DEFAULT_TIMEOUT = 10
 
     @classmethod
-    def informacao_usuario(cls, username):
+    def informacao_usuario(cls, username: Any) -> Any:
+        """Consulta dados do usuário na API SME.
+
+        Args:
+            username: Login ou matrícula do usuário na SME.
+
+        Returns:
+            Dicionário com os dados consultados.
+
+        Raises:
+            SmeIntegracaoException: Quando a API SME falha ou não encontra
+            dados.
+            RequestException: Se a chamada HTTP falhar.
+        """
         logger.info(f"Consultando dados na API externa para: {username}")
         try:
-            url = f"{settings.SME_INTEGRACAO_URL}/api/AutenticacaoSgp/{username}/dados"  # noqa: E501
+            url = (
+                f"{settings.SME_INTEGRACAO_URL}"
+                f"/api/AutenticacaoSgp/{username}/dados"
+            )
             response = requests.get(
                 url, headers=cls.DEFAULT_HEADERS, timeout=10
             )
-
             if response.status_code == status.HTTP_200_OK:
                 return response.json()
-
             else:
                 logger.info(f"Dados não encontrados: {response}")
                 raise SmeIntegracaoException("Dados não encontrados.")
-
         except requests.RequestException as err:
             logger.exception("Erro de conexão com a API externa")
             raise requests.RequestException(
@@ -39,19 +59,34 @@ class SmeIntegracaoService:
             ) from err
 
     @classmethod
-    def redefine_senha(cls, registro_funcional, senha):
+    def redefine_senha(cls, registro_funcional: Any, senha: Any) -> Any:
+        """Redefine senha.
+
+        Args:
+            registro_funcional: Registro funcional do servidor.
+            senha: Nova senha a ser definida.
+
+        Returns:
+            Confirmação de que a alteração foi aceita.
+
+        Raises:
+            SmeIntegracaoException: Quando a API SME falha ou não encontra
+            dados.
+        """
         if not registro_funcional or not senha:
             raise SmeIntegracaoException(
                 "Registro funcional e senha são obrigatórios"
             )
-
         logger.info(
             "Iniciando redefinição de senha no CoreSSO para usuário: %s",
             registro_funcional,
         )
         data = {"Usuario": registro_funcional, "Senha": senha}
         try:
-            url = f"{settings.SME_INTEGRACAO_URL}/api/AutenticacaoSgp/AlterarSenha"  # noqa: E501
+            url = (
+                f"{settings.SME_INTEGRACAO_URL}"
+                f"/api/AutenticacaoSgp/AlterarSenha"
+            )
             response = requests.post(
                 url, data=data, headers=cls.DEFAULT_HEADERS
             )
@@ -67,19 +102,34 @@ class SmeIntegracaoService:
             raise SmeIntegracaoException(str(err)) from err
 
     @classmethod
-    def alterar_email(cls, registro_funcional, email):
+    def alterar_email(cls, registro_funcional: Any, email: Any) -> Any:
+        """Altera o e-mail do usuário na API SME.
+
+        Args:
+            registro_funcional: Registro funcional do servidor.
+            email: Endereço de e-mail a ser atualizado.
+
+        Returns:
+            Confirmação de que a alteração foi aceita.
+
+        Raises:
+            SmeIntegracaoException: Quando a API SME falha ou não encontra
+            dados.
+        """
         if not registro_funcional or not email:
             raise SmeIntegracaoException(
                 "Registro funcional e email são obrigatórios"
             )
-
         logger.info(
             "Iniciando alteração de email no CoreSSO para usuário: %s",
             registro_funcional,
         )
         data = {"Usuario": registro_funcional, "Email": email}
         try:
-            url = f"{settings.SME_INTEGRACAO_URL}/api/AutenticacaoSgp/AlterarEmail"  # noqa: E501
+            url = (
+                f"{settings.SME_INTEGRACAO_URL}"
+                f"/api/AutenticacaoSgp/AlterarEmail"
+            )
             response = requests.post(
                 url, data=data, headers=cls.DEFAULT_HEADERS
             )

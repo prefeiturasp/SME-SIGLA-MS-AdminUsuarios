@@ -1,3 +1,7 @@
+"""Módulo services/autenticacao."""
+
+from __future__ import annotations
+
 import logging
 from typing import Any
 
@@ -17,6 +21,8 @@ logger = logging.getLogger(__name__)
 
 
 class AutenticacaoService:
+    """Serviço para operações de autenticacao."""
+
     DEFAULT_HEADERS = {
         "Content-Type": "application/json",
         "x-api-eol-key": settings.SME_INTEGRACAO_TOKEN,
@@ -24,7 +30,22 @@ class AutenticacaoService:
     DEFAULT_TIMEOUT = 100
 
     @classmethod
-    def autentica(cls, login, senha) -> dict[str, Any]:
+    def autentica(cls, login: Any, senha: Any) -> dict[str, Any]:
+        """Autentica o usuário no serviço externo.
+
+        Args:
+            login: Login.
+            senha: Nova senha a ser definida.
+
+        Returns:
+            Dicionário com os dados processados.
+
+        Raises:
+            AutenticacaoCredenciaisInvalidasError: Login ou senha incorretos.
+            AutenticacaoUpstreamError: Erro retornado pelo serviço externo.
+            AutenticacaoRequisicaoError: Falha de conexão com o serviço.
+            AutenticacaoRespostaInvalidaError: Resposta inválida do serviço.
+        """
         payload = {"usuario": login, "senha": senha, "codigoSistema": 1}
         try:
             logger.info("Autenticando no coresso. Login: %s", login)
@@ -48,7 +69,7 @@ class AutenticacaoService:
                 raise AutenticacaoUpstreamError(
                     "Erro no serviço de autenticação"
                 )
-            return data
+            return data  # type: ignore[no-any-return]
         except requests.RequestException as exc:
             logger.info("ERROR request - %s", str(exc))
             raise AutenticacaoRequisicaoError(
@@ -60,16 +81,28 @@ class AutenticacaoService:
 
     @classmethod
     def gerar_tokens_para_usuario(cls, user: User) -> dict[str, str]:
-        """Gera par de tokens JWT (access/refresh) para o usuário informado."""
+        """Gera tokens para usuario.
+
+        Args:
+            user: User.
+
+        Returns:
+            Dicionário com os dados processados.
+        """
         refresh = RefreshToken.for_user(user)
-        return {
-            "access": str(refresh.access_token),
-            "refresh": str(refresh),
-        }
+        return {"access": str(refresh.access_token), "refresh": str(refresh)}
 
     @classmethod
     def montar_resposta_login(cls, dados: Any, user: User) -> dict[str, Any]:
-        """Monta resposta do login com dados externos e tokens locais."""
+        """Monta resposta login.
+
+        Args:
+            dados: Dados.
+            user: User.
+
+        Returns:
+            Dicionário com os dados processados.
+        """
         resposta: dict[str, Any] = {}
         if isinstance(dados, dict):
             resposta.update(dados)
@@ -81,37 +114,24 @@ class AutenticacaoService:
     def atualizar_usuario_com_dados_autenticacao(
         cls, *, user: User, dados: Any, senha: str
     ) -> User:
-        """
-        Atualiza campos do User (nome/email) com base nos dados
-        retornados pelo serviço de autenticação.
-
-        - nome: mapeia para first_name/last_name (split por espaço)
-        - email: mapeia para user.email
-        - senha: mapeia para user.password
-        Tolera variações de chave (Nome/nome, Email/email).
-        """
+        """Atualiza usuario com dados de autenticação."""
         if not isinstance(dados, dict):
             return user
-
         nome = dados.get("nome")
         email = dados.get("email")
-
         update_fields = []
-
         if isinstance(nome, str):
             nome = nome.strip()
             if nome:
                 parts = [p for p in nome.split(" ") if p]
                 first_name = parts[0] if parts else ""
                 last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
-
                 if first_name and user.first_name != first_name:
                     user.first_name = first_name
                     update_fields.append("first_name")
                 if user.last_name != last_name:
                     user.last_name = last_name
                     update_fields.append("last_name")
-
         if isinstance(email, str):
             email = email.strip()
             if email and user.email != email:
