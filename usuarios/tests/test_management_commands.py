@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from typing import Any
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -16,14 +15,14 @@ from usuarios.management.commands.importar_usuarios import split_nome
 pytestmark = pytest.mark.django_db
 
 
-def test_split_nome_handles_edge_cases() -> None:
+def test_split_nome_handles_edge_cases():
     """Verifica split nome handles edge cases."""
     assert split_nome("") == ("", "")
     assert split_nome("Maria") == ("Maria", "")
     assert split_nome("Maria da Silva") == ("Maria", "da Silva")
 
 
-def test_criar_usuarios_creates_and_skips_existing() -> None:
+def test_criar_usuarios_creates_and_skips_existing():
     """Verifica criar usuarios creates and skips existing."""
     user_model = get_user_model()
     user_model.objects.create_user(
@@ -37,7 +36,7 @@ def test_criar_usuarios_creates_and_skips_existing() -> None:
     assert user_model.objects.get(username="usuario2").check_password("123456")
 
 
-def test_importar_usuarios_invalid_payload_raises() -> None:
+def test_importar_usuarios_invalid_payload_raises():
     """Verifica importar usuarios invalid payload raises."""
     with pytest.raises(CommandError, match="Não foi possível ler o JSON"):
         call_command("importar_usuarios", "nao-e-json")
@@ -45,7 +44,7 @@ def test_importar_usuarios_invalid_payload_raises() -> None:
         call_command("importar_usuarios", json.dumps({"username": "u1"}))
 
 
-def test_importar_usuarios_creates_skips_and_collects_errors() -> None:
+def test_importar_usuarios_creates_skips_and_collects_errors():
     """Verifica importar usuarios creates skips and collects errors."""
     user_model = get_user_model()
     user_model.objects.create_user(
@@ -71,7 +70,7 @@ def test_importar_usuarios_creates_skips_and_collects_errors() -> None:
     assert novo.has_usable_password() is False
 
 
-def test_limpar_usuarios_keeps_superuser_and_deletes_regular() -> None:
+def test_limpar_usuarios_keeps_superuser_and_deletes_regular():
     """Verifica limpar usuarios keeps superuser and deletes regular."""
     user_model = get_user_model()
     user_model.objects.create_superuser(
@@ -84,9 +83,7 @@ def test_limpar_usuarios_keeps_superuser_and_deletes_regular() -> None:
     assert not user_model.objects.filter(username__in=["u1", "u2"]).exists()
 
 
-def test_load_initial_permissions_creates_groups_and_permissions(
-    tmp_path: Any,
-) -> None:
+def test_load_initial_permissions_creates_groups_and_permissions(tmp_path):
     """Verifica load initial permissions creates groups and permissions."""
     permissions_file = tmp_path / "permissions.json"
     groups_file = tmp_path / "groups.json"

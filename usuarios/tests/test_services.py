@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
-from typing import Any
 
 import pytest
 import requests
@@ -24,7 +23,7 @@ from usuarios.services.token_service import TokenService
 pytestmark = pytest.mark.django_db
 
 
-def test_autenticacao_service_autentica_success(monkeypatch: Any) -> None:
+def test_autenticacao_service_autentica_success(monkeypatch):
     """Verifica autenticacao service autentica success."""
     response = SimpleNamespace(status_code=200, json=lambda: {"ok": True})
     monkeypatch.setattr(
@@ -35,7 +34,7 @@ def test_autenticacao_service_autentica_success(monkeypatch: Any) -> None:
     assert result == {"ok": True}
 
 
-def test_autenticacao_service_autentica_error_paths(monkeypatch: Any) -> None:
+def test_autenticacao_service_autentica_error_paths(monkeypatch):
     """Verifica autenticacao service autentica error paths."""
     unauthorized = SimpleNamespace(
         status_code=401, json=lambda: {"detail": "unauthorized"}
@@ -63,7 +62,7 @@ def test_autenticacao_service_autentica_error_paths(monkeypatch: Any) -> None:
     with pytest.raises(AutenticacaoUpstreamError):
         AutenticacaoService.autentica("user", "pwd")
 
-    def _raise_req(*_args: Any, **_kwargs: Any) -> None:
+    def _raise_req(*_args, **_kwargs):
         """Raise req."""
         raise requests.RequestException("network")
 
@@ -74,7 +73,7 @@ def test_autenticacao_service_autentica_error_paths(monkeypatch: Any) -> None:
         AutenticacaoService.autentica("user", "pwd")
 
 
-def test_autenticacao_service_login_payload_helpers(monkeypatch: Any) -> None:
+def test_autenticacao_service_login_payload_helpers(monkeypatch):
     """Verifica autenticacao service login payload helpers."""
     user = User.objects.create_user(username="alice")
     monkeypatch.setattr(
@@ -91,9 +90,7 @@ def test_autenticacao_service_login_payload_helpers(monkeypatch: Any) -> None:
     assert resposta["token"] == "access-token"
 
 
-def test_sme_integracao_informacao_usuario_success_and_errors(
-    monkeypatch: Any,
-) -> None:
+def test_sme_integracao_informacao_usuario_success_and_errors(monkeypatch):
     """Verifica sme integracao informacao usuario success and errors."""
     ok_response = SimpleNamespace(
         status_code=200, json=lambda: {"Nome": "Maria"}
@@ -111,7 +108,7 @@ def test_sme_integracao_informacao_usuario_success_and_errors(
     with pytest.raises(SmeIntegracaoException, match="Dados não encontrados"):
         SmeIntegracaoService.informacao_usuario("123")
 
-    def _raise_request(*_args: Any, **_kwargs: Any) -> None:
+    def _raise_request(*_args, **_kwargs):
         """Raise request."""
         raise requests.RequestException("timeout")
 
@@ -122,9 +119,7 @@ def test_sme_integracao_informacao_usuario_success_and_errors(
         SmeIntegracaoService.informacao_usuario("123")
 
 
-def test_sme_integracao_redefine_senha_success_and_errors(
-    monkeypatch: Any,
-) -> None:
+def test_sme_integracao_redefine_senha_success_and_errors(monkeypatch):
     """Verifica sme integracao redefine senha success and errors."""
     success_response = SimpleNamespace(status_code=200, content=b"")
     fail_response = SimpleNamespace(
@@ -145,9 +140,7 @@ def test_sme_integracao_redefine_senha_success_and_errors(
         SmeIntegracaoService.redefine_senha("", "")
 
 
-def test_sme_integracao_alterar_email_success_and_errors(
-    monkeypatch: Any,
-) -> None:
+def test_sme_integracao_alterar_email_success_and_errors(monkeypatch):
     """Verifica sme integracao alterar email success and errors."""
     success_response = SimpleNamespace(status_code=200, content=b"")
     fail_response = SimpleNamespace(
@@ -170,7 +163,7 @@ def test_sme_integracao_alterar_email_success_and_errors(
         SmeIntegracaoService.alterar_email("123", "")
 
 
-def test_token_service_gerar_token_para_reset() -> None:
+def test_token_service_gerar_token_para_reset():
     """Verifica token service gerar token para reset."""
     user = User.objects.create_user(username="alice", first_name="Alice")
     data = TokenService.gerar_token_para_reset(user, "alice@example.com")
@@ -179,9 +172,7 @@ def test_token_service_gerar_token_para_reset() -> None:
     assert data["token"]
 
 
-def test_email_service_enviar_email_and_reset(
-    monkeypatch: Any, settings: Any
-) -> None:
+def test_email_service_enviar_email_and_reset(monkeypatch, settings):
     """Verifica email service enviar email and reset."""
     settings.DEFAULT_FROM_EMAIL = "default@example.com"
     settings.APLICACAO_URL = "http://frontend.local"
@@ -191,14 +182,7 @@ def test_email_service_enviar_email_and_reset(
     class DummyEmail:
         """Representa DummyEmail."""
 
-        def __init__(
-            self,
-            subject: Any,
-            body: Any,
-            from_email: Any,
-            to: Any,
-            headers: Any,
-        ) -> None:
+        def __init__(self, subject, body, from_email, to, headers):
             """Inicializa a instância com os parâmetros informados."""
             captured["subject"] = subject
             captured["body"] = body
@@ -207,11 +191,11 @@ def test_email_service_enviar_email_and_reset(
             captured["headers"] = headers
             captured["alternatives"] = []
 
-        def attach_alternative(self, html: Any, content_type: Any) -> None:
+        def attach_alternative(self, html, content_type):
             """Attach alternative."""
             captured["alternatives"].append((html, content_type))
 
-        def send(self) -> None:
+        def send(self):
             """Send."""
             captured["sent"] = True
 

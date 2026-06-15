@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import pytest
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
@@ -22,17 +20,17 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
-def rf() -> Any:
+def rf():
     return APIRequestFactory()
 
 
 @pytest.fixture
-def ct_user() -> Any:
+def ct_user():
     return ContentType.objects.get_for_model(User)
 
 
 @pytest.fixture
-def perm_direta(ct_user: Any) -> Any:
+def perm_direta(ct_user):
     return Permission.objects.create(
         codename="pode_ver_dashboard",
         name="Pode ver dashboard",
@@ -41,7 +39,7 @@ def perm_direta(ct_user: Any) -> Any:
 
 
 @pytest.fixture
-def perm_grupo(ct_user: Any) -> Any:
+def perm_grupo(ct_user):
     return Permission.objects.create(
         codename="pode_editar_grupo",
         name="Pode editar grupo",
@@ -49,7 +47,7 @@ def perm_grupo(ct_user: Any) -> Any:
     )
 
 
-def test_gerenciar_permissoes_usuario_requires_param(rf: Any) -> None:
+def test_gerenciar_permissoes_usuario_requires_param(rf):
     """Verifica gerenciar permissoes usuario requires param."""
     request = rf.get("/usuarios/permissoes/")
     response = GerenciarPermissoesUsuarioView.as_view()(request)
@@ -57,7 +55,7 @@ def test_gerenciar_permissoes_usuario_requires_param(rf: Any) -> None:
     assert response.data["detail"] == "usuario é obrigatório"
 
 
-def test_gerenciar_permissoes_usuario_not_found(rf: Any) -> None:
+def test_gerenciar_permissoes_usuario_not_found(rf):
     """Verifica gerenciar permissoes usuario not found."""
     request = rf.get("/usuarios/permissoes/?usuario=naoexiste")
     response = GerenciarPermissoesUsuarioView.as_view()(request)
@@ -66,8 +64,8 @@ def test_gerenciar_permissoes_usuario_not_found(rf: Any) -> None:
 
 
 def test_gerenciar_permissoes_usuario_success_with_group_and_direct(
-    rf: Any, perm_direta: Any, perm_grupo: Any
-) -> None:
+    rf, perm_direta, perm_grupo
+):
     """Verifica gerenciar permissoes usuario success with group and direct."""
     user = User.objects.create_user(
         username="alice",
@@ -88,9 +86,7 @@ def test_gerenciar_permissoes_usuario_success_with_group_and_direct(
     assert set(response.data["grupos"]) == {"Admins"}
 
 
-def test_gerenciar_permissoes_usuario_filters_model(
-    rf: Any, perm_direta: Any
-) -> None:
+def test_gerenciar_permissoes_usuario_filters_model(rf, perm_direta):
     """Verifica gerenciar permissoes usuario filters model."""
     user = User.objects.create_user(username="alice")
     user.user_permissions.add(perm_direta)
@@ -100,9 +96,7 @@ def test_gerenciar_permissoes_usuario_filters_model(
     assert response.data["total_permissoes"] == 1
 
 
-def test_permissoes_disponiveis_get_returns_permissions(
-    rf: Any, perm_direta: Any
-) -> None:
+def test_permissoes_disponiveis_get_returns_permissions(rf, perm_direta):
     """Verifica permissoes disponiveis get returns permissions."""
     request = rf.get("/permissoes/")
     response = PermissoesDisponiveisView.as_view()(request)
@@ -110,9 +104,7 @@ def test_permissoes_disponiveis_get_returns_permissions(
     assert any(p["codename"] == perm_direta.codename for p in response.data)
 
 
-def test_permissoes_disponiveis_post_creates_permission(
-    rf: Any, ct_user: Any
-) -> None:
+def test_permissoes_disponiveis_post_creates_permission(rf, ct_user):
     """Verifica permissoes disponiveis post creates permission."""
     request = rf.post(
         "/permissoes/",
@@ -129,7 +121,7 @@ def test_permissoes_disponiveis_post_creates_permission(
     assert response.data["codename"] == "pode_exportar"
 
 
-def test_grupos_disponiveis_get_not_found_by_name(rf: Any) -> None:
+def test_grupos_disponiveis_get_not_found_by_name(rf):
     """Verifica grupos disponiveis get not found by name."""
     request = rf.get("/grupos/?grupo=Inexistente")
     response = GruposDisponiveisView.as_view()(request)
@@ -137,7 +129,7 @@ def test_grupos_disponiveis_get_not_found_by_name(rf: Any) -> None:
     assert response.data["detail"] == "Grupo não encontrado"
 
 
-def test_grupos_disponiveis_get_all(rf: Any) -> None:
+def test_grupos_disponiveis_get_all(rf):
     """Verifica grupos disponiveis get all."""
     Group.objects.create(name="A")
     Group.objects.create(name="B")
@@ -147,7 +139,7 @@ def test_grupos_disponiveis_get_all(rf: Any) -> None:
     assert len(response.data) == 2
 
 
-def test_grupos_disponiveis_put_not_found(rf: Any) -> None:
+def test_grupos_disponiveis_put_not_found(rf):
     """Verifica grupos disponiveis put not found."""
     request = rf.put("/grupos/", {"grupo": "Inexistente"}, format="json")
     response = GruposDisponiveisView.as_view()(request)
@@ -155,8 +147,8 @@ def test_grupos_disponiveis_put_not_found(rf: Any) -> None:
 
 
 def test_grupos_disponiveis_put_add_remove_permissions(
-    rf: Any, perm_direta: Any, perm_grupo: Any
-) -> None:
+    rf, perm_direta, perm_grupo
+):
     """Verifica grupos disponiveis put add remove permissions."""
     group = Group.objects.create(name="Gestores")
     group.permissions.add(perm_direta)
@@ -177,9 +169,7 @@ def test_grupos_disponiveis_put_add_remove_permissions(
     }
 
 
-def test_grupos_disponiveis_post_creates_group(
-    rf: Any, perm_direta: Any
-) -> None:
+def test_grupos_disponiveis_post_creates_group(rf, perm_direta):
     """Verifica grupos disponiveis post creates group."""
     request = rf.post(
         "/grupos/",
@@ -195,7 +185,7 @@ def test_grupos_disponiveis_post_creates_group(
     assert group.permissions.filter(codename=perm_direta.codename).exists()
 
 
-def test_gerenciar_usuarios_grupo_group_not_found(rf: Any) -> None:
+def test_gerenciar_usuarios_grupo_group_not_found(rf):
     """Verifica gerenciar usuarios grupo group not found."""
     request = rf.put(
         "/grupos/usuarios/",
@@ -207,7 +197,7 @@ def test_gerenciar_usuarios_grupo_group_not_found(rf: Any) -> None:
     assert response.data["detail"] == "Grupo não encontrado"
 
 
-def test_gerenciar_usuarios_grupo_add_and_remove(rf: Any) -> None:
+def test_gerenciar_usuarios_grupo_add_and_remove(rf):
     """Verifica gerenciar usuarios grupo add and remove."""
     group = Group.objects.create(name="Equipe")
     u1 = User.objects.create_user(username="u1")
@@ -228,7 +218,7 @@ def test_gerenciar_usuarios_grupo_add_and_remove(rf: Any) -> None:
     assert set(group.user_set.values_list("username", flat=True)) == {"u2"}
 
 
-def test_usuarios_com_grupos_get_and_filter(rf: Any) -> None:
+def test_usuarios_com_grupos_get_and_filter(rf):
     """Verifica usuarios com grupos get and filter."""
     g = Group.objects.create(name="Equipe")
     u1 = User.objects.create_user(username="alice", first_name="Alice")
@@ -245,7 +235,7 @@ def test_usuarios_com_grupos_get_and_filter(rf: Any) -> None:
     assert filtered_response.data["results"][0]["usuario"] == "alice"
 
 
-def test_usuarios_com_grupos_patch_user_not_found(rf: Any) -> None:
+def test_usuarios_com_grupos_patch_user_not_found(rf):
     """Verifica usuarios com grupos patch user not found."""
     request = rf.patch(
         "/usuarios/grupos/", {"usuario": "naoexiste"}, format="json"
@@ -255,9 +245,7 @@ def test_usuarios_com_grupos_patch_user_not_found(rf: Any) -> None:
     assert response.data["detail"] == "Usuário não encontrado"
 
 
-def test_usuarios_com_grupos_patch_updates_fields_and_groups(
-    rf: Any, monkeypatch: Any
-) -> None:
+def test_usuarios_com_grupos_patch_updates_fields_and_groups(rf, monkeypatch):
     """Verifica usuarios com grupos patch updates fields and groups."""
     monkeypatch.setattr(
         "usuarios.views.permissoes.SmeIntegracaoService.alterar_email",
@@ -290,7 +278,7 @@ def test_usuarios_com_grupos_patch_updates_fields_and_groups(
     assert set(user.groups.values_list("name", flat=True)) == {"G2"}
 
 
-def test_usuarios_com_grupos_patch_email_unique_validation(rf: Any) -> None:
+def test_usuarios_com_grupos_patch_email_unique_validation(rf):
     """Verifica usuarios com grupos patch email unique validation."""
     User.objects.create_user(username="u1", email="same@x.com")
     User.objects.create_user(username="u2", email="u2@x.com")
@@ -304,14 +292,12 @@ def test_usuarios_com_grupos_patch_email_unique_validation(rf: Any) -> None:
     assert "email" in response.data
 
 
-def test_patch_email_diferente_chama_sme_e_salva(
-    rf: Any, monkeypatch: Any
-) -> Any:
+def test_patch_email_diferente_chama_sme_e_salva(rf, monkeypatch):
     """Verifica patch email diferente chama sme e salva."""
     user = User.objects.create_user(username="alice", email="old@x.com")
     chamadas = {"n": 0}
 
-    def _ok(*_a: Any, **_k: Any) -> Any:
+    def _ok(*_a, **_k):
         """Ok."""
         chamadas["n"] += 1
         return "OK"
@@ -331,12 +317,12 @@ def test_patch_email_diferente_chama_sme_e_salva(
     assert chamadas["n"] == 1
 
 
-def test_patch_email_igual_nao_chama_sme(rf: Any, monkeypatch: Any) -> Any:
+def test_patch_email_igual_nao_chama_sme(rf, monkeypatch):
     """Verifica patch email igual nao chama sme."""
     User.objects.create_user(username="alice", email="same@x.com")
     chamadas = {"n": 0}
 
-    def _spy(*_a: Any, **_k: Any) -> Any:
+    def _spy(*_a, **_k):
         """Spy."""
         chamadas["n"] += 1
         return "OK"
@@ -354,15 +340,13 @@ def test_patch_email_igual_nao_chama_sme(rf: Any, monkeypatch: Any) -> Any:
     assert chamadas["n"] == 0
 
 
-def test_patch_email_sme_falha_retorna_400_e_nao_salva(
-    rf: Any, monkeypatch: Any
-) -> None:
+def test_patch_email_sme_falha_retorna_400_e_nao_salva(rf, monkeypatch):
     """Verifica patch email sme falha retorna 400 e nao salva."""
     from usuarios.exceptions import SmeIntegracaoException
 
     user = User.objects.create_user(username="alice", email="old@x.com")
 
-    def _raise(*_a: Any, **_k: Any) -> None:
+    def _raise(*_a, **_k):
         """Raise."""
         raise SmeIntegracaoException("email recusado")
 

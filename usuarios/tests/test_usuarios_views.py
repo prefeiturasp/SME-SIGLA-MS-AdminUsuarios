@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import pytest
 from django.contrib.auth.models import Group, User
 from django.utils.encoding import force_bytes
@@ -33,12 +31,12 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
-def rf() -> Any:
+def rf():
     """Rf."""
     return APIRequestFactory()
 
 
-def test_mask_email_formats_values() -> None:
+def test_mask_email_formats_values():
     """Verifica mask email formats values."""
     assert (
         _mask_email("abcde@prefeitura.sp.gov.br")
@@ -48,7 +46,7 @@ def test_mask_email_formats_values() -> None:
     assert _mask_email("invalido") == "***"
 
 
-def test_login_user_not_found_returns_401(rf: Any) -> None:
+def test_login_user_not_found_returns_401(rf):
     """Verifica login user not found returns 401."""
     request = rf.post(
         "/usuarios/login/",
@@ -60,13 +58,11 @@ def test_login_user_not_found_returns_401(rf: Any) -> None:
     assert response.data["detail"] == "Usuário não encontrado"
 
 
-def test_login_invalid_credentials_returns_401(
-    rf: Any, monkeypatch: Any
-) -> None:
+def test_login_invalid_credentials_returns_401(rf, monkeypatch):
     """Verifica login invalid credentials returns 401."""
     User.objects.create_user(username="rf123", password="segredo")
 
-    def _raise_invalid(*_args: Any, **_kwargs: Any) -> None:
+    def _raise_invalid(*_args, **_kwargs):
         """Raise invalid."""
         raise AutenticacaoCredenciaisInvalidasError()
 
@@ -83,11 +79,11 @@ def test_login_invalid_credentials_returns_401(
     assert response.data["detail"] == "Credenciais inválidas"
 
 
-def test_login_upstream_error_returns_400(rf: Any, monkeypatch: Any) -> None:
+def test_login_upstream_error_returns_400(rf, monkeypatch):
     """Verifica login upstream error returns 400."""
     User.objects.create_user(username="rf123", password="segredo")
 
-    def _raise_upstream(*_args: Any, **_kwargs: Any) -> None:
+    def _raise_upstream(*_args, **_kwargs):
         """Raise upstream."""
         raise AutenticacaoRequisicaoError("falha")
 
@@ -105,7 +101,7 @@ def test_login_upstream_error_returns_400(rf: Any, monkeypatch: Any) -> None:
     assert response.data["detail"] == "Falha no serviço de autenticação"
 
 
-def test_login_success_returns_payload(rf: Any, monkeypatch: Any) -> Any:
+def test_login_success_returns_payload(rf, monkeypatch):
     """Verifica login success returns payload."""
     user = User.objects.create_user(username="rf123", password="segredo")
     monkeypatch.setattr(
@@ -114,7 +110,7 @@ def test_login_success_returns_payload(rf: Any, monkeypatch: Any) -> Any:
     )
     called = {"count": 0}
 
-    def _montar(*_args: Any, **_kwargs: Any) -> Any:
+    def _montar(*_args, **_kwargs):
         """Montar."""
         called["count"] += 1
         return {"access": "ok", "user": {"username": user.username}}
@@ -134,7 +130,7 @@ def test_login_success_returns_payload(rf: Any, monkeypatch: Any) -> Any:
     assert called["count"] == 1
 
 
-def test_esqueci_senha_user_not_found(rf: Any) -> None:
+def test_esqueci_senha_user_not_found(rf):
     """Verifica esqueci senha user not found."""
     request = rf.post(
         "/usuarios/esqueci-minha-senha/", {"rf": "000"}, format="json"
@@ -144,11 +140,11 @@ def test_esqueci_senha_user_not_found(rf: Any) -> None:
     assert response.data["detail"] == "Usuário não encontrado"
 
 
-def test_esqueci_senha_sme_failure(rf: Any, monkeypatch: Any) -> None:
+def test_esqueci_senha_sme_failure(rf, monkeypatch):
     """Verifica esqueci senha sme failure."""
     User.objects.create_user(username="123")
 
-    def _raise(*_args: Any, **_kwargs: Any) -> None:
+    def _raise(*_args, **_kwargs):
         """Raise."""
         raise Exception("erro")
 
@@ -164,7 +160,7 @@ def test_esqueci_senha_sme_failure(rf: Any, monkeypatch: Any) -> None:
     assert response.data["detail"] == "Falha ao consultar dados do usuário"
 
 
-def test_esqueci_senha_email_not_found(rf: Any, monkeypatch: Any) -> None:
+def test_esqueci_senha_email_not_found(rf, monkeypatch):
     """Verifica esqueci senha email not found."""
     User.objects.create_user(username="123")
     monkeypatch.setattr(
@@ -179,7 +175,7 @@ def test_esqueci_senha_email_not_found(rf: Any, monkeypatch: Any) -> None:
     assert response.data["detail"] == "E-mail não encontrado para o usuário"
 
 
-def test_esqueci_senha_email_send_failure(rf: Any, monkeypatch: Any) -> None:
+def test_esqueci_senha_email_send_failure(rf, monkeypatch):
     """Verifica esqueci senha email send failure."""
     User.objects.create_user(username="123", first_name="Maria")
     monkeypatch.setattr(
@@ -190,7 +186,7 @@ def test_esqueci_senha_email_send_failure(rf: Any, monkeypatch: Any) -> None:
         },
     )
 
-    def _raise_send(*_args: Any, **_kwargs: Any) -> None:
+    def _raise_send(*_args, **_kwargs):
         """Raise send."""
         raise Exception("smtp")
 
@@ -206,7 +202,7 @@ def test_esqueci_senha_email_send_failure(rf: Any, monkeypatch: Any) -> None:
     assert response.data["detail"] == "Falha ao enviar e-mail"
 
 
-def test_esqueci_senha_success(rf: Any, monkeypatch: Any) -> None:
+def test_esqueci_senha_success(rf, monkeypatch):
     """Verifica esqueci senha success."""
     User.objects.create_user(username="123", first_name="Maria")
     monkeypatch.setattr(
@@ -229,7 +225,7 @@ def test_esqueci_senha_success(rf: Any, monkeypatch: Any) -> None:
     assert response.data["email_enviado"] is True
 
 
-def test_criar_nova_senha_uid_invalido(rf: Any) -> None:
+def test_criar_nova_senha_uid_invalido(rf):
     """Verifica criar nova senha uid invalido."""
     request = rf.post(
         "/usuarios/criar-nova-senha/",
@@ -241,7 +237,7 @@ def test_criar_nova_senha_uid_invalido(rf: Any) -> None:
     assert response.data["detail"] == "UID inválido"
 
 
-def test_criar_nova_senha_token_invalido(rf: Any) -> None:
+def test_criar_nova_senha_token_invalido(rf):
     """Verifica criar nova senha token invalido."""
     user = User.objects.create_user(username="123", password="senha-antiga")
     uid = urlsafe_base64_encode(force_bytes(user.pk))
@@ -255,18 +251,18 @@ def test_criar_nova_senha_token_invalido(rf: Any) -> None:
     assert response.data["detail"] == "Token inválido"
 
 
-def test_criar_nova_senha_sme_exception(rf: Any, monkeypatch: Any) -> Any:
+def test_criar_nova_senha_sme_exception(rf, monkeypatch):
     """Verifica criar nova senha sme exception."""
     user = User.objects.create_user(username="123", password="senha-antiga")
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     called = {"count": 0}
 
-    def _check_token(*_args: Any, **_kwargs: Any) -> Any:
+    def _check_token(*_args, **_kwargs):
         """Check token."""
         called["count"] += 1
         return True
 
-    def _raise_sme(*_args: Any, **_kwargs: Any) -> None:
+    def _raise_sme(*_args, **_kwargs):
         """Raise sme."""
         raise SmeIntegracaoException("erro")
 
@@ -291,7 +287,7 @@ def test_criar_nova_senha_sme_exception(rf: Any, monkeypatch: Any) -> Any:
     assert called["count"] == 1
 
 
-def test_criar_nova_senha_success(rf: Any, monkeypatch: Any) -> None:
+def test_criar_nova_senha_success(rf, monkeypatch):
     """Verifica criar nova senha success."""
     user = User.objects.create_user(username="123", password="senha-antiga")
     uid = urlsafe_base64_encode(force_bytes(user.pk))
@@ -314,7 +310,7 @@ def test_criar_nova_senha_success(rf: Any, monkeypatch: Any) -> None:
     assert user.check_password("novasenha")
 
 
-def test_criar_usuario_username_conflict(rf: Any) -> None:
+def test_criar_usuario_username_conflict(rf):
     """Verifica criar usuario username conflict."""
     User.objects.create_user(
         username="existente", email="x@x.com", password="123456"
@@ -333,7 +329,7 @@ def test_criar_usuario_username_conflict(rf: Any) -> None:
     assert "Nome de usuário" in response.data["detail"]
 
 
-def test_criar_usuario_email_conflict(rf: Any) -> None:
+def test_criar_usuario_email_conflict(rf):
     """Verifica criar usuario email conflict."""
     User.objects.create_user(
         username="u1", email="igual@x.com", password="123456"
@@ -348,7 +344,7 @@ def test_criar_usuario_email_conflict(rf: Any) -> None:
     assert "E-mail" in response.data["detail"]
 
 
-def test_criar_usuario_success(rf: Any) -> None:
+def test_criar_usuario_success(rf):
     """Verifica criar usuario success."""
     request = rf.post(
         "/usuarios/criar-usuario/",
@@ -364,7 +360,7 @@ def test_criar_usuario_success(rf: Any) -> None:
     assert user.has_usable_password() is False
 
 
-def test_meus_dados_unauthenticated(rf: Any) -> None:
+def test_meus_dados_unauthenticated(rf):
     """Verifica meus dados unauthenticated."""
     request = rf.get("/usuarios/meus-dados/")
     response = MeusDadosView.as_view()(request)
@@ -374,7 +370,7 @@ def test_meus_dados_unauthenticated(rf: Any) -> None:
     )
 
 
-def test_meus_dados_sem_grupos(rf: Any) -> None:
+def test_meus_dados_sem_grupos(rf):
     """Verifica meus dados sem grupos."""
     user = User.objects.create_user(
         username="rf999",
@@ -392,7 +388,7 @@ def test_meus_dados_sem_grupos(rf: Any) -> None:
     assert response.data["perfil_acesso"] == []
 
 
-def test_meus_dados_com_grupos(rf: Any) -> None:
+def test_meus_dados_com_grupos(rf):
     """Verifica meus dados com grupos."""
     user = User.objects.create_user(username="rf888", first_name="Maria")
     grupo = Group.objects.create(name="Gestor")
@@ -404,7 +400,7 @@ def test_meus_dados_com_grupos(rf: Any) -> None:
     assert "Gestor" in response.data["perfil_acesso"]
 
 
-def test_meus_dados_nome_apenas_first_name(rf: Any) -> None:
+def test_meus_dados_nome_apenas_first_name(rf):
     """Verifica meus dados nome apenas first name."""
     user = User.objects.create_user(
         username="rf777", first_name="Ana", last_name=""
@@ -415,7 +411,7 @@ def test_meus_dados_nome_apenas_first_name(rf: Any) -> None:
     assert response.data["nome_completo"] == "Ana"
 
 
-def test_alterar_senha_unauthenticated(rf: Any) -> None:
+def test_alterar_senha_unauthenticated(rf):
     """Verifica alterar senha unauthenticated."""
     request = rf.post("/usuarios/alterar-senha/", {}, format="json")
     response = AlterarSenhaView.as_view()(request)
@@ -425,7 +421,7 @@ def test_alterar_senha_unauthenticated(rf: Any) -> None:
     )
 
 
-def test_alterar_senha_atual_incorreta(rf: Any) -> None:
+def test_alterar_senha_atual_incorreta(rf):
     """Verifica alterar senha atual incorreta."""
     user = User.objects.create_user(
         username="rf111", password="SenhaCorreta1!"
@@ -445,13 +441,13 @@ def test_alterar_senha_atual_incorreta(rf: Any) -> None:
     assert "Senha atual incorreta" in response.data["detail"]
 
 
-def test_alterar_senha_sme_exception(rf: Any, monkeypatch: Any) -> None:
+def test_alterar_senha_sme_exception(rf, monkeypatch):
     """Verifica alterar senha sme exception."""
     user = User.objects.create_user(
         username="rf222", password="SenhaCorreta1!"
     )
 
-    def _raise_sme(*_args: Any, **_kwargs: Any) -> None:
+    def _raise_sme(*_args, **_kwargs):
         """Raise sme."""
         raise SmeIntegracaoException("senha fraca")
 
@@ -474,7 +470,7 @@ def test_alterar_senha_sme_exception(rf: Any, monkeypatch: Any) -> None:
     assert "senha fraca" in response.data["detail"]
 
 
-def test_alterar_senha_success(rf: Any, monkeypatch: Any) -> None:
+def test_alterar_senha_success(rf, monkeypatch):
     """Verifica alterar senha success."""
     user = User.objects.create_user(
         username="rf333", password="SenhaCorreta1!"
@@ -513,9 +509,7 @@ def test_alterar_senha_success(rf: Any, monkeypatch: Any) -> None:
         ("Acentuàdo1!", "acentuados"),
     ],
 )
-def test_alterar_senha_serializer_validacao_nova_senha(
-    nova_senha: Any, esperado: Any
-) -> None:
+def test_alterar_senha_serializer_validacao_nova_senha(nova_senha, esperado):
     """Verifica alterar senha serializer validacao nova senha."""
     data = {
         "senha_atual": "Antiga1!",
@@ -528,7 +522,7 @@ def test_alterar_senha_serializer_validacao_nova_senha(
     assert esperado in errors_str
 
 
-def test_alterar_senha_serializer_confirmacao_divergente() -> None:
+def test_alterar_senha_serializer_confirmacao_divergente():
     """Verifica alterar senha serializer confirmacao divergente."""
     data = {
         "senha_atual": "Antiga1!",
@@ -540,7 +534,7 @@ def test_alterar_senha_serializer_confirmacao_divergente() -> None:
     assert "confirmacao_nova_senha" in serializer.errors
 
 
-def test_alterar_senha_serializer_valido() -> None:
+def test_alterar_senha_serializer_valido():
     """Verifica alterar senha serializer valido."""
     data = {
         "senha_atual": "Antiga1!",
@@ -551,7 +545,7 @@ def test_alterar_senha_serializer_valido() -> None:
     assert serializer.is_valid(), serializer.errors
 
 
-def test_alterar_email_serializer_email_invalido() -> None:
+def test_alterar_email_serializer_email_invalido():
     """Verifica alterar email serializer email invalido."""
     user = User.objects.create_user(username="u1")
     s = AlterarEmailSerializer(
@@ -561,7 +555,7 @@ def test_alterar_email_serializer_email_invalido() -> None:
     assert "novo_email" in s.errors
 
 
-def test_alterar_email_serializer_email_duplicado() -> None:
+def test_alterar_email_serializer_email_duplicado():
     """Verifica alterar email serializer email duplicado."""
     User.objects.create_user(username="u1", email="igual@x.com")
     user2 = User.objects.create_user(username="u2", email="u2@x.com")
@@ -572,9 +566,7 @@ def test_alterar_email_serializer_email_duplicado() -> None:
     assert "já está cadastrado" in str(s.errors)
 
 
-def test_alterar_email_serializer_permite_mesmo_email_do_proprio_user() -> (
-    None
-):
+def test_alterar_email_serializer_permite_mesmo_email_do_proprio_user():
     """Verifica alterar email serializer permite mesmo email do proprio user."""
     user = User.objects.create_user(username="u1", email="mine@x.com")
     s = AlterarEmailSerializer(
@@ -583,7 +575,7 @@ def test_alterar_email_serializer_permite_mesmo_email_do_proprio_user() -> (
     assert s.is_valid(), s.errors
 
 
-def test_alterar_email_serializer_valido() -> None:
+def test_alterar_email_serializer_valido():
     """Verifica alterar email serializer valido."""
     user = User.objects.create_user(username="u1", email="old@x.com")
     s = AlterarEmailSerializer(
@@ -592,7 +584,7 @@ def test_alterar_email_serializer_valido() -> None:
     assert s.is_valid(), s.errors
 
 
-def test_alterar_email_unauthenticated(rf: Any) -> None:
+def test_alterar_email_unauthenticated(rf):
     """Verifica alterar email unauthenticated."""
     request = rf.post("/usuarios/alterar-email/", {}, format="json")
     response = AlterarEmailView.as_view()(request)
@@ -602,7 +594,7 @@ def test_alterar_email_unauthenticated(rf: Any) -> None:
     )
 
 
-def test_alterar_email_duplicado(rf: Any) -> None:
+def test_alterar_email_duplicado(rf):
     """Verifica alterar email duplicado."""
     User.objects.create_user(username="outro", email="igual@x.com")
     user = User.objects.create_user(username="eu", email="meu@x.com")
@@ -617,11 +609,11 @@ def test_alterar_email_duplicado(rf: Any) -> None:
     assert "novo_email" in response.data
 
 
-def test_alterar_email_sme_exception(rf: Any, monkeypatch: Any) -> None:
+def test_alterar_email_sme_exception(rf, monkeypatch):
     """Verifica alterar email sme exception."""
     user = User.objects.create_user(username="eu", email="meu@x.com")
 
-    def _raise(*_a: Any, **_k: Any) -> None:
+    def _raise(*_a, **_k):
         """Raise."""
         raise SmeIntegracaoException("email invalido")
 
@@ -639,12 +631,12 @@ def test_alterar_email_sme_exception(rf: Any, monkeypatch: Any) -> None:
     assert user.email == "meu@x.com"
 
 
-def test_alterar_email_success(rf: Any, monkeypatch: Any) -> Any:
+def test_alterar_email_success(rf, monkeypatch):
     """Verifica alterar email success."""
     user = User.objects.create_user(username="eu", email="meu@x.com")
     chamadas = {"n": 0}
 
-    def _ok(*_a: Any, **_k: Any) -> Any:
+    def _ok(*_a, **_k):
         """Ok."""
         chamadas["n"] += 1
         return "OK"

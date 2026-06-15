@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import pytest
 from django.urls import resolve, reverse
 
@@ -38,9 +36,7 @@ from usuarios.views.permissoes import (
         ("usuarios-com-grupos", UsuariosComGruposView),
     ],
 )
-def test_urlpatterns_resolve_expected_views(
-    route_name: Any, view_class: Any
-) -> None:
+def test_urlpatterns_resolve_expected_views(route_name, view_class):
     """Verifica urlpatterns resolve expected views."""
     match = resolve(reverse(route_name))
-    assert match.func.view_class is view_class  # type: ignore[attr-defined]
+    assert match.func.view_class is view_class
