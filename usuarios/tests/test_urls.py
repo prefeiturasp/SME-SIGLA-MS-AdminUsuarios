@@ -1,3 +1,7 @@
+"""Módulo tests/test_urls."""
+
+from __future__ import annotations
+
 import pytest
 from django.urls import resolve, reverse
 
@@ -33,5 +37,6 @@ from usuarios.views.permissoes import (
     ],
 )
 def test_urlpatterns_resolve_expected_views(route_name, view_class):
+    """Verifica urlpatterns resolve expected views."""
     match = resolve(reverse(route_name))
     assert match.func.view_class is view_class

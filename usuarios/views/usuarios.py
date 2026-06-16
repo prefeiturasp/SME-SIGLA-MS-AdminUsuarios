@@ -1,16 +1,14 @@
-"""
-DRF views for the usuarios module.
-"""
+"""DRF views for the usuarios module."""
+
+from __future__ import annotations
 
 import logging
+from typing import Any
 
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
-from drf_spectacular.utils import (
-    OpenApiResponse,
-    extend_schema,
-)
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -40,6 +38,14 @@ logger = logging.getLogger(__name__)
 
 
 def _mask_email(email: str) -> str:
+    """Mask email.
+
+    Args:
+        email: Endereço de e-mail a ser atualizado.
+
+    Returns:
+        Conteúdo textual gerado.
+    """
     try:
         local, domain = email.split("@", 1)
     except ValueError:
@@ -54,11 +60,14 @@ def _mask_email(email: str) -> str:
 
 
 class LoginView(TokenObtainPairView):
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    """Representa LoginView."""
+
+    permission_classes = [permissions.AllowAny]  # type: ignore[assignment]
+    authentication_classes = []  # type: ignore[assignment]
 
     @extend_schema(request=LoginSerializer)
-    def post(self, request):
+    def post(self, request: Any) -> Any:
+        """Autentica o usuário e retorna os dados de acesso."""
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         usuario = User.objects.filter(
@@ -88,8 +97,6 @@ class LoginView(TokenObtainPairView):
                 {"detail": "Falha no serviço de autenticação"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        # Atualiza nome/email do usuário local com dados retornados da autenticação  # noqa: E501
         AutenticacaoService.atualizar_usuario_com_dados_autenticacao(
             user=usuario, dados=data, senha=serializer.validated_data["senha"]
         )
@@ -100,13 +107,15 @@ class LoginView(TokenObtainPairView):
 
 
 class EsqueciSenhaView(APIView):
+    """Representa EsqueciSenhaView."""
+
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
 
-    def post(self, request):
+    def post(self, request: Any) -> Any:
+        """Solicita envio de e-mail para recuperação de senha."""
         serializer = EsqueciSenhaSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         usuario = serializer.validated_data["rf"]
         user = User.objects.filter(username=usuario).first()
         if not user:
@@ -121,7 +130,6 @@ class EsqueciSenhaView(APIView):
                 {"detail": "Falha ao consultar dados do usuário"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
         email = (info or {}).get("Email") or (info or {}).get("email")
         nome = (
             (info or {}).get("Nome")
@@ -133,7 +141,6 @@ class EsqueciSenhaView(APIView):
                 {"detail": "E-mail não encontrado para o usuário"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-
         try:
             EmailService.enviar_email_esqueci_senha(
                 user=user, email=email, nome=nome
@@ -143,7 +150,6 @@ class EsqueciSenhaView(APIView):
                 {"detail": "Falha ao enviar e-mail"},
                 status=status.HTTP_502_BAD_GATEWAY,
             )
-
         return Response(
             {
                 "usuario": user.username,
@@ -155,17 +161,18 @@ class EsqueciSenhaView(APIView):
 
 
 class CriarNovaSenhaView(APIView):
+    """Representa CriarNovaSenhaView."""
+
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
 
-    def post(self, request):
+    def post(self, request: Any) -> Any:
+        """Redefine a senha com base no token de recuperação."""
         serializer = CriarNovaSenhaSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         uidb64 = serializer.validated_data["uid"]
         token = serializer.validated_data["token"]
         nova_senha = serializer.validated_data["nova_senha"]
-
         try:
             uid = urlsafe_base64_decode(uidb64).decode()
             user = User.objects.get(pk=uid)
@@ -173,13 +180,11 @@ class CriarNovaSenhaView(APIView):
             return Response(
                 {"detail": "UID inválido"}, status=status.HTTP_400_BAD_REQUEST
             )
-
         if not default_token_generator.check_token(user, token):
             return Response(
                 {"detail": "Token inválido"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
         try:
             SmeIntegracaoService.redefine_senha(user.username, nova_senha)
         except SmeIntegracaoException as e:
@@ -188,19 +193,20 @@ class CriarNovaSenhaView(APIView):
                 {"detail": "Falha ao redefinir senha no SME Integração"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
         user.set_password(nova_senha)
         user.save(update_fields=["password"])
-
         return Response(
             {"detail": "Senha alterada com sucesso"}, status=status.HTTP_200_OK
         )
 
 
 class MeusDadosView(APIView):
+    """Representa MeusDadosView."""
+
     permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request):
+    def get(self, request: Any) -> Any:
+        """Retorna perfil e dados do usuário autenticado."""
         user = request.user
         nome_completo = f"{user.first_name} {user.last_name}".strip()
         grupos = list(user.groups.values_list("name", flat=True))
@@ -216,22 +222,22 @@ class MeusDadosView(APIView):
 
 
 class AlterarSenhaView(APIView):
+    """Representa AlterarSenhaView."""
+
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request):
+    def post(self, request: Any) -> Any:
+        """Altera a senha do usuário autenticado."""
         serializer = AlterarSenhaSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         user = request.user
         senha_atual = serializer.validated_data["senha_atual"]
         nova_senha = serializer.validated_data["nova_senha"]
-
         if not user.check_password(senha_atual):
             return Response(
                 {"detail": "Senha atual incorreta."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
         try:
             SmeIntegracaoService.redefine_senha(user.username, nova_senha)
         except SmeIntegracaoException as e:
@@ -239,16 +245,16 @@ class AlterarSenhaView(APIView):
             return Response(
                 {"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST
             )
-
         user.set_password(nova_senha)
         user.save(update_fields=["password"])
-
         return Response(
             {"detail": "Senha alterada com sucesso"}, status=status.HTTP_200_OK
         )
 
 
 class BuscarUsuarioEolView(APIView):
+    """Representa BuscarUsuarioEolView."""
+
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
 
@@ -261,18 +267,16 @@ class BuscarUsuarioEolView(APIView):
         },
         description="Busca dados do usuário no EOL via RF. Retorna 400 se já existir no SIGLA.",  # noqa: E501
     )
-    def post(self, request):
+    def post(self, request: Any) -> Any:
+        """Consulta dados do servidor no EOL pelo RF informado."""
         serializer = BuscarUsuarioEolSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         rf = serializer.validated_data["rf"]
-
         if User.objects.filter(username=rf).exists():
             return Response(
                 {"detail": "Usuário já cadastrado no SIGLA."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
         try:
             info = SmeIntegracaoService.informacao_usuario(rf)
         except SmeIntegracaoException:
@@ -286,16 +290,13 @@ class BuscarUsuarioEolView(APIView):
                 {"detail": "Falha ao consultar o EOL."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
         nome = (info or {}).get("Nome") or (info or {}).get("nome", "")
         email = (info or {}).get("Email") or (info or {}).get("email", "")
-
-        if not nome and not email:
+        if not nome and (not email):
             return Response(
                 {"detail": "Usuário não encontrado no EOL."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
         return Response(
             {"username": rf, "nome": nome, "email": email},
             status=status.HTTP_200_OK,
@@ -303,6 +304,8 @@ class BuscarUsuarioEolView(APIView):
 
 
 class CriarUsuarioView(APIView):
+    """Representa CriarUsuarioView."""
+
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
 
@@ -315,37 +318,32 @@ class CriarUsuarioView(APIView):
         },
         description="Cria um novo usuário a partir de username, nome e email.",
     )
-    def post(self, request):
+    def post(self, request: Any) -> Any:
+        """Cadastra um novo usuário no SIGLA."""
         serializer = CreateUserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         username = serializer.validated_data["username"]
         email = serializer.validated_data["email"]
         nome = serializer.validated_data["nome"]
-
         if User.objects.filter(username=username).exists():
             return Response(
                 {"detail": "Nome de usuário já está cadastrado."},
                 status=status.HTTP_409_CONFLICT,
             )
-
         if User.objects.filter(email__iexact=email).exists():
             return Response(
                 {"detail": "E-mail já está cadastrado."},
                 status=status.HTTP_409_CONFLICT,
             )
-
         partes = nome.strip().split(" ", 1)
         first_name = partes[0]
         last_name = partes[1] if len(partes) > 1 else ""
-
         user = User.objects.create_user(
             username=username,
             email=email,
             first_name=first_name,
             last_name=last_name,
         )
-
         return Response(
             {"detail": "Usuário criado com sucesso", "user": user.username},
             status=status.HTTP_201_CREATED,
@@ -353,17 +351,18 @@ class CriarUsuarioView(APIView):
 
 
 class AlterarEmailView(APIView):
+    """Representa AlterarEmailView."""
+
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request):
+    def post(self, request: Any) -> Any:
+        """Atualiza o e-mail do usuário autenticado."""
         serializer = AlterarEmailSerializer(
             data=request.data, context={"user": request.user}
         )
         serializer.is_valid(raise_exception=True)
-
         user = request.user
         novo_email = serializer.validated_data["novo_email"]
-
         try:
             SmeIntegracaoService.alterar_email(user.username, novo_email)
         except SmeIntegracaoException as e:
@@ -371,10 +370,8 @@ class AlterarEmailView(APIView):
             return Response(
                 {"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST
             )
-
         user.email = novo_email
         user.save(update_fields=["email"])
-
         return Response(
             {"detail": "Email alterado com sucesso"}, status=status.HTTP_200_OK
         )

@@ -1,3 +1,6 @@
+"""Módulo exceptions."""
+
+
 class AutenticacaoServiceError(Exception):
     """Erro genérico do serviço de autenticação externo (CORESSO)."""
 
