@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import Any
 
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from django.db import transaction
+
+_JSON_DIR = Path(__file__).resolve().parent / "json"
 
 
 class Command(BaseCommand):
@@ -21,13 +24,13 @@ class Command(BaseCommand):
         parser.add_argument(
             "--permissions",
             type=str,
-            default="usuarios/management/commands/json/permissions.json",
+            default=str(_JSON_DIR / "permissions.json"),
             help="Caminho do arquivo JSON de permissões",
         )
         parser.add_argument(
             "--groups",
             type=str,
-            default="usuarios/management/commands/json/groups.json",
+            default=str(_JSON_DIR / "groups.json"),
             help="Caminho do arquivo JSON de grupos",
         )
 

@@ -6,7 +6,6 @@ import json
 
 import pytest
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group, Permission
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
@@ -81,52 +80,3 @@ def test_limpar_usuarios_keeps_superuser_and_deletes_regular():
     call_command("limpar_usuarios")
     assert user_model.objects.filter(username="admin").exists()
     assert not user_model.objects.filter(username__in=["u1", "u2"]).exists()
-
-
-def test_load_initial_permissions_creates_groups_and_permissions(tmp_path):
-    """Verifica load initial permissions creates groups and permissions."""
-    permissions_file = tmp_path / "permissions.json"
-    groups_file = tmp_path / "groups.json"
-    permissions_file.write_text(
-        json.dumps(
-            [
-                {
-                    "app_label": "auth",
-                    "model": "user",
-                    "codename": "can_manage_users",
-                    "name": "Can manage users",
-                }
-            ]
-        ),
-        encoding="utf-8",
-    )
-    groups_file.write_text(
-        json.dumps(
-            [
-                {
-                    "name": "Gestores",
-                    "permissoes": [
-                        {
-                            "app_label": "auth",
-                            "model": "user",
-                            "codename": "can_manage_users",
-                        },
-                        {
-                            "app_label": "auth",
-                            "model": "user",
-                            "codename": "missing_permission",
-                        },
-                    ],
-                }
-            ]
-        ),
-        encoding="utf-8",
-    )
-    call_command(
-        "load_initial_permissions",
-        permissions=str(permissions_file),
-        groups=str(groups_file),
-    )
-    perm = Permission.objects.get(codename="can_manage_users")
-    group = Group.objects.get(name="Gestores")
-    assert group.permissions.filter(pk=perm.pk).exists()

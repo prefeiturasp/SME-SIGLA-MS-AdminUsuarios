@@ -1,4 +1,4 @@
-"""DRF views for the usuarios module."""
+"""DRF views for the permissoes module."""
 
 from __future__ import annotations
 
@@ -13,12 +13,10 @@ from drf_spectacular.utils import (
     extend_schema,
 )
 from rest_framework import permissions, status
-from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from usuarios.exceptions import SmeIntegracaoException
-from usuarios.serializers.permissoes_serializers import (
+from permissoes.serializers import (
     CreateGroupSerializer,
     CreatePermissionSerializer,
     GroupSerializer,
@@ -27,6 +25,7 @@ from usuarios.serializers.permissoes_serializers import (
     UpdateGroupUsersSerializer,
     UpdateUsuarioSerializer,
 )
+from usuarios.exceptions import SmeIntegracaoException
 from usuarios.services.sme_integracao import SmeIntegracaoService
 
 logger = logging.getLogger(__name__)
@@ -288,7 +287,6 @@ class GerenciarUsuariosGrupoView(APIView):
         responses={200: GroupSerializer},
         description="Adiciona ou remove usuários (username) de um grupo.",
     )
-    @action(detail=False, methods=["put"], url_path="usuarios")
     def put(self, request: Any) -> Any:
         """Atualiza o recurso solicitado.
 

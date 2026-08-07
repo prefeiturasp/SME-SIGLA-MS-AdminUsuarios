@@ -8,7 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
-from usuarios.views.permissoes import (
+from permissoes.api.views import (
     GerenciarPermissoesUsuarioView,
     GerenciarUsuariosGrupoView,
     GruposDisponiveisView,
@@ -248,7 +248,7 @@ def test_usuarios_com_grupos_patch_user_not_found(rf):
 def test_usuarios_com_grupos_patch_updates_fields_and_groups(rf, monkeypatch):
     """Verifica usuarios com grupos patch updates fields and groups."""
     monkeypatch.setattr(
-        "usuarios.views.permissoes.SmeIntegracaoService.alterar_email",
+        "permissoes.api.views.SmeIntegracaoService.alterar_email",
         lambda *_a, **_k: "OK",
     )
     user = User.objects.create_user(
@@ -303,7 +303,7 @@ def test_patch_email_diferente_chama_sme_e_salva(rf, monkeypatch):
         return "OK"
 
     monkeypatch.setattr(
-        "usuarios.views.permissoes.SmeIntegracaoService.alterar_email", _ok
+        "permissoes.api.views.SmeIntegracaoService.alterar_email", _ok
     )
     request = rf.patch(
         "/usuarios/grupos/",
@@ -328,7 +328,7 @@ def test_patch_email_igual_nao_chama_sme(rf, monkeypatch):
         return "OK"
 
     monkeypatch.setattr(
-        "usuarios.views.permissoes.SmeIntegracaoService.alterar_email", _spy
+        "permissoes.api.views.SmeIntegracaoService.alterar_email", _spy
     )
     request = rf.patch(
         "/usuarios/grupos/",
@@ -351,7 +351,7 @@ def test_patch_email_sme_falha_retorna_400_e_nao_salva(rf, monkeypatch):
         raise SmeIntegracaoException("email recusado")
 
     monkeypatch.setattr(
-        "usuarios.views.permissoes.SmeIntegracaoService.alterar_email", _raise
+        "permissoes.api.views.SmeIntegracaoService.alterar_email", _raise
     )
     request = rf.patch(
         "/usuarios/grupos/",

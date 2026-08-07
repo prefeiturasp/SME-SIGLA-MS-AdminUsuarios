@@ -1,19 +1,25 @@
-"""Módulo serializers/password."""
+"""Serializers de autenticação e cadastro de usuários."""
 
 from __future__ import annotations
 
 import re
 from typing import Any
 
+from django.contrib.auth.models import User
 from rest_framework import serializers
 
 
-class ChangePasswordSerializer(serializers.Serializer):
-    """Serializer do modelo ChangePassword."""
+class LoginSerializer(serializers.Serializer):
+    """Serializer do modelo Login."""
 
-    user_id = serializers.CharField()
-    old_password = serializers.CharField(write_only=True)
-    new_password = serializers.CharField(write_only=True)
+    usuario = serializers.CharField()
+    senha = serializers.CharField(write_only=True)
+
+
+class EsqueciSenhaSerializer(serializers.Serializer):
+    """Serializer do modelo EsqueciSenha."""
+
+    rf = serializers.CharField()
 
 
 class CriarNovaSenhaSerializer(serializers.Serializer):
@@ -70,3 +76,37 @@ class AlterarSenhaSerializer(serializers.Serializer):
                 {"confirmacao_nova_senha": "As senhas não conferem."}
             )
         return attrs
+
+
+class AlterarEmailSerializer(serializers.Serializer):
+    """Serializer do modelo AlterarEmail."""
+
+    novo_email = serializers.EmailField()
+
+    def validate_novo_email(self, value: Any) -> Any:
+        """Valida novo email."""
+        user = self.context.get("user")
+        if user is None:
+            raise serializers.ValidationError(
+                "Usuário não fornecido no contexto."
+            )
+        qs = User.objects.filter(email__iexact=value)
+        if user.id:
+            qs = qs.exclude(id=user.id)
+        if qs.exists():
+            raise serializers.ValidationError("E-mail já está cadastrado.")
+        return value
+
+
+class BuscarUsuarioEolSerializer(serializers.Serializer):
+    """Serializer do modelo BuscarUsuarioEol."""
+
+    rf = serializers.CharField()
+
+
+class CreateUserSerializer(serializers.Serializer):
+    """Serializer do modelo CreateUser."""
+
+    username = serializers.CharField()
+    nome = serializers.CharField()
+    email = serializers.EmailField()

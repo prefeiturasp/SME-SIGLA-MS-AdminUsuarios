@@ -1,4 +1,4 @@
-"""Módulo serializers/permissoes_serializers."""
+"""Serializers de grupos e permissões."""
 
 from __future__ import annotations
 
