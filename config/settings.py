@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -9,6 +10,9 @@ DJANGO_ENVIRONMENT = os.environ.get("DJANGO_ENVIRONMENT", "local")
 MS_PATH = os.environ.get("MS_PATH", "/ms-admin-usuarios")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+sys.path.insert(0, os.path.join(BASE_DIR, "apps"))
+
 SECRET_KEY = os.environ.get(
     "SECRET_KEY", "django-insecure-your-secret-key-here"
 )
@@ -39,6 +43,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "usuarios",
+    "permissoes",
 ]
 
 MIDDLEWARE = [
@@ -174,6 +179,11 @@ LOGGING = {
             "propagate": False,
         },
         "usuarios": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+        "permissoes": {
             "handlers": ["console"],
             "level": "DEBUG",
             "propagate": False,

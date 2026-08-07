@@ -5,19 +5,19 @@ from __future__ import annotations
 import pytest
 from django.urls import resolve, reverse
 
-from usuarios.views import (
-    AlterarEmailView,
-    CriarNovaSenhaView,
-    CriarUsuarioView,
-    EsqueciSenhaView,
-    LoginView,
-)
-from usuarios.views.permissoes import (
+from permissoes.api.views import (
     GerenciarPermissoesUsuarioView,
     GerenciarUsuariosGrupoView,
     GruposDisponiveisView,
     PermissoesDisponiveisView,
     UsuariosComGruposView,
+)
+from usuarios.api.views import (
+    AlterarEmailView,
+    CriarNovaSenhaView,
+    CriarUsuarioView,
+    EsqueciSenhaView,
+    LoginView,
 )
 
 

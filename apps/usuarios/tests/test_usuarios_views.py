@@ -14,9 +14,8 @@ from usuarios.exceptions import (
     AutenticacaoRequisicaoError,
     SmeIntegracaoException,
 )
-from usuarios.serializers.email import AlterarEmailSerializer
-from usuarios.serializers.password import AlterarSenhaSerializer
-from usuarios.views.usuarios import (
+from usuarios.serializers import AlterarEmailSerializer, AlterarSenhaSerializer
+from usuarios.api.views import (
     AlterarEmailView,
     AlterarSenhaView,
     CriarNovaSenhaView,
@@ -67,7 +66,7 @@ def test_login_invalid_credentials_returns_401(rf, monkeypatch):
         raise AutenticacaoCredenciaisInvalidasError()
 
     monkeypatch.setattr(
-        "usuarios.views.usuarios.AutenticacaoService.autentica", _raise_invalid
+        "usuarios.api.views.AutenticacaoService.autentica", _raise_invalid
     )
     request = rf.post(
         "/usuarios/login/",
@@ -88,7 +87,7 @@ def test_login_upstream_error_returns_400(rf, monkeypatch):
         raise AutenticacaoRequisicaoError("falha")
 
     monkeypatch.setattr(
-        "usuarios.views.usuarios.AutenticacaoService.autentica",
+        "usuarios.api.views.AutenticacaoService.autentica",
         _raise_upstream,
     )
     request = rf.post(
@@ -105,7 +104,7 @@ def test_login_success_returns_payload(rf, monkeypatch):
     """Verifica login success returns payload."""
     user = User.objects.create_user(username="rf123", password="segredo")
     monkeypatch.setattr(
-        "usuarios.views.usuarios.AutenticacaoService.autentica",
+        "usuarios.api.views.AutenticacaoService.autentica",
         lambda *_args, **_kwargs: {"token": "abc"},
     )
     called = {"count": 0}
@@ -116,7 +115,7 @@ def test_login_success_returns_payload(rf, monkeypatch):
         return {"access": "ok", "user": {"username": user.username}}
 
     monkeypatch.setattr(
-        "usuarios.views.usuarios.AutenticacaoService.montar_resposta_login",
+        "usuarios.api.views.AutenticacaoService.montar_resposta_login",
         _montar,
     )
     request = rf.post(
@@ -149,7 +148,7 @@ def test_esqueci_senha_sme_failure(rf, monkeypatch):
         raise Exception("erro")
 
     monkeypatch.setattr(
-        "usuarios.views.usuarios.SmeIntegracaoService.informacao_usuario",
+        "usuarios.api.views.SmeIntegracaoService.informacao_usuario",
         _raise,
     )
     request = rf.post(
@@ -164,7 +163,7 @@ def test_esqueci_senha_email_not_found(rf, monkeypatch):
     """Verifica esqueci senha email not found."""
     User.objects.create_user(username="123")
     monkeypatch.setattr(
-        "usuarios.views.usuarios.SmeIntegracaoService.informacao_usuario",
+        "usuarios.api.views.SmeIntegracaoService.informacao_usuario",
         lambda *_args, **_kwargs: {"Nome": "Maria"},
     )
     request = rf.post(
@@ -179,7 +178,7 @@ def test_esqueci_senha_email_send_failure(rf, monkeypatch):
     """Verifica esqueci senha email send failure."""
     User.objects.create_user(username="123", first_name="Maria")
     monkeypatch.setattr(
-        "usuarios.views.usuarios.SmeIntegracaoService.informacao_usuario",
+        "usuarios.api.views.SmeIntegracaoService.informacao_usuario",
         lambda *_args, **_kwargs: {
             "Nome": "Maria",
             "Email": "maria@prefeitura.sp.gov.br",
@@ -191,7 +190,7 @@ def test_esqueci_senha_email_send_failure(rf, monkeypatch):
         raise Exception("smtp")
 
     monkeypatch.setattr(
-        "usuarios.views.usuarios.EmailService.enviar_email_esqueci_senha",
+        "usuarios.api.views.EmailService.enviar_email_esqueci_senha",
         _raise_send,
     )
     request = rf.post(
@@ -206,14 +205,14 @@ def test_esqueci_senha_success(rf, monkeypatch):
     """Verifica esqueci senha success."""
     User.objects.create_user(username="123", first_name="Maria")
     monkeypatch.setattr(
-        "usuarios.views.usuarios.SmeIntegracaoService.informacao_usuario",
+        "usuarios.api.views.SmeIntegracaoService.informacao_usuario",
         lambda *_args, **_kwargs: {
             "Nome": "Maria",
             "Email": "maria@prefeitura.sp.gov.br",
         },
     )
     monkeypatch.setattr(
-        "usuarios.views.usuarios.EmailService.enviar_email_esqueci_senha",
+        "usuarios.api.views.EmailService.enviar_email_esqueci_senha",
         lambda *_args, **_kwargs: None,
     )
     request = rf.post(
@@ -267,11 +266,11 @@ def test_criar_nova_senha_sme_exception(rf, monkeypatch):
         raise SmeIntegracaoException("erro")
 
     monkeypatch.setattr(
-        "usuarios.views.usuarios.default_token_generator.check_token",
+        "usuarios.api.views.default_token_generator.check_token",
         _check_token,
     )
     monkeypatch.setattr(
-        "usuarios.views.usuarios.SmeIntegracaoService.redefine_senha",
+        "usuarios.api.views.SmeIntegracaoService.redefine_senha",
         _raise_sme,
     )
     request = rf.post(
@@ -292,11 +291,11 @@ def test_criar_nova_senha_success(rf, monkeypatch):
     user = User.objects.create_user(username="123", password="senha-antiga")
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     monkeypatch.setattr(
-        "usuarios.views.usuarios.default_token_generator.check_token",
+        "usuarios.api.views.default_token_generator.check_token",
         lambda *_args, **_kwargs: True,
     )
     monkeypatch.setattr(
-        "usuarios.views.usuarios.SmeIntegracaoService.redefine_senha",
+        "usuarios.api.views.SmeIntegracaoService.redefine_senha",
         lambda *_args, **_kwargs: None,
     )
     request = rf.post(
@@ -452,7 +451,7 @@ def test_alterar_senha_sme_exception(rf, monkeypatch):
         raise SmeIntegracaoException("senha fraca")
 
     monkeypatch.setattr(
-        "usuarios.views.usuarios.SmeIntegracaoService.redefine_senha",
+        "usuarios.api.views.SmeIntegracaoService.redefine_senha",
         _raise_sme,
     )
     request = rf.post(
@@ -476,7 +475,7 @@ def test_alterar_senha_success(rf, monkeypatch):
         username="rf333", password="SenhaCorreta1!"
     )
     monkeypatch.setattr(
-        "usuarios.views.usuarios.SmeIntegracaoService.redefine_senha",
+        "usuarios.api.views.SmeIntegracaoService.redefine_senha",
         lambda *_a, **_k: None,
     )
     request = rf.post(
@@ -618,7 +617,7 @@ def test_alterar_email_sme_exception(rf, monkeypatch):
         raise SmeIntegracaoException("email invalido")
 
     monkeypatch.setattr(
-        "usuarios.views.usuarios.SmeIntegracaoService.alterar_email", _raise
+        "usuarios.api.views.SmeIntegracaoService.alterar_email", _raise
     )
     request = rf.post(
         "/usuarios/alterar-email/", {"novo_email": "new@x.com"}, format="json"
@@ -642,7 +641,7 @@ def test_alterar_email_success(rf, monkeypatch):
         return "OK"
 
     monkeypatch.setattr(
-        "usuarios.views.usuarios.SmeIntegracaoService.alterar_email", _ok
+        "usuarios.api.views.SmeIntegracaoService.alterar_email", _ok
     )
     request = rf.post(
         "/usuarios/alterar-email/", {"novo_email": "new@x.com"}, format="json"
