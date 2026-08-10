@@ -35,7 +35,7 @@ class GerenciarPermissoesUsuarioView(APIView):
     """Representa GerenciarPermissoesUsuarioView."""
 
     permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    authentication_classes: list = []
 
     @extend_schema(
         parameters=[
@@ -130,7 +130,7 @@ class PermissoesDisponiveisView(APIView):
     """Representa PermissoesDisponiveisView."""
 
     permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    authentication_classes: list = []
 
     @extend_schema(
         responses={200: PermissionSerializer(many=True)},
@@ -179,9 +179,7 @@ class GruposDisponiveisView(APIView):
     """Representa GruposDisponiveisView."""
 
     permission_classes = [permissions.AllowAny]
-    authentication_classes = []
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    authentication_classes: list = []
 
     @extend_schema(
         parameters=[
@@ -280,7 +278,7 @@ class GerenciarUsuariosGrupoView(APIView):
     """Representa GerenciarUsuariosGrupoView."""
 
     permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    authentication_classes: list = []
 
     @extend_schema(
         request=UpdateGroupUsersSerializer,
@@ -321,7 +319,7 @@ class UsuariosComGruposView(APIView):
     """Representa UsuariosComGruposView."""
 
     permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    authentication_classes: list = []
 
     @extend_schema(
         parameters=[

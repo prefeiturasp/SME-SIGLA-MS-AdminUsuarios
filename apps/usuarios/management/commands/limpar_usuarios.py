@@ -33,7 +33,7 @@ class Command(BaseCommand):
             if usernames:
                 self.stdout.write(
                     self.style.WARNING(
-                        f'Usuários removidos: {', '.join(usernames)}'
+                        f"Usuários removidos: {', '.join(usernames)}"
                     )
                 )
         except Exception as e:

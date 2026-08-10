@@ -187,6 +187,6 @@ class UpdateUsuarioSerializer(serializers.Serializer):
             faltando = sorted(grupos_set - existentes)
             if faltando:
                 raise serializers.ValidationError(
-                    {"grupos": f'Grupos inexistentes: {', '.join(faltando)}'}
+                    {"grupos": f"Grupos inexistentes: {', '.join(faltando)}"}
                 )
         return attrs

@@ -80,7 +80,7 @@ class Command(BaseCommand):
                 except Permission.DoesNotExist:
                     self.stdout.write(
                         self.style.WARNING(
-                            f'⚠️ Permissão não encontrada: {p['codename']}'
+                            f"⚠️ Permissão não encontrada: {p['codename']}"
                         )
                     )
             group.permissions.set(perms)

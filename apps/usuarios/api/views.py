@@ -63,7 +63,7 @@ class LoginView(TokenObtainPairView):
     """Representa LoginView."""
 
     permission_classes = [permissions.AllowAny]  # type: ignore[assignment]
-    authentication_classes = []  # type: ignore[assignment]
+    authentication_classes: list = []  # type: ignore[assignment]
 
     @extend_schema(request=LoginSerializer)
     def post(self, request: Any) -> Any:
@@ -110,7 +110,7 @@ class EsqueciSenhaView(APIView):
     """Representa EsqueciSenhaView."""
 
     permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    authentication_classes: list = []
 
     def post(self, request: Any) -> Any:
         """Solicita envio de e-mail para recuperação de senha."""
@@ -164,7 +164,7 @@ class CriarNovaSenhaView(APIView):
     """Representa CriarNovaSenhaView."""
 
     permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    authentication_classes: list = []
 
     def post(self, request: Any) -> Any:
         """Redefine a senha com base no token de recuperação."""
@@ -256,7 +256,7 @@ class BuscarUsuarioEolView(APIView):
     """Representa BuscarUsuarioEolView."""
 
     permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    authentication_classes: list = []
 
     @extend_schema(
         request=BuscarUsuarioEolSerializer,
@@ -307,7 +307,7 @@ class CriarUsuarioView(APIView):
     """Representa CriarUsuarioView."""
 
     permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    authentication_classes: list = []
 
     @extend_schema(
         request=CreateUserSerializer,

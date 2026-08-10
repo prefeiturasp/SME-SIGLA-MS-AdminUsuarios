@@ -84,7 +84,7 @@ class Command(BaseCommand):
                     )
                     criados.append(user.username)
             except Exception as exc:
-                erros.append(f'#{idx} - {username or '<sem-username>'}: {exc}')
+                erros.append(f"#{idx} - {username or '<sem-username>'}: {exc}")
         self.stdout.write("")
         self.stdout.write(self.style.SUCCESS("Resumo de Importação"))
         self.stdout.write(self.style.SUCCESS(f"  ✅ Criados: {len(criados)}"))
@@ -93,9 +93,9 @@ class Command(BaseCommand):
         )
         self.stdout.write(self.style.ERROR(f"  ❌ Erros: {len(erros)}"))
         if criados:
-            self.stdout.write(self.style.SUCCESS(f'  + {', '.join(criados)}'))
+            self.stdout.write(self.style.SUCCESS(f"  + {', '.join(criados)}"))
         if pulados:
-            self.stdout.write(self.style.WARNING(f'  = {', '.join(pulados)}'))
+            self.stdout.write(self.style.WARNING(f"  = {', '.join(pulados)}"))
         if erros:
             for e in erros:
                 self.stdout.write(self.style.ERROR(f"    - {e}"))
