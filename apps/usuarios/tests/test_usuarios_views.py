@@ -9,12 +9,6 @@ from django.utils.http import urlsafe_base64_encode
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
-from usuarios.exceptions import (
-    AutenticacaoCredenciaisInvalidasError,
-    AutenticacaoRequisicaoError,
-    SmeIntegracaoException,
-)
-from usuarios.serializers import AlterarEmailSerializer, AlterarSenhaSerializer
 from usuarios.api.views import (
     AlterarEmailView,
     AlterarSenhaView,
@@ -25,6 +19,12 @@ from usuarios.api.views import (
     MeusDadosView,
     _mask_email,
 )
+from usuarios.exceptions import (
+    AutenticacaoCredenciaisInvalidasError,
+    AutenticacaoRequisicaoError,
+    SmeIntegracaoException,
+)
+from usuarios.serializers import AlterarEmailSerializer, AlterarSenhaSerializer
 
 pytestmark = pytest.mark.django_db
 
