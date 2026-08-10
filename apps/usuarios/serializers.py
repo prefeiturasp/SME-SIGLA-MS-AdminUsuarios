@@ -5,8 +5,9 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from django.contrib.auth.models import User
 from rest_framework import serializers
+
+from usuarios.repository import UserRepository
 
 
 class LoginSerializer(serializers.Serializer):
@@ -90,10 +91,7 @@ class AlterarEmailSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 "Usuário não fornecido no contexto."
             )
-        qs = User.objects.filter(email__iexact=value)
-        if user.id:
-            qs = qs.exclude(id=user.id)
-        if qs.exists():
+        if UserRepository.existe_email_em_outro_usuario(value, user.id):
             raise serializers.ValidationError("E-mail já está cadastrado.")
         return value
 

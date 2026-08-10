@@ -6,7 +6,6 @@ from types import SimpleNamespace
 
 import pytest
 import requests
-from django.contrib.auth.models import User
 
 from usuarios.exceptions import (
     AutenticacaoCredenciaisInvalidasError,
@@ -15,6 +14,7 @@ from usuarios.exceptions import (
     AutenticacaoUpstreamError,
     SmeIntegracaoException,
 )
+from usuarios.repository import UserRepository
 from usuarios.services.autenticacao import AutenticacaoService
 from usuarios.services.email import EmailService
 from usuarios.services.sme_integracao import SmeIntegracaoService
@@ -75,7 +75,7 @@ def test_autenticacao_service_autentica_error_paths(monkeypatch):
 
 def test_autenticacao_service_login_payload_helpers(monkeypatch):
     """Verifica autenticacao service login payload helpers."""
-    user = User.objects.create_user(username="alice")
+    user = UserRepository.criar(username="alice")
     monkeypatch.setattr(
         "usuarios.services.autenticacao.RefreshToken.for_user",
         lambda _user: SimpleNamespace(
@@ -88,6 +88,21 @@ def test_autenticacao_service_login_payload_helpers(monkeypatch):
     assert "refresh" in tokens
     assert resposta["foo"] == "bar"
     assert resposta["token"] == "access-token"
+
+
+def test_autenticacao_service_atualizar_usuario_persiste_via_repository():
+    """Verifica atualizar usuario com dados de autenticacao via repository."""
+    user = UserRepository.criar(username="alice", email="old@x.com")
+    AutenticacaoService.atualizar_usuario_com_dados_autenticacao(
+        user=user,
+        dados={"nome": "Alice Silva", "email": "novo@x.com"},
+        senha="Senha@123",
+    )
+    user.refresh_from_db()
+    assert user.first_name == "Alice"
+    assert user.last_name == "Silva"
+    assert user.email == "novo@x.com"
+    assert user.check_password("Senha@123")
 
 
 def test_sme_integracao_informacao_usuario_success_and_errors(monkeypatch):
@@ -165,7 +180,7 @@ def test_sme_integracao_alterar_email_success_and_errors(monkeypatch):
 
 def test_token_service_gerar_token_para_reset():
     """Verifica token service gerar token para reset."""
-    user = User.objects.create_user(username="alice", first_name="Alice")
+    user = UserRepository.criar(username="alice", first_name="Alice")
     data = TokenService.gerar_token_para_reset(user, "alice@example.com")
     assert data["name"] == "Alice"
     assert data["uid"]
@@ -212,7 +227,7 @@ def test_email_service_enviar_email_and_reset(monkeypatch, settings):
         context={"k": "v"},
         recipients=["dest@example.com"],
     )
-    user = User.objects.create_user(username="alice", first_name="Alice")
+    user = UserRepository.criar(username="alice", first_name="Alice")
     monkeypatch.setattr(
         "usuarios.services.email.TokenService.gerar_token_para_reset",
         lambda *_args, **_kwargs: {

@@ -6,10 +6,15 @@ import json
 from pathlib import Path
 from typing import Any
 
-from django.contrib.auth.models import Group, Permission
-from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.models import Permission
 from django.core.management.base import BaseCommand
 from django.db import transaction
+
+from permissoes.repository import (
+    ContentTypeRepository,
+    GroupRepository,
+    PermissionRepository,
+)
 
 _JSON_DIR = Path(__file__).resolve().parent / "json"
 
@@ -47,13 +52,13 @@ class Command(BaseCommand):
         for perm in permissions_data:
             app_label = perm["app_label"]
             model = perm["model"]
-            content_type, _ = ContentType.objects.get_or_create(
+            content_type, _ = ContentTypeRepository.get_or_create(
                 app_label=app_label, model=model
             )
-            obj, created = Permission.objects.get_or_create(
+            obj, created = PermissionRepository.get_or_create(
                 codename=perm["codename"],
                 content_type=content_type,
-                defaults={"name": perm["name"]},
+                name=perm["name"],
             )
             if created:
                 self.stdout.write(
@@ -67,14 +72,16 @@ class Command(BaseCommand):
         with open(groups_file, encoding="utf-8") as f:
             groups_data = json.load(f)
         for group_data in groups_data:
-            group, _ = Group.objects.get_or_create(name=group_data["name"])
+            group, _ = GroupRepository.get_or_create(group_data["name"])
             perms = []
             for p in group_data["permissoes"]:
                 try:
-                    perm = Permission.objects.get(
-                        codename=p["codename"],
-                        content_type__app_label=p["app_label"],
-                        content_type__model=p["model"],
+                    perm = (
+                        PermissionRepository.obter_por_codename_e_content_type(
+                            codename=p["codename"],
+                            app_label=p["app_label"],
+                            model=p["model"],
+                        )
                     )
                     perms.append(perm)
                 except Permission.DoesNotExist:
@@ -83,8 +90,8 @@ class Command(BaseCommand):
                             f"⚠️ Permissão não encontrada: {p['codename']}"
                         )
                     )
-            group.permissions.set(perms)
-            group.save()
+            GroupRepository.definir_permissoes(group, perms)
+            GroupRepository.salvar(group)
             self.stdout.write(
                 self.style.SUCCESS(
                     f"✅ Grupo '{group.name}' atualizado com {len(perms)} permissões."  # noqa: E501

@@ -10,6 +10,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 
 from usuarios.management.commands.importar_usuarios import split_nome
+from usuarios.repository import UserRepository
 
 pytestmark = pytest.mark.django_db
 
@@ -23,16 +24,18 @@ def test_split_nome_handles_edge_cases():
 
 def test_criar_usuarios_creates_and_skips_existing():
     """Verifica criar usuarios creates and skips existing."""
-    user_model = get_user_model()
-    user_model.objects.create_user(
+    UserRepository.criar(
         username="usuario1", email="usuario1@example.com", password="123456"
     )
     call_command("criar_usuarios", count=3)
+    user_model = get_user_model()
     created_users = user_model.objects.filter(
         username__in=["usuario1", "usuario2", "usuario3"]
     )
     assert created_users.count() == 3
-    assert user_model.objects.get(username="usuario2").check_password("123456")
+    assert UserRepository.obter_por_username("usuario2").check_password(
+        "123456"
+    )
 
 
 def test_importar_usuarios_invalid_payload_raises():
@@ -45,8 +48,7 @@ def test_importar_usuarios_invalid_payload_raises():
 
 def test_importar_usuarios_creates_skips_and_collects_errors():
     """Verifica importar usuarios creates skips and collects errors."""
-    user_model = get_user_model()
-    user_model.objects.create_user(
+    UserRepository.criar(
         username="existente", email="existente@example.com"
     )
     payload = [
@@ -63,7 +65,8 @@ def test_importar_usuarios_creates_skips_and_collects_errors():
         {"username": "sem-email"},
     ]
     call_command("importar_usuarios", json.dumps(payload))
-    novo = user_model.objects.get(username="novo")
+    novo = UserRepository.obter_por_username("novo")
+    assert novo is not None
     assert novo.first_name == "Novo"
     assert novo.last_name == "Usuario"
     assert novo.has_usable_password() is False
@@ -75,8 +78,9 @@ def test_limpar_usuarios_keeps_superuser_and_deletes_regular():
     user_model.objects.create_superuser(
         username="admin", email="admin@example.com", password="123456"
     )
-    user_model.objects.create_user(username="u1", email="u1@example.com")
-    user_model.objects.create_user(username="u2", email="u2@example.com")
+    UserRepository.criar(username="u1", email="u1@example.com")
+    UserRepository.criar(username="u2", email="u2@example.com")
     call_command("limpar_usuarios")
-    assert user_model.objects.filter(username="admin").exists()
-    assert not user_model.objects.filter(username__in=["u1", "u2"]).exists()
+    assert UserRepository.existe_por_username("admin")
+    assert not UserRepository.existe_por_username("u1")
+    assert not UserRepository.existe_por_username("u2")

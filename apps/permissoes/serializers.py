@@ -4,9 +4,15 @@ from __future__ import annotations
 
 from typing import Any
 
-from django.contrib.auth.models import Group, Permission, User
-from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.models import Group, Permission
 from rest_framework import serializers
+
+from permissoes.repository import (
+    ContentTypeRepository,
+    GroupRepository,
+    PermissionRepository,
+)
+from usuarios.repository import UserRepository
 
 
 class PermissionSerializer(serializers.ModelSerializer):
@@ -49,16 +55,14 @@ class CreatePermissionSerializer(serializers.Serializer):
     def validate(self, attrs: Any) -> Any:
         """Valida content type informado e codename livre para cadastro."""
         app_label, model = (attrs["app_label"], attrs["model"])
-        ct = ContentType.objects.filter(
-            app_label=app_label, model__iexact=model
-        ).first()
+        ct = ContentTypeRepository.obter_por_app_e_model(app_label, model)
         if not ct:
             raise serializers.ValidationError(
                 "ContentType não encontrado para app_label/model informados."
             )
-        if Permission.objects.filter(
-            content_type=ct, codename=attrs["codename"]
-        ).exists():
+        if PermissionRepository.existe_por_content_type_e_codename(
+            ct, attrs["codename"]
+        ):
             raise serializers.ValidationError(
                 "Permissão já existe para este content type e codename."
             )
@@ -68,16 +72,15 @@ class CreatePermissionSerializer(serializers.Serializer):
     def create(self, validated_data: Any) -> Any:
         """Cria a permissão vinculada ao content type informado."""
         validated_data.pop("content_type", None)
-        ct = ContentType.objects.get(
-            app_label=self.validated_data["app_label"],
-            model__iexact=self.validated_data["model"],
+        ct = ContentTypeRepository.obter_por_app_e_model_exato(
+            self.validated_data["app_label"],
+            self.validated_data["model"],
         )
-        perm = Permission.objects.create(
+        return PermissionRepository.criar(
             name=validated_data["name"],
             codename=validated_data["codename"],
             content_type=ct,
         )
-        return perm
 
 
 class CreateGroupSerializer(serializers.Serializer):
@@ -90,17 +93,17 @@ class CreateGroupSerializer(serializers.Serializer):
 
     def validate_grupo(self, value: Any) -> Any:
         """Impede cadastro de grupo com nome já existente."""
-        if Group.objects.filter(name=value).exists():
+        if GroupRepository.existe_por_nome(value):
             raise serializers.ValidationError("Grupo já existe.")
         return value
 
     def create(self, validated_data: Any) -> Any:
         """Cria o grupo e vincula as permissões informadas."""
-        grupo = Group.objects.create(name=validated_data["grupo"])
+        grupo = GroupRepository.criar(validated_data["grupo"])
         codenames = validated_data.get("permissoes_codenames", [])
         if codenames:
-            perms = Permission.objects.filter(codename__in=codenames)
-            grupo.permissions.add(*perms)
+            perms = PermissionRepository.listar_por_codenames(codenames)
+            GroupRepository.adicionar_permissoes(grupo, perms)
         return grupo
 
 
@@ -153,12 +156,9 @@ class UpdateUsuarioSerializer(serializers.Serializer):
         if not email:
             return ""
         username = (self.initial_data or {}).get("usuario", "")
-        user = User.objects.filter(username=username).only("id").first()
-        if (
-            user
-            and User.objects.filter(email__iexact=email)
-            .exclude(id=user.id)
-            .exists()
+        user = UserRepository.obter_por_username_apenas_id(username)
+        if user and UserRepository.existe_email_em_outro_usuario(
+            email, user.id
         ):
             raise serializers.ValidationError(
                 "Email já está em uso por outro usuário."
@@ -179,11 +179,7 @@ class UpdateUsuarioSerializer(serializers.Serializer):
             g.strip() for g in grupos_informados if (g or "").strip()
         }
         if grupos_set:
-            existentes = set(
-                Group.objects.filter(name__in=grupos_set).values_list(
-                    "name", flat=True
-                )
-            )
+            existentes = GroupRepository.nomes_existentes(grupos_set)
             faltando = sorted(grupos_set - existentes)
             if faltando:
                 raise serializers.ValidationError(
