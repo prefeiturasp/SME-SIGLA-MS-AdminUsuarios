@@ -12,8 +12,9 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
+
+from usuarios.repository import UserRepository
 
 
 def split_nome(full_name: str) -> tuple[str, str]:
@@ -55,7 +56,6 @@ class Command(BaseCommand):
             raise CommandError(
                 "O JSON deve ser uma lista de objetos de usuários."
             )
-        User = get_user_model()
         criados: list[str] = []
         pulados: list[str] = []
         erros: list[str] = []
@@ -71,11 +71,11 @@ class Command(BaseCommand):
                 continue
             first_name, last_name = split_nome(nome)  # type: ignore[arg-type]
             try:
-                user = User.objects.filter(username=username).first()
+                user = UserRepository.obter_por_username(username)
                 if user:
                     pulados.append(username)
                 else:
-                    user = User.objects.create_user(
+                    user = UserRepository.criar(
                         username=username,
                         email=email,
                         password=None,

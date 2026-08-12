@@ -16,6 +16,7 @@ from usuarios.exceptions import (
     AutenticacaoRespostaInvalidaError,
     AutenticacaoUpstreamError,
 )
+from usuarios.repository import UserRepository
 
 logger = logging.getLogger(__name__)
 
@@ -140,5 +141,5 @@ class AutenticacaoService:
         user.set_password(senha)
         update_fields.append("password")
         if update_fields:
-            user.save(update_fields=update_fields)
+            UserRepository.salvar(user, campos_atualizacao=update_fields)
         return user

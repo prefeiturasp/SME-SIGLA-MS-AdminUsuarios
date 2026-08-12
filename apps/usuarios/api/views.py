@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
 from drf_spectacular.utils import OpenApiResponse, extend_schema
@@ -21,6 +20,7 @@ from usuarios.exceptions import (
     AutenticacaoUpstreamError,
     SmeIntegracaoException,
 )
+from usuarios.repository import UserRepository
 from usuarios.serializers import (
     AlterarEmailSerializer,
     AlterarSenhaSerializer,
@@ -70,9 +70,9 @@ class LoginView(TokenObtainPairView):
         """Autentica o usuário e retorna os dados de acesso."""
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        usuario = User.objects.filter(
-            username=serializer.validated_data["usuario"]
-        ).first()
+        usuario = UserRepository.obter_por_username(
+            serializer.validated_data["usuario"]
+        )
         if not usuario:
             return Response(
                 {"detail": "Usuário não encontrado"},
@@ -117,7 +117,7 @@ class EsqueciSenhaView(APIView):
         serializer = EsqueciSenhaSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         usuario = serializer.validated_data["rf"]
-        user = User.objects.filter(username=usuario).first()
+        user = UserRepository.obter_por_username(usuario)
         if not user:
             return Response(
                 {"detail": "Usuário não encontrado"},
@@ -175,7 +175,7 @@ class CriarNovaSenhaView(APIView):
         nova_senha = serializer.validated_data["nova_senha"]
         try:
             uid = urlsafe_base64_decode(uidb64).decode()
-            user = User.objects.get(pk=uid)
+            user = UserRepository.obter_por_pk(uid)
         except Exception:
             return Response(
                 {"detail": "UID inválido"}, status=status.HTTP_400_BAD_REQUEST
@@ -194,7 +194,7 @@ class CriarNovaSenhaView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         user.set_password(nova_senha)
-        user.save(update_fields=["password"])
+        UserRepository.salvar(user, campos_atualizacao=["password"])
         return Response(
             {"detail": "Senha alterada com sucesso"}, status=status.HTTP_200_OK
         )
@@ -209,7 +209,7 @@ class MeusDadosView(APIView):
         """Retorna perfil e dados do usuário autenticado."""
         user = request.user
         nome_completo = f"{user.first_name} {user.last_name}".strip()
-        grupos = list(user.groups.values_list("name", flat=True))
+        grupos = UserRepository.nomes_grupos_sem_ordem(user)
         return Response(
             {
                 "rf": user.username,
@@ -246,7 +246,7 @@ class AlterarSenhaView(APIView):
                 {"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST
             )
         user.set_password(nova_senha)
-        user.save(update_fields=["password"])
+        UserRepository.salvar(user, campos_atualizacao=["password"])
         return Response(
             {"detail": "Senha alterada com sucesso"}, status=status.HTTP_200_OK
         )
@@ -272,7 +272,7 @@ class BuscarUsuarioEolView(APIView):
         serializer = BuscarUsuarioEolSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         rf = serializer.validated_data["rf"]
-        if User.objects.filter(username=rf).exists():
+        if UserRepository.existe_por_username(rf):
             return Response(
                 {"detail": "Usuário já cadastrado no SIGLA."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -325,12 +325,12 @@ class CriarUsuarioView(APIView):
         username = serializer.validated_data["username"]
         email = serializer.validated_data["email"]
         nome = serializer.validated_data["nome"]
-        if User.objects.filter(username=username).exists():
+        if UserRepository.existe_por_username(username):
             return Response(
                 {"detail": "Nome de usuário já está cadastrado."},
                 status=status.HTTP_409_CONFLICT,
             )
-        if User.objects.filter(email__iexact=email).exists():
+        if UserRepository.existe_por_email(email):
             return Response(
                 {"detail": "E-mail já está cadastrado."},
                 status=status.HTTP_409_CONFLICT,
@@ -338,7 +338,7 @@ class CriarUsuarioView(APIView):
         partes = nome.strip().split(" ", 1)
         first_name = partes[0]
         last_name = partes[1] if len(partes) > 1 else ""
-        user = User.objects.create_user(
+        user = UserRepository.criar(
             username=username,
             email=email,
             first_name=first_name,
@@ -371,7 +371,7 @@ class AlterarEmailView(APIView):
                 {"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST
             )
         user.email = novo_email
-        user.save(update_fields=["email"])
+        UserRepository.salvar(user, campos_atualizacao=["email"])
         return Response(
             {"detail": "Email alterado com sucesso"}, status=status.HTTP_200_OK
         )

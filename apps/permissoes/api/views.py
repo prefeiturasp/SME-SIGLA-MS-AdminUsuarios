@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from django.contrib.auth.models import Group, Permission, User
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiParameter,
@@ -16,6 +15,7 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from permissoes.repository import GroupRepository, PermissionRepository
 from permissoes.serializers import (
     CreateGroupSerializer,
     CreatePermissionSerializer,
@@ -26,6 +26,7 @@ from permissoes.serializers import (
     UpdateUsuarioSerializer,
 )
 from usuarios.exceptions import SmeIntegracaoException
+from usuarios.repository import UserRepository
 from usuarios.services.sme_integracao import SmeIntegracaoService
 
 logger = logging.getLogger(__name__)
@@ -81,33 +82,22 @@ class GerenciarPermissoesUsuarioView(APIView):
                 {"detail": "usuario é obrigatório"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        user = User.objects.filter(username=username).first()
+        user = UserRepository.obter_por_username(username)
         if not user:
             return Response(
                 {"detail": "Usuário não encontrado"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        permissoes_diretas = user.user_permissions.select_related(
-            "content_type"
-        )
-        permissoes_grupos = Permission.objects.filter(
-            group__user=user
-        ).select_related("content_type")
-        permissoes = (permissoes_diretas | permissoes_grupos).distinct()
+        models_filter = None
         if model_param:
             models_filter = [
                 m.strip().lower() for m in model_param.split(",") if m.strip()
             ]
-            permissoes = permissoes.filter(
-                content_type__model__in=models_filter
-            )
-        serializer = PermissionSerializer(
-            permissoes.order_by("content_type__app_label", "codename"),
-            many=True,
+        permissoes = PermissionRepository.permissoes_do_usuario(
+            user, models_filter=models_filter
         )
-        grupos = list(
-            user.groups.order_by("name").values_list("name", flat=True)
-        )
+        permissoes_data = PermissionRepository.serializar_lista(permissoes)
+        grupos = UserRepository.nomes_grupos(user)
         nome = (
             f"{user.first_name} {user.last_name}".strip()
             if user.first_name or user.last_name
@@ -119,8 +109,8 @@ class GerenciarPermissoesUsuarioView(APIView):
                 "nome": nome,
                 "email": user.email or None,
                 "grupos": grupos,
-                "total_permissoes": len(serializer.data),
-                "permissoes": serializer.data,
+                "total_permissoes": len(permissoes_data),
+                "permissoes": permissoes_data,
             },
             status=status.HTTP_200_OK,
         )
@@ -145,13 +135,11 @@ class PermissoesDisponiveisView(APIView):
         Returns:
             Resposta HTTP com os dados solicitados.
         """
-        permissoes = (
-            Permission.objects.select_related("content_type")
-            .all()
-            .order_by("content_type__app_label", "id")
+        permissoes = PermissionRepository.listar_todas()
+        return Response(
+            PermissionRepository.serializar_lista(permissoes),
+            status=status.HTTP_200_OK,
         )
-        serializer = PermissionSerializer(permissoes, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @extend_schema(
         request=CreatePermissionSerializer,
@@ -171,7 +159,8 @@ class PermissoesDisponiveisView(APIView):
         serializer.is_valid(raise_exception=True)
         perm = serializer.save()
         return Response(
-            PermissionSerializer(perm).data, status=status.HTTP_201_CREATED
+            PermissionRepository.serializar(perm),
+            status=status.HTTP_201_CREATED,
         )
 
 
@@ -203,18 +192,18 @@ class GruposDisponiveisView(APIView):
             Resposta HTTP com os dados solicitados.
         """
         grupo_name = request.query_params.get("grupo", "").strip()
-        grupos_qs = Group.objects.prefetch_related(
-            "permissions__content_type"
-        ).order_by("name")
-        if grupo_name:
-            grupos_qs = grupos_qs.filter(name=grupo_name)
-            if not grupos_qs.exists():
-                return Response(
-                    {"detail": "Grupo não encontrado"},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
-        serializer = GroupSerializer(grupos_qs, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        grupos_qs = GroupRepository.listar_com_permissoes(
+            nome=grupo_name or None
+        )
+        if grupo_name and not grupos_qs.exists():
+            return Response(
+                {"detail": "Grupo não encontrado"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response(
+            GroupRepository.serializar_lista(grupos_qs),
+            status=status.HTTP_200_OK,
+        )
 
     @extend_schema(
         request=UpdateGroupPermissionsSerializer,
@@ -233,7 +222,7 @@ class GruposDisponiveisView(APIView):
         serializer = UpdateGroupPermissionsSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        grupo = Group.objects.filter(name=data["grupo"]).first()
+        grupo = GroupRepository.obter_por_nome(data["grupo"])
         if not grupo:
             return Response(
                 {"detail": "Grupo não encontrado"},
@@ -242,15 +231,19 @@ class GruposDisponiveisView(APIView):
         add_codenames = data.get("adicionar_codenames", [])
         remove_codenames = data.get("remover_codenames", [])
         if add_codenames:
-            perms_add = Permission.objects.filter(codename__in=add_codenames)
-            grupo.permissions.add(*perms_add)
-        if remove_codenames:
-            perms_rem = Permission.objects.filter(
-                codename__in=remove_codenames
+            perms_add = PermissionRepository.listar_por_codenames(
+                add_codenames
             )
-            grupo.permissions.remove(*perms_rem)
-        grupo.save()
-        return Response(GroupSerializer(grupo).data, status=status.HTTP_200_OK)
+            GroupRepository.adicionar_permissoes(grupo, perms_add)
+        if remove_codenames:
+            perms_rem = PermissionRepository.listar_por_codenames(
+                remove_codenames
+            )
+            GroupRepository.remover_permissoes(grupo, perms_rem)
+        GroupRepository.salvar(grupo)
+        return Response(
+            GroupRepository.serializar(grupo), status=status.HTTP_200_OK
+        )
 
     @extend_schema(
         request=CreateGroupSerializer,
@@ -270,7 +263,7 @@ class GruposDisponiveisView(APIView):
         serializer.is_valid(raise_exception=True)
         grupo = serializer.save()
         return Response(
-            GroupSerializer(grupo).data, status=status.HTTP_201_CREATED
+            GroupRepository.serializar(grupo), status=status.HTTP_201_CREATED
         )
 
 
@@ -297,7 +290,7 @@ class GerenciarUsuariosGrupoView(APIView):
         serializer = UpdateGroupUsersSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        grupo = Group.objects.filter(name=data["grupo"]).first()
+        grupo = GroupRepository.obter_por_nome(data["grupo"])
         if not grupo:
             return Response(
                 {"detail": "Grupo não encontrado"},
@@ -306,13 +299,15 @@ class GerenciarUsuariosGrupoView(APIView):
         add_users = data.get("adicionar_usuarios", [])
         rem_users = data.get("remover_usuarios", [])
         if add_users:
-            users_add = User.objects.filter(username__in=add_users)
-            grupo.user_set.add(*users_add)
+            users_add = UserRepository.listar_por_usernames(add_users)
+            GroupRepository.adicionar_usuarios(grupo, users_add)
         if rem_users:
-            users_rem = User.objects.filter(username__in=rem_users)
-            grupo.user_set.remove(*users_rem)
-        grupo.save()
-        return Response(GroupSerializer(grupo).data, status=status.HTTP_200_OK)
+            users_rem = UserRepository.listar_por_usernames(rem_users)
+            GroupRepository.remover_usuarios(grupo, users_rem)
+        GroupRepository.salvar(grupo)
+        return Response(
+            GroupRepository.serializar(grupo), status=status.HTTP_200_OK
+        )
 
 
 class UsuariosComGruposView(APIView):
@@ -343,9 +338,9 @@ class UsuariosComGruposView(APIView):
             Resposta HTTP com os dados solicitados.
         """
         usuario_filtro = request.query_params.get("usuario", "").strip()
-        qs = User.objects.all().prefetch_related("groups").order_by("username")
-        if usuario_filtro:
-            qs = qs.filter(username__icontains=usuario_filtro)
+        qs = UserRepository.listar_com_grupos(
+            username_filtro=usuario_filtro or None
+        )
         data = []
         for u in qs:
             nome = (
@@ -359,7 +354,7 @@ class UsuariosComGruposView(APIView):
                     "nome": nome,
                     "email": u.email or None,
                     "is_active": u.is_active,
-                    "grupos": list(u.groups.values_list("name", flat=True)),
+                    "grupos": UserRepository.nomes_grupos_sem_ordem(u),
                 }
             )
         return Response(
@@ -393,11 +388,7 @@ class UsuariosComGruposView(APIView):
         serializer = UpdateUsuarioSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        user = (
-            User.objects.filter(username=data["usuario"])
-            .prefetch_related("groups")
-            .first()
-        )
+        user = UserRepository.obter_por_username_com_grupos(data["usuario"])
         if not user:
             return Response(
                 {"detail": "Usuário não encontrado"},
@@ -429,7 +420,7 @@ class UsuariosComGruposView(APIView):
             user.email = novo_email
         if "is_active" in data:
             user.is_active = data["is_active"]
-        user.save()
+        UserRepository.salvar(user)
         if "grupos" in data:
             grupos_desejados = [
                 g.strip()
@@ -437,15 +428,15 @@ class UsuariosComGruposView(APIView):
                 if (g or "").strip()
             ]
             desired_set = set(grupos_desejados)
-            current_set = set(user.groups.values_list("name", flat=True))
+            current_set = set(UserRepository.nomes_grupos_sem_ordem(user))
             to_add = sorted(desired_set - current_set)
             to_remove = sorted(current_set - desired_set)
             if to_add:
-                grupos_add = Group.objects.filter(name__in=to_add)
-                user.groups.add(*grupos_add)
+                grupos_add = GroupRepository.listar_por_nomes(to_add)
+                UserRepository.adicionar_grupos(user, grupos_add)
             if to_remove:
-                grupos_rem = Group.objects.filter(name__in=to_remove)
-                user.groups.remove(*grupos_rem)
+                grupos_rem = GroupRepository.listar_por_nomes(to_remove)
+                UserRepository.remover_grupos(user, grupos_rem)
         nome_resp = (
             f"{user.first_name} {user.last_name}".strip()
             if user.first_name or user.last_name
@@ -456,6 +447,6 @@ class UsuariosComGruposView(APIView):
             "nome": nome_resp,
             "email": user.email or None,
             "is_active": user.is_active,
-            "grupos": list(user.groups.values_list("name", flat=True)),
+            "grupos": UserRepository.nomes_grupos_sem_ordem(user),
         }
         return Response(payload, status=status.HTTP_200_OK)

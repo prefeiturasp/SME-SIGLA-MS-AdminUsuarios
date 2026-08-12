@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
+
+from usuarios.repository import UserRepository
 
 
 class Command(BaseCommand):
@@ -37,10 +38,10 @@ class Command(BaseCommand):
             email = f"{username}@example.com"
             first_name = "Usuario"
             last_name = f"{i + 1}"
-            if User.objects.filter(username=username).exists():
+            if UserRepository.existe_por_username(username):
                 usuarios_pulados.append(username)
                 continue
-            user = User.objects.create_user(
+            user = UserRepository.criar(
                 username=username,
                 email=email,
                 password="123456",

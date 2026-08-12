@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
+
+from usuarios.repository import UserRepository
 
 
 class Command(BaseCommand):
@@ -15,16 +16,16 @@ class Command(BaseCommand):
 
     def handle(self, *args: Any, **options: Any) -> None:
         """Roda a lógica principal do comando."""
-        total_registros = User.objects.filter(is_superuser=False).count()
+        total_registros = UserRepository.contar_nao_superusers()
         self.stdout.write(
             self.style.SUCCESS(
                 f"Removendo {total_registros} usuários (não superusers)..."
             )
         )
         try:
-            qs = User.objects.filter(is_superuser=False)
+            qs = UserRepository.filtrar_nao_superusers()
             usernames = list(qs.values_list("username", flat=True))
-            qs.delete()
+            UserRepository.excluir_queryset(qs)
             self.stdout.write(
                 self.style.SUCCESS(
                     f"✅ {total_registros} usuários removidos com sucesso!"
