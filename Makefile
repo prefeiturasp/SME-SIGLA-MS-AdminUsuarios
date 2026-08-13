@@ -1,7 +1,7 @@
 # Makefile para o projeto SME-SIGLA-MS-Usuarios
 # Comandos úteis para desenvolvimento Django
 
-.PHONY: help pep257 pep484 pep-check makemigrations migrate runserver coverage test clean install format lint check pre-commit-install pre-commit
+.PHONY: help pep257 pep484 pep-check makemigrations migrate runserver coverage test clean install format lint check docs pre-commit-install pre-commit
 
 PEP_APP_DIRS = apps/usuarios apps/permissoes
 
@@ -20,6 +20,7 @@ help:
 	@echo "  make pep257              - Verifica PEP 257 (docstrings / Ruff D)"
 	@echo "  make pep484              - Verifica PEP 484 (type hints / mypy)"
 	@echo "  make pep-check           - PEP 257 + PEP 484"
+	@echo "  make docs                - Gera documentação HTML (Sphinx)"
 	@echo "  make check               - Roda lint + testes"
 	@echo "  make pre-commit-install  - Instala hooks do pre-commit no repositório"
 	@echo "  make pre-commit          - Roda pre-commit em todos os arquivos"
@@ -91,6 +92,12 @@ pep484:
 
 # PEP 257 + PEP 484
 pep-check: pep257 pep484
+
+# Gera documentação HTML com Sphinx
+docs:
+	@echo "Gerando documentação Sphinx..."
+	sphinx-build -b html docs/ docs/_build/html
+	@echo "Documentação gerada em docs/_build/html/index.html"
 
 # Configura hooks do pre-commit no repositório local
 pre-commit-install:
