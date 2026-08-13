@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -9,6 +10,9 @@ DJANGO_ENVIRONMENT = os.environ.get("DJANGO_ENVIRONMENT", "local")
 MS_PATH = os.environ.get("MS_PATH", "/ms-admin-usuarios")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+sys.path.insert(0, os.path.join(BASE_DIR, "apps"))
+
 SECRET_KEY = os.environ.get(
     "SECRET_KEY", "django-insecure-your-secret-key-here"
 )
@@ -39,6 +43,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "usuarios",
+    "permissoes",
 ]
 
 MIDDLEWARE = [
@@ -140,6 +145,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.TokenAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "sigla_sdk.autenticacao.authentication.ApiKeyAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -178,6 +184,11 @@ LOGGING = {
             "level": "DEBUG",
             "propagate": False,
         },
+        "permissoes": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
         "django.server": {
             "handlers": ["console"],
             "level": "ERROR",
@@ -191,13 +202,24 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "API para o sistema de administração de usuários de sigla",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    # "APPEND_COMPONENTS": {
+    #     "securitySchemes": {
+    #         "ApiKeyAuth": {
+    #             "type": "apiKey",
+    #             "in": "header",
+    #             "name": "X-API-Key",
+    #         }
+    #     }
+    # },
+    # "SECURITY": [{"ApiKeyAuth": []}],
 }
 
 CORESSO_API_TOKEN = os.environ.get("CORESSO_API_TOKEN", "")
 CORESSO_API_URL = os.environ.get("CORESSO_API_URL", "")
 SME_INTEGRACAO_URL = os.environ.get("SME_INTEGRACAO_URL", "")
 SME_INTEGRACAO_TOKEN = os.environ.get("SME_INTEGRACAO_TOKEN", "")
-
+API_KEY = os.environ.get("API_KEY", "api-key-admin-usuarios")
+API_KEY_HEADER = os.environ.get("API_KEY_HEADER", "X-API-Key")
 
 # E-mail
 EMAIL_BACKEND = os.environ.get(

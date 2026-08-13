@@ -1,26 +1,29 @@
 # Makefile para o projeto SME-SIGLA-MS-Usuarios
 # Comandos úteis para desenvolvimento Django
 
-.PHONY: help pep257 pep484 pep-check makemigrations migrate runserver coverage test clean install format lint check
+.PHONY: help pep257 pep484 pep-check makemigrations migrate runserver coverage test clean install format lint check docs pre-commit-install pre-commit
 
-PEP_APP_DIRS = usuarios
+PEP_APP_DIRS = apps/usuarios apps/permissoes
 
 # Comando padrão - mostra ajuda
 help:
 	@echo "Comandos disponíveis:"
-	@echo "  make makemigrations  - Cria migrações do Django"
-	@echo "  make migrate         - Aplica migrações do Django"
-	@echo "  make runserver       - Inicia o servidor de desenvolvimento"
-	@echo "  make coverage        - Executa testes com relatório de cobertura"
-	@echo "  make test            - Executa todos os testes"
-	@echo "  make clean           - Remove arquivos temporários"
-	@echo "  make install         - Instala dependências"
-	@echo "  make format          - Formata o código com ruff (auto-fix)"
-	@echo "  make lint            - Verifica conformidade com PEP 8 (ruff)"
-	@echo "  make pep257          - Verifica PEP 257 (docstrings / Ruff D)"
-	@echo "  make pep484          - Verifica PEP 484 (type hints / mypy)"
-	@echo "  make pep-check       - PEP 257 + PEP 484"
-	@echo "  make check           - Roda lint + testes"
+	@echo "  make makemigrations      - Cria migrações do Django"
+	@echo "  make migrate             - Aplica migrações do Django"
+	@echo "  make runserver           - Inicia o servidor de desenvolvimento"
+	@echo "  make coverage            - Executa testes com relatório de cobertura"
+	@echo "  make test                - Executa todos os testes"
+	@echo "  make clean               - Remove arquivos temporários"
+	@echo "  make install             - Instala dependências"
+	@echo "  make format              - Formata o código com ruff (auto-fix)"
+	@echo "  make lint                - Verifica conformidade com PEP 8 (ruff)"
+	@echo "  make pep257              - Verifica PEP 257 (docstrings / Ruff D)"
+	@echo "  make pep484              - Verifica PEP 484 (type hints / mypy)"
+	@echo "  make pep-check           - PEP 257 + PEP 484"
+	@echo "  make docs                - Gera documentação HTML (Sphinx)"
+	@echo "  make check               - Roda lint + testes"
+	@echo "  make pre-commit-install  - Instala hooks do pre-commit no repositório"
+	@echo "  make pre-commit          - Roda pre-commit em todos os arquivos"
 
 # Cria migrações do Django
 makemigrations:
@@ -40,7 +43,7 @@ runserver:
 # Executa testes com relatório de cobertura
 coverage:
 	@echo "Executando testes com cobertura..."
-	pytest --ds=config.settings_test --cov=usuarios --cov-report=term-missing --cov-report=html
+	pytest --ds=config.settings_test --cov=apps --cov-report=term-missing --cov-report=html
 
 # Executa todos os testes
 test:
@@ -89,3 +92,19 @@ pep484:
 
 # PEP 257 + PEP 484
 pep-check: pep257 pep484
+
+# Gera documentação HTML com Sphinx
+docs:
+	@echo "Gerando documentação Sphinx..."
+	sphinx-build -b html docs/ docs/_build/html
+	@echo "Documentação gerada em docs/_build/html/index.html"
+
+# Configura hooks do pre-commit no repositório local
+pre-commit-install:
+	@echo "Instalando hooks do pre-commit..."
+	pre-commit install
+
+# Roda pre-commit em todos os arquivos
+pre-commit:
+	@echo "Executando pre-commit em todos os arquivos..."
+	pre-commit run --all-files

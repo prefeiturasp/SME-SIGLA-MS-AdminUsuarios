@@ -5,20 +5,23 @@ Sistema de administração de usuários desenvolvido com Django REST Framework, 
 ## 📁 Estrutura do Projeto
 
 ```
-admin-usuarios-sigla-backend/
+ms-admin-usuarios/
 ├── config/                          # Configurações do Django
 │   ├── settings.py                  # Configurações principais (DRF, EXTERNAL_SERVICES, DB)
-│   ├── urls.py                      # URLs principais (inclui usuarios.urls em /api/v1/)
+│   ├── urls.py                      # URLs principais (inclui apps em /api/v1/)
 │   └── wsgi.py                      # Configuração WSGI
-├── usuarios/                        # App principal
-│   ├── auth.py                      # Autenticação DRF via serviço externo (Bearer)
-│   ├── serializers.py               # Serializers (login, criar usuário, alterar senha)
-│   ├── services.py                  # Integração com serviços externos (AuthenticationService)
-│   ├── urls.py                      # Rotas da API (/login, /criar-usuario, /alterar-senha)
-│   ├── views.py                     # Views da API
-│   └── management/commands/         # Comandos customizados
-│       ├── criar_usuarios.py        # Cria usuários Django (senha fixa 123456)
-│       └── limpar_usuarios.py       # Remove usuários não superusuários
+├── apps/
+│   ├── usuarios/                    # Autenticação e cadastro de usuários
+│   │   ├── api/                     # Views e urls
+│   │   ├── serializers.py           # Serializers de usuário/login/senha
+│   │   ├── services/                # Integrações externas
+│   │   ├── tests/
+│   │   └── management/commands/     # criar/importar/limpar usuários
+│   └── permissoes/                  # Grupos e permissões
+│       ├── api/                     # Views e urls
+│       ├── serializers.py
+│       ├── tests/
+│       └── management/commands/     # load_initial_permissions + json/
 ├── requirements/                    # Dependências organizadas
 │   ├── base.txt                     # Dependências principais
 │   ├── local.txt                    # Desenvolvimento local

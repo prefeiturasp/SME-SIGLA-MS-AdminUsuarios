@@ -1,0 +1,43 @@
+"""Django management command to clear non-superuser Django users."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from django.core.management.base import BaseCommand
+
+from usuarios.repository import UserRepository
+
+
+class Command(BaseCommand):
+    """Representa Command."""
+
+    help = "Remove todos os usuários que não são superusuários"
+
+    def handle(self, *args: Any, **options: Any) -> None:
+        """Roda a lógica principal do comando."""
+        total_registros = UserRepository.contar_nao_superusers()
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Removendo {total_registros} usuários (não superusers)..."
+            )
+        )
+        try:
+            qs = UserRepository.filtrar_nao_superusers()
+            usernames = list(qs.values_list("username", flat=True))
+            UserRepository.excluir_queryset(qs)
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"✅ {total_registros} usuários removidos com sucesso!"
+                )
+            )
+            if usernames:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"Usuários removidos: {', '.join(usernames)}"
+                    )
+                )
+        except Exception as e:
+            self.stdout.write(
+                self.style.ERROR(f"❌ Erro ao remover usuários: {e}")
+            )

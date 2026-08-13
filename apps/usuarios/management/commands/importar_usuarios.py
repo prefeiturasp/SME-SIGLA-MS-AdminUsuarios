@@ -1,0 +1,101 @@
+"""Importa usuários a partir de uma string JSON (argumento único).
+
+Uso:
+    python manage.py importar_usuarios '[{...}]'
+
+O payload deve ser um JSON com lista de objetos contendo
+``nome``, ``username`` e ``email``.
+"""
+
+from __future__ import annotations
+
+import json
+from typing import Any
+
+from django.core.management.base import BaseCommand, CommandError
+
+from usuarios.repository import UserRepository
+
+
+def split_nome(full_name: str) -> tuple[str, str]:
+    """Split nome.
+
+    Args:
+        full_name: Full name.
+
+    Returns:
+        Tupla com os objetos criados ou atualizados.
+    """
+    if not full_name:
+        return ("", "")
+    parts = str(full_name).strip().split()
+    if len(parts) == 1:
+        return (parts[0], "")
+    return (parts[0], " ".join(parts[1:]))
+
+
+class Command(BaseCommand):
+    """Representa Command."""
+
+    help = "Importa usuários a partir de uma string JSON."
+
+    def add_arguments(self, parser: Any) -> None:
+        """Registra os argumentos da linha de comando."""
+        parser.add_argument(
+            "data", type=str, help="String JSON com lista de usuários"
+        )
+
+    def handle(self, *args: Any, **options: Any) -> None:
+        """Roda a lógica principal do comando."""
+        data_str = options.get("data")
+        try:
+            payload = json.loads(data_str)  # type: ignore[arg-type]
+        except Exception as exc:
+            raise CommandError(f"Não foi possível ler o JSON: {exc}") from exc
+        if not isinstance(payload, list):
+            raise CommandError(
+                "O JSON deve ser uma lista de objetos de usuários."
+            )
+        criados: list[str] = []
+        pulados: list[str] = []
+        erros: list[str] = []
+        self.stdout.write(
+            self.style.SUCCESS(f"Processando {len(payload)} registros...")
+        )
+        for idx, item in enumerate(payload, start=1):
+            username = (item or {}).get("username")
+            email = (item or {}).get("email")
+            nome = (item or {}).get("nome")
+            if not username or not email:
+                erros.append(f"#{idx} - Faltando username/email")
+                continue
+            first_name, last_name = split_nome(nome)  # type: ignore[arg-type]
+            try:
+                user = UserRepository.obter_por_username(username)
+                if user:
+                    pulados.append(username)
+                else:
+                    user = UserRepository.criar(
+                        username=username,
+                        email=email,
+                        password=None,
+                        first_name=first_name,
+                        last_name=last_name,
+                    )
+                    criados.append(user.username)
+            except Exception as exc:
+                erros.append(f"#{idx} - {username or '<sem-username>'}: {exc}")
+        self.stdout.write("")
+        self.stdout.write(self.style.SUCCESS("Resumo de Importação"))
+        self.stdout.write(self.style.SUCCESS(f"  ✅ Criados: {len(criados)}"))
+        self.stdout.write(
+            self.style.WARNING(f"  ↩️  Pulados (já existiam): {len(pulados)}")
+        )
+        self.stdout.write(self.style.ERROR(f"  ❌ Erros: {len(erros)}"))
+        if criados:
+            self.stdout.write(self.style.SUCCESS(f"  + {', '.join(criados)}"))
+        if pulados:
+            self.stdout.write(self.style.WARNING(f"  = {', '.join(pulados)}"))
+        if erros:
+            for e in erros:
+                self.stdout.write(self.style.ERROR(f"    - {e}"))
