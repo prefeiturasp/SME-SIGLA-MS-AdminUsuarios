@@ -70,10 +70,10 @@ class LoginView(TokenObtainPairView):
         """Autentica o usuário e retorna os dados de acesso."""
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        usuario = UserRepository.obter_por_username(
+        user = UserRepository.obter_por_username(
             serializer.validated_data["usuario"]
         )
-        if not usuario:
+        if not user:
             return Response(
                 {"detail": "Usuário não encontrado"},
                 status=status.HTTP_401_UNAUTHORIZED,
@@ -98,10 +98,10 @@ class LoginView(TokenObtainPairView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         AutenticacaoService.atualizar_usuario_com_dados_autenticacao(
-            user=usuario, dados=data, senha=serializer.validated_data["senha"]
+            user=user, dados=data, senha=serializer.validated_data["senha"]
         )
         response_data = AutenticacaoService.montar_resposta_login(
-            data, usuario
+            data, user
         )
         return Response(response_data, status=status.HTTP_200_OK)
 
@@ -116,15 +116,19 @@ class EsqueciSenhaView(APIView):
         """Solicita envio de e-mail para recuperação de senha."""
         serializer = EsqueciSenhaSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        usuario = serializer.validated_data["rf"]
-        user = UserRepository.obter_por_username(usuario)
+        rf = serializer.validated_data.get("rf")
+        email = serializer.validated_data.get("email")
+        if rf:
+            user = UserRepository.obter_por_username(rf)
+        else:
+            user = UserRepository.obter_por_email(email)
         if not user:
             return Response(
                 {"detail": "Usuário não encontrado"},
                 status=status.HTTP_404_NOT_FOUND,
             )
         try:
-            info = SmeIntegracaoService.informacao_usuario(usuario)
+            info = SmeIntegracaoService.informacao_usuario(user.username)
         except Exception:
             return Response(
                 {"detail": "Falha ao consultar dados do usuário"},

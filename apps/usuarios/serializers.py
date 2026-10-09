@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from usuarios.repository import UserRepository
@@ -20,7 +21,18 @@ class LoginSerializer(serializers.Serializer):
 class EsqueciSenhaSerializer(serializers.Serializer):
     """Serializer do modelo EsqueciSenha."""
 
-    rf = serializers.CharField()
+    rf = serializers.CharField(required=False, allow_blank=False)
+    email = serializers.EmailField(required=False, allow_blank=False)
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        """Exige rf ou email (apenas um identificador)."""
+        rf = attrs.get("rf")
+        email = attrs.get("email")
+        if bool(rf) == bool(email):
+            raise serializers.ValidationError(
+                "Informe rf ou email (apenas um)."
+            )
+        return attrs
 
 
 class CriarNovaSenhaSerializer(serializers.Serializer):
@@ -108,3 +120,13 @@ class CreateUserSerializer(serializers.Serializer):
     username = serializers.CharField()
     nome = serializers.CharField()
     email = serializers.EmailField()
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """Serializer de leitura do User."""
+
+    class Meta:
+        """Representa Meta."""
+
+        model = User
+        fields = ["id", "username", "email", "first_name", "last_name"]

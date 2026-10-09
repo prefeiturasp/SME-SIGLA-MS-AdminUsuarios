@@ -214,7 +214,7 @@ LOGGING = {
 
 ELASTIC_APM = {
     "SERVICE_NAME": os.environ.get(
-        "ELASTIC_APM_SERVICE_NAME", "SME-SIGLA-MS-Relatorios"
+        "ELASTIC_APM_SERVICE_NAME", "sigla-ms-admin-usuarios"
     ),
     "SECRET_TOKEN": os.environ.get("ELASTIC_APM_SECRET_TOKEN", ""),
     "SERVER_URL": os.environ.get(
@@ -249,8 +249,6 @@ ELASTIC_APM = {
     ),
     'RECORDING': True,
     'TRANSACTIONS_ROOT_UNNAMED': True,
-    'CAPTURE_BODY': 'all',
-    'CAPTURE_HEADERS': True,
     'CAPTURE_ERRORS': True,
     'CAPTURE_PERFORMANCE': True,
     'CAPTURE_TRANSACTIONS': True,

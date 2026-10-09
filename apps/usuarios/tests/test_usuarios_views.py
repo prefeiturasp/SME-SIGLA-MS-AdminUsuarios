@@ -224,6 +224,42 @@ def test_esqueci_senha_success(rf, monkeypatch):
     assert response.data["email_enviado"] is True
 
 
+def test_esqueci_senha_success_por_email(rf, monkeypatch):
+    """Verifica esqueci senha buscando usuário por e-mail."""
+    User.objects.create_user(
+        username="123",
+        email="maria@prefeitura.sp.gov.br",
+        first_name="Maria",
+    )
+    chamado = {}
+
+    def _info(username, *_args, **_kwargs):
+        chamado["username"] = username
+        return {
+            "Nome": "Maria",
+            "Email": "maria@prefeitura.sp.gov.br",
+        }
+
+    monkeypatch.setattr(
+        "usuarios.api.views.SmeIntegracaoService.informacao_usuario",
+        _info,
+    )
+    monkeypatch.setattr(
+        "usuarios.api.views.EmailService.enviar_email_esqueci_senha",
+        lambda *_args, **_kwargs: None,
+    )
+    request = rf.post(
+        "/usuarios/esqueci-minha-senha/",
+        {"email": "maria@prefeitura.sp.gov.br"},
+        format="json",
+    )
+    response = EsqueciSenhaView.as_view()(request)
+    assert response.status_code == status.HTTP_200_OK
+    assert chamado["username"] == "123"
+    assert response.data["usuario"] == "123"
+    assert response.data["email_enviado"] is True
+
+
 def test_criar_nova_senha_uid_invalido(rf):
     """Verifica criar nova senha uid invalido."""
     request = rf.post(
