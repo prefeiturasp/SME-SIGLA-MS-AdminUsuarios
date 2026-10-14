@@ -14,27 +14,58 @@ from permissoes.repository import (
 )
 from usuarios.repository import UserRepository
 
+DESCRICOES_PERMISSAO = {
+    "id": {"help_text": "Identificador numérico da permissão."},
+    "codename": {
+        "help_text": (
+            "Código da permissão, por exemplo `view_user`. É por ele que "
+            "os grupos recebem e perdem permissões."
+        )
+    },
+    "name": {"help_text": "Descrição legível da permissão."},
+}
+
+DESCRICOES_GRUPO = {
+    "id": {"help_text": "Identificador numérico do grupo."},
+    "name": {"help_text": "Nome do grupo."},
+}
+
 
 class PermissionSerializer(serializers.ModelSerializer):
-    """Serializer do modelo Permission."""
+    """Permissão do sistema."""
 
     app_label = serializers.CharField(
-        source="content_type.app_label", read_only=True
+        source="content_type.app_label",
+        read_only=True,
+        help_text=(
+            "Nome do app a que a permissão pertence, por exemplo `auth`."
+        ),
     )
-    model = serializers.CharField(source="content_type.model", read_only=True)
+    model = serializers.CharField(
+        source="content_type.model",
+        read_only=True,
+        help_text=(
+            "Nome do model a que a permissão se refere, em minúsculas, por "
+            "exemplo `user`."
+        ),
+    )
 
     class Meta:
         """Representa Meta."""
 
         model = Permission
         fields = ["id", "codename", "name", "app_label", "model"]
+        extra_kwargs = DESCRICOES_PERMISSAO
 
 
 class GroupSerializer(serializers.ModelSerializer):
-    """Serializer do modelo Group."""
+    """Grupo de usuários, com as permissões dele."""
 
     permissoes = PermissionSerializer(
-        source="permissions", many=True, read_only=True
+        source="permissions",
+        many=True,
+        read_only=True,
+        help_text="Permissões do grupo.",
     )
 
     class Meta:
@@ -42,15 +73,25 @@ class GroupSerializer(serializers.ModelSerializer):
 
         model = Group
         fields = ["id", "name", "permissoes"]
+        extra_kwargs = DESCRICOES_GRUPO
 
 
 class CreatePermissionSerializer(serializers.Serializer):
-    """Serializer do modelo CreatePermission."""
+    """Dados da permissão a criar."""
 
-    app_label = serializers.CharField()
-    model = serializers.CharField()
-    codename = serializers.CharField()
-    name = serializers.CharField()
+    app_label = serializers.CharField(
+        help_text="Nome do app do model, por exemplo `auth`."
+    )
+    model = serializers.CharField(
+        help_text=(
+            "Nome do model, sem diferenciar maiúsculas de minúsculas, por "
+            "exemplo `user`."
+        )
+    )
+    codename = serializers.CharField(
+        help_text="Código da permissão. Não pode se repetir no mesmo model."
+    )
+    name = serializers.CharField(help_text="Descrição legível da permissão.")
 
     def validate(self, attrs: Any) -> Any:
         """Valida content type informado e codename livre para cadastro."""
@@ -84,11 +125,18 @@ class CreatePermissionSerializer(serializers.Serializer):
 
 
 class CreateGroupSerializer(serializers.Serializer):
-    """Serializer do modelo CreateGroup."""
+    """Dados do grupo a criar."""
 
-    grupo = serializers.CharField()
+    grupo = serializers.CharField(
+        help_text="Nome do grupo. Não pode repetir o de um grupo existente."
+    )
     permissoes_codenames = serializers.ListField(
-        child=serializers.CharField(), required=False
+        child=serializers.CharField(),
+        required=False,
+        help_text=(
+            "Códigos das permissões do grupo. Códigos que não existem são "
+            "ignorados."
+        ),
     )
 
     def validate_grupo(self, value: Any) -> Any:
@@ -108,46 +156,106 @@ class CreateGroupSerializer(serializers.Serializer):
 
 
 class UpdateGroupPermissionsSerializer(serializers.Serializer):
-    """Serializer do modelo UpdateGroupPermissions."""
+    """Permissões a incluir e a retirar de um grupo."""
 
-    grupo = serializers.CharField()
+    grupo = serializers.CharField(
+        help_text="Nome exato do grupo, com maiúsculas e minúsculas."
+    )
     adicionar_codenames = serializers.ListField(
-        child=serializers.CharField(), required=False
+        child=serializers.CharField(),
+        required=False,
+        help_text=(
+            "Códigos das permissões a incluir. Códigos que não existem "
+            "são ignorados."
+        ),
     )
     remover_codenames = serializers.ListField(
-        child=serializers.CharField(), required=False
+        child=serializers.CharField(),
+        required=False,
+        help_text=(
+            "Códigos das permissões a retirar, aplicados depois das "
+            "inclusões."
+        ),
     )
 
 
 class UpdateGroupUsersSerializer(serializers.Serializer):
-    """Serializer do modelo UpdateGroupUsers."""
+    """Usuários a incluir e a retirar de um grupo."""
 
-    grupo = serializers.CharField()
+    grupo = serializers.CharField(
+        help_text="Nome exato do grupo, com maiúsculas e minúsculas."
+    )
     adicionar_usuarios = serializers.ListField(
-        child=serializers.CharField(), required=False
+        child=serializers.CharField(),
+        required=False,
+        help_text=(
+            "Registros funcionais dos usuários a incluir. Os que não "
+            "existem são ignorados."
+        ),
     )
     remover_usuarios = serializers.ListField(
-        child=serializers.CharField(), required=False
+        child=serializers.CharField(),
+        required=False,
+        help_text=(
+            "Registros funcionais dos usuários a retirar, aplicados depois "
+            "das inclusões."
+        ),
     )
 
 
 class UpdateUsuarioSerializer(serializers.Serializer):
-    """Atualiza campos básicos do usuário nativo do Django."""
+    """Dados a alterar em um usuário."""
 
     usuario = serializers.CharField(
-        help_text="Username do usuário a ser atualizado."
+        help_text="Registro funcional do usuário a alterar."
     )
-    nome = serializers.CharField(required=False, allow_blank=False)
-    email = serializers.EmailField(required=False, allow_blank=True)
-    is_active = serializers.BooleanField(required=False)
+    nome = serializers.CharField(
+        required=False,
+        allow_blank=False,
+        help_text=(
+            "Nome completo. A primeira palavra é gravada como nome e o "
+            "restante, como sobrenome."
+        ),
+    )
+    email = serializers.EmailField(
+        required=False,
+        allow_blank=True,
+        help_text=(
+            "E-mail do usuário. Um e-mail diferente do atual é alterado "
+            "também no CoreSSO. Vazio apaga o e-mail só neste serviço."
+        ),
+    )
+    is_active = serializers.BooleanField(
+        required=False,
+        help_text=(
+            "Indica se o usuário está ativo. Um usuário inativo é "
+            "recusado nas rotas que exigem token."
+        ),
+    )
     grupos = serializers.ListField(
-        child=serializers.CharField(), required=False
+        child=serializers.CharField(),
+        required=False,
+        help_text=(
+            "Lista final de grupos do usuário: os que faltam são "
+            "incluídos e os demais, retirados. Lista vazia tira o usuário "
+            "de todos os grupos."
+        ),
     )
     adicionar_grupos = serializers.ListField(
-        child=serializers.CharField(), required=False
+        child=serializers.CharField(),
+        required=False,
+        help_text=(
+            "Os nomes são conferidos, mas o campo não tem efeito hoje. "
+            "Use `grupos`."
+        ),
     )
     remover_grupos = serializers.ListField(
-        child=serializers.CharField(), required=False
+        child=serializers.CharField(),
+        required=False,
+        help_text=(
+            "Os nomes são conferidos, mas o campo não tem efeito hoje. "
+            "Use `grupos`."
+        ),
     )
 
     def validate_email(self, value: str) -> str:
@@ -186,3 +294,79 @@ class UpdateUsuarioSerializer(serializers.Serializer):
                     {"grupos": f"Grupos inexistentes: {', '.join(faltando)}"}
                 )
         return attrs
+
+
+class AtualizarUsuarioRequisicaoSerializer(UpdateUsuarioSerializer):
+    """Dados a alterar em um usuário.
+
+    Em PATCH, o drf-spectacular marca o corpo como parcial e publica todos
+    os campos como opcionais. Esta rota não é uma atualização parcial:
+    `usuario` é sempre exigido.
+    """
+
+    @property
+    def partial(self) -> bool:
+        """Indica que o corpo nunca é tratado como parcial."""
+        return False
+
+    @partial.setter
+    def partial(self, valor: bool) -> None:
+        """Ignora a marcação de parcial feita na geração do schema."""
+
+
+class UsuarioComGruposSerializer(serializers.Serializer):
+    """Usuário com os grupos a que pertence."""
+
+    usuario = serializers.CharField(help_text="Registro funcional do usuário.")
+    nome = serializers.CharField(
+        allow_null=True,
+        help_text="Nome e sobrenome, ou nulo se não estão preenchidos.",
+    )
+    email = serializers.CharField(
+        allow_null=True, help_text="E-mail, ou nulo se não está preenchido."
+    )
+    is_active = serializers.BooleanField(
+        help_text="Indica se o usuário está ativo."
+    )
+    grupos = serializers.ListField(
+        child=serializers.CharField(),
+        help_text="Nomes dos grupos do usuário.",
+    )
+
+
+class UsuariosComGruposSerializer(serializers.Serializer):
+    """Usuários cadastrados, com os grupos de cada um."""
+
+    count = serializers.IntegerField(
+        help_text="Quantidade de usuários retornados."
+    )
+    results = UsuarioComGruposSerializer(
+        many=True, help_text="Usuários, em ordem de registro funcional."
+    )
+
+
+class UsuarioPermissoesSerializer(serializers.Serializer):
+    """Usuário com os grupos e as permissões que tem."""
+
+    usuario = serializers.CharField(help_text="Registro funcional do usuário.")
+    nome = serializers.CharField(
+        allow_null=True,
+        help_text="Nome e sobrenome, ou nulo se não estão preenchidos.",
+    )
+    email = serializers.CharField(
+        allow_null=True, help_text="E-mail, ou nulo se não está preenchido."
+    )
+    grupos = serializers.ListField(
+        child=serializers.CharField(),
+        help_text="Nomes dos grupos do usuário, em ordem alfabética.",
+    )
+    total_permissoes = serializers.IntegerField(
+        help_text="Quantidade de itens em `permissoes`."
+    )
+    permissoes = PermissionSerializer(
+        many=True,
+        help_text=(
+            "Permissões do usuário, diretas ou recebidas dos grupos, sem "
+            "repetição."
+        ),
+    )
