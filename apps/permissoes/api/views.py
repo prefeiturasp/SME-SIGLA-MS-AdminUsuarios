@@ -5,26 +5,29 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import (
-    OpenApiParameter,
-    OpenApiResponse,
-    extend_schema,
-)
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from permissoes.api.schemas import (
+    OPERACOES_GRUPOS,
+    OPERACOES_PERMISSOES,
+    OPERACOES_PERMISSOES_DO_USUARIO,
+    OPERACOES_USUARIOS_COM_GRUPOS,
+    OPERACOES_USUARIOS_DO_GRUPO,
+    TAG_GRUPOS,
+    TAG_PERMISSOES,
+)
 from permissoes.repository import GroupRepository, PermissionRepository
 from permissoes.serializers import (
     CreateGroupSerializer,
     CreatePermissionSerializer,
-    GroupSerializer,
-    PermissionSerializer,
     UpdateGroupPermissionsSerializer,
     UpdateGroupUsersSerializer,
     UpdateUsuarioSerializer,
 )
+from usuarios.api.schemas import TAG_USUARIOS
 from usuarios.exceptions import SmeIntegracaoException
 from usuarios.repository import UserRepository
 from usuarios.services.sme_integracao import SmeIntegracaoService
@@ -32,40 +35,14 @@ from usuarios.services.sme_integracao import SmeIntegracaoService
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(tags=[TAG_USUARIOS])
+@extend_schema_view(**OPERACOES_PERMISSOES_DO_USUARIO)
 class GerenciarPermissoesUsuarioView(APIView):
     """Representa GerenciarPermissoesUsuarioView."""
 
     permission_classes = [permissions.AllowAny]
     authentication_classes: list = []
 
-    @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name="usuario",
-                description=(
-                    "Nome de usuário para buscar permissões "
-                    "(diretas e herdadas)."
-                ),
-                required=True,
-                type=str,
-                location=OpenApiParameter.QUERY,
-            ),
-            OpenApiParameter(
-                name="model",
-                description=(
-                    "(Opcional) Modelos separados por vírgula "
-                    "para filtrar permissões."
-                ),
-                required=False,
-                type=OpenApiTypes.STR,
-                location=OpenApiParameter.QUERY,
-            ),
-        ],
-        responses={200: PermissionSerializer(many=True)},
-        description=(
-            "Retorna permissões diretas e herdadas por grupo do usuário."
-        ),
-    )
     def get(self, request: Any) -> Any:
         """Consulta o recurso solicitado.
 
@@ -116,16 +93,14 @@ class GerenciarPermissoesUsuarioView(APIView):
         )
 
 
+@extend_schema(tags=[TAG_PERMISSOES])
+@extend_schema_view(**OPERACOES_PERMISSOES)
 class PermissoesDisponiveisView(APIView):
     """Representa PermissoesDisponiveisView."""
 
     permission_classes = [permissions.AllowAny]
     authentication_classes: list = []
 
-    @extend_schema(
-        responses={200: PermissionSerializer(many=True)},
-        description="Retorna todas as permissões disponíveis no sistema.",
-    )
     def get(self, request: Any) -> Any:
         """Consulta o recurso solicitado.
 
@@ -141,11 +116,6 @@ class PermissoesDisponiveisView(APIView):
             status=status.HTTP_200_OK,
         )
 
-    @extend_schema(
-        request=CreatePermissionSerializer,
-        responses={201: PermissionSerializer},
-        description="Cria uma nova permissão vinculada a um ContentType.",
-    )
     def post(self, request: Any) -> Any:
         """Registra ou processa o recurso solicitado.
 
@@ -164,24 +134,14 @@ class PermissoesDisponiveisView(APIView):
         )
 
 
+@extend_schema(tags=[TAG_GRUPOS])
+@extend_schema_view(**OPERACOES_GRUPOS)
 class GruposDisponiveisView(APIView):
     """Representa GruposDisponiveisView."""
 
     permission_classes = [permissions.AllowAny]
     authentication_classes: list = []
 
-    @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name="grupo",
-                description="(Opcional) Nome do grupo para filtrar.",
-                required=False,
-                type=str,
-            )
-        ],
-        responses={200: GroupSerializer(many=True)},
-        description="Retorna permissões de grupos (ou de um grupo).",
-    )
     def get(self, request: Any) -> Any:
         """Consulta o recurso solicitado.
 
@@ -205,11 +165,6 @@ class GruposDisponiveisView(APIView):
             status=status.HTTP_200_OK,
         )
 
-    @extend_schema(
-        request=UpdateGroupPermissionsSerializer,
-        responses={200: GroupSerializer},
-        description="Adiciona ou remove permissões (codename) de um grupo.",
-    )
     def put(self, request: Any) -> Any:
         """Atualiza o recurso solicitado.
 
@@ -245,11 +200,6 @@ class GruposDisponiveisView(APIView):
             GroupRepository.serializar(grupo), status=status.HTTP_200_OK
         )
 
-    @extend_schema(
-        request=CreateGroupSerializer,
-        responses={201: GroupSerializer},
-        description="Cria um grupo e associa permissões usando codenames.",
-    )
     def post(self, request: Any) -> Any:
         """Registra ou processa o recurso solicitado.
 
@@ -267,17 +217,14 @@ class GruposDisponiveisView(APIView):
         )
 
 
+@extend_schema(tags=[TAG_GRUPOS])
+@extend_schema_view(**OPERACOES_USUARIOS_DO_GRUPO)
 class GerenciarUsuariosGrupoView(APIView):
     """Representa GerenciarUsuariosGrupoView."""
 
     permission_classes = [permissions.AllowAny]
     authentication_classes: list = []
 
-    @extend_schema(
-        request=UpdateGroupUsersSerializer,
-        responses={200: GroupSerializer},
-        description="Adiciona ou remove usuários (username) de um grupo.",
-    )
     def put(self, request: Any) -> Any:
         """Atualiza o recurso solicitado.
 
@@ -310,24 +257,14 @@ class GerenciarUsuariosGrupoView(APIView):
         )
 
 
+@extend_schema(tags=[TAG_USUARIOS])
+@extend_schema_view(**OPERACOES_USUARIOS_COM_GRUPOS)
 class UsuariosComGruposView(APIView):
     """Representa UsuariosComGruposView."""
 
     permission_classes = [permissions.AllowAny]
     authentication_classes: list = []
 
-    @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name="usuario",
-                description="(Opcional) Filtra por username (sem case).",
-                required=False,
-                type=str,
-            )
-        ],
-        responses={200: GroupSerializer(many=True)},
-        description="Retorna todos os usuários com os grupos a que pertencem.",
-    )
     def get(self, request: Any) -> Any:
         """Consulta o recurso solicitado.
 
@@ -361,21 +298,6 @@ class UsuariosComGruposView(APIView):
             {"count": len(data), "results": data}, status=status.HTTP_200_OK
         )
 
-    @extend_schema(
-        request=UpdateUsuarioSerializer,
-        responses={
-            200: OpenApiResponse(
-                description="Usuário atualizado com sucesso."
-            ),
-            400: OpenApiResponse(description="Dados inválidos."),
-            404: OpenApiResponse(description="Usuário não encontrado."),
-        },
-        description=(
-            "Atualiza nome, e-mail e is_active do usuário e gerencia grupos. "
-            'Se "grupos" for enviado, define a lista final (pode ser []). '
-            "E-mail deve ser único."
-        ),
-    )
     def patch(self, request: Any) -> Any:
         """Altera parcialmente o recurso solicitado.
 

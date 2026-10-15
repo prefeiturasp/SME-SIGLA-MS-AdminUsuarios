@@ -52,8 +52,11 @@ def test_obter_por_username_variantes() -> None:
     user = UserRepository.criar(username="rf1", email="rf1@x.com")
     grupo = Group.objects.create(name="Gestor")
     UserRepository.adicionar_grupos(user, [grupo])
-    assert UserRepository.obter_por_username("rf1") == user
+    encontrado = UserRepository.obter_por_username("rf1")
+    assert encontrado == user
     assert UserRepository.obter_por_username("inexistente") is None
+    assert UserRepository.obter_por_email("RF1@X.com") == user
+    assert UserRepository.obter_por_email("livre@x.com") is None
     com_grupos = UserRepository.obter_por_username_com_grupos("rf1")
     assert com_grupos is not None
     assert list(com_grupos.groups.values_list("name", flat=True)) == [

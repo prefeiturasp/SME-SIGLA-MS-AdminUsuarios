@@ -33,9 +33,10 @@ def test_criar_usuarios_creates_and_skips_existing():
         username__in=["usuario1", "usuario2", "usuario3"]
     )
     assert created_users.count() == 3
-    assert UserRepository.obter_por_username("usuario2").check_password(
-        "123456"
-    )
+    usuario2 = UserRepository.obter_por_username("usuario2")
+    assert usuario2 is not None
+    assert usuario2.check_password("123456")
+
 
 
 def test_importar_usuarios_invalid_payload_raises():

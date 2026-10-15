@@ -51,6 +51,11 @@ class UserRepository:
         return User.objects.filter(username=username).first()
 
     @classmethod
+    def obter_por_email(cls, email: str) -> User | None:
+        """Retorna o usuário pelo e-mail (case-insensitive), ou None."""
+        return User.objects.filter(email__iexact=email).first()
+
+    @classmethod
     def obter_por_username_com_grupos(cls, username: str) -> User | None:
         """Retorna o usuário com groups prefetch pelo username, ou None."""
         return (

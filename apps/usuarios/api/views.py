@@ -7,12 +7,25 @@ from typing import Any
 
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
-from drf_spectacular.utils import OpenApiResponse, extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from usuarios.api.schemas import (
+    OPERACOES_ALTERAR_EMAIL,
+    OPERACOES_ALTERAR_SENHA,
+    OPERACOES_BUSCAR_USUARIO_EOL,
+    OPERACOES_CRIAR_USUARIO,
+    OPERACOES_ESQUECI_SENHA,
+    OPERACOES_LOGIN,
+    OPERACOES_MEUS_DADOS,
+    OPERACOES_NOVA_SENHA,
+    TAG_AUTENTICACAO,
+    TAG_MINHA_CONTA,
+    TAG_USUARIOS,
+)
 from usuarios.exceptions import (
     AutenticacaoCredenciaisInvalidasError,
     AutenticacaoRequisicaoError,
@@ -59,21 +72,22 @@ def _mask_email(email: str) -> str:
     return f"{masked_local}@{domain}"
 
 
+@extend_schema(tags=[TAG_AUTENTICACAO])
+@extend_schema_view(**OPERACOES_LOGIN)
 class LoginView(TokenObtainPairView):
     """Representa LoginView."""
 
     permission_classes = [permissions.AllowAny]  # type: ignore[assignment]
     authentication_classes: list = []  # type: ignore[assignment]
 
-    @extend_schema(request=LoginSerializer)
     def post(self, request: Any) -> Any:
         """Autentica o usuário e retorna os dados de acesso."""
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        usuario = UserRepository.obter_por_username(
+        user = UserRepository.obter_por_username(
             serializer.validated_data["usuario"]
         )
-        if not usuario:
+        if not user:
             return Response(
                 {"detail": "Usuário não encontrado"},
                 status=status.HTTP_401_UNAUTHORIZED,
@@ -98,14 +112,16 @@ class LoginView(TokenObtainPairView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         AutenticacaoService.atualizar_usuario_com_dados_autenticacao(
-            user=usuario, dados=data, senha=serializer.validated_data["senha"]
+            user=user, dados=data, senha=serializer.validated_data["senha"]
         )
         response_data = AutenticacaoService.montar_resposta_login(
-            data, usuario
+            data, user
         )
         return Response(response_data, status=status.HTTP_200_OK)
 
 
+@extend_schema(tags=[TAG_AUTENTICACAO])
+@extend_schema_view(**OPERACOES_ESQUECI_SENHA)
 class EsqueciSenhaView(APIView):
     """Representa EsqueciSenhaView."""
 
@@ -116,15 +132,19 @@ class EsqueciSenhaView(APIView):
         """Solicita envio de e-mail para recuperação de senha."""
         serializer = EsqueciSenhaSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        usuario = serializer.validated_data["rf"]
-        user = UserRepository.obter_por_username(usuario)
+        rf = serializer.validated_data.get("rf")
+        email = serializer.validated_data.get("email")
+        if rf:
+            user = UserRepository.obter_por_username(rf)
+        else:
+            user = UserRepository.obter_por_email(email)
         if not user:
             return Response(
                 {"detail": "Usuário não encontrado"},
                 status=status.HTTP_404_NOT_FOUND,
             )
         try:
-            info = SmeIntegracaoService.informacao_usuario(usuario)
+            info = SmeIntegracaoService.informacao_usuario(user.username)
         except Exception:
             return Response(
                 {"detail": "Falha ao consultar dados do usuário"},
@@ -160,6 +180,8 @@ class EsqueciSenhaView(APIView):
         )
 
 
+@extend_schema(tags=[TAG_AUTENTICACAO])
+@extend_schema_view(**OPERACOES_NOVA_SENHA)
 class CriarNovaSenhaView(APIView):
     """Representa CriarNovaSenhaView."""
 
@@ -200,6 +222,8 @@ class CriarNovaSenhaView(APIView):
         )
 
 
+@extend_schema(tags=[TAG_MINHA_CONTA])
+@extend_schema_view(**OPERACOES_MEUS_DADOS)
 class MeusDadosView(APIView):
     """Representa MeusDadosView."""
 
@@ -221,6 +245,8 @@ class MeusDadosView(APIView):
         )
 
 
+@extend_schema(tags=[TAG_MINHA_CONTA])
+@extend_schema_view(**OPERACOES_ALTERAR_SENHA)
 class AlterarSenhaView(APIView):
     """Representa AlterarSenhaView."""
 
@@ -252,21 +278,14 @@ class AlterarSenhaView(APIView):
         )
 
 
+@extend_schema(tags=[TAG_USUARIOS])
+@extend_schema_view(**OPERACOES_BUSCAR_USUARIO_EOL)
 class BuscarUsuarioEolView(APIView):
     """Representa BuscarUsuarioEolView."""
 
     permission_classes = [permissions.AllowAny]
     authentication_classes: list = []
 
-    @extend_schema(
-        request=BuscarUsuarioEolSerializer,
-        responses={
-            200: OpenApiResponse(description="Dados do usuário no EOL"),
-            400: OpenApiResponse(description="Usuário já cadastrado no SIGLA"),
-            404: OpenApiResponse(description="Usuário não encontrado no EOL"),
-        },
-        description="Busca dados do usuário no EOL via RF. Retorna 400 se já existir no SIGLA.",  # noqa: E501
-    )
     def post(self, request: Any) -> Any:
         """Consulta dados do servidor no EOL pelo RF informado."""
         serializer = BuscarUsuarioEolSerializer(data=request.data)
@@ -303,21 +322,14 @@ class BuscarUsuarioEolView(APIView):
         )
 
 
+@extend_schema(tags=[TAG_USUARIOS])
+@extend_schema_view(**OPERACOES_CRIAR_USUARIO)
 class CriarUsuarioView(APIView):
     """Representa CriarUsuarioView."""
 
     permission_classes = [permissions.AllowAny]
     authentication_classes: list = []
 
-    @extend_schema(
-        request=CreateUserSerializer,
-        responses={
-            201: OpenApiResponse(description="Usuário criado com sucesso"),
-            400: OpenApiResponse(description="Dados inválidos"),
-            409: OpenApiResponse(description="Usuário já cadastrado"),
-        },
-        description="Cria um novo usuário a partir de username, nome e email.",
-    )
     def post(self, request: Any) -> Any:
         """Cadastra um novo usuário no SIGLA."""
         serializer = CreateUserSerializer(data=request.data)
@@ -350,6 +362,8 @@ class CriarUsuarioView(APIView):
         )
 
 
+@extend_schema(tags=[TAG_MINHA_CONTA])
+@extend_schema_view(**OPERACOES_ALTERAR_EMAIL)
 class AlterarEmailView(APIView):
     """Representa AlterarEmailView."""
 

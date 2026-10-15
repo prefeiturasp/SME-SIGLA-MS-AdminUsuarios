@@ -71,8 +71,7 @@ class Command(BaseCommand):
                 continue
             first_name, last_name = split_nome(nome)  # type: ignore[arg-type]
             try:
-                user = UserRepository.obter_por_username(username)
-                if user:
+                if UserRepository.existe_por_username(username):
                     pulados.append(username)
                 else:
                     user = UserRepository.criar(
