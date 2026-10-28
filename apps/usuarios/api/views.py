@@ -84,10 +84,16 @@ class LoginView(TokenObtainPairView):
         """Autentica o usuário e retorna os dados de acesso."""
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        logger.info(
+            f"Autenticando usuario: {serializer.validated_data['usuario']}"
+            f"senha: {serializer.validated_data['senha'][0]}***"
+        )
         user = UserRepository.obter_por_username(
             serializer.validated_data["usuario"]
         )
+        logger.info(f"Usuario: {user}")
         if not user:
+            logger.info("Usuário não encontrado")
             return Response(
                 {"detail": "Usuário não encontrado"},
                 status=status.HTTP_401_UNAUTHORIZED,
@@ -98,6 +104,7 @@ class LoginView(TokenObtainPairView):
                 serializer.validated_data["senha"],
             )
         except AutenticacaoCredenciaisInvalidasError:
+            logger.info("Credenciais inválidas")
             return Response(
                 {"detail": "Credenciais inválidas"},
                 status=status.HTTP_401_UNAUTHORIZED,
@@ -106,11 +113,13 @@ class LoginView(TokenObtainPairView):
             AutenticacaoRespostaInvalidaError,
             AutenticacaoUpstreamError,
             AutenticacaoRequisicaoError,
-        ):
+        ) as exc:
+            logger.exception(f"Falha no serviço de autenticação: {str(exc)}")
             return Response(
                 {"detail": "Falha no serviço de autenticação"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        logger.info("Autenticado com sucesso")
         AutenticacaoService.atualizar_usuario_com_dados_autenticacao(
             user=user, dados=data, senha=serializer.validated_data["senha"]
         )
@@ -134,18 +143,24 @@ class EsqueciSenhaView(APIView):
         serializer.is_valid(raise_exception=True)
         rf = serializer.validated_data.get("rf")
         email = serializer.validated_data.get("email")
+        logger.info(
+            f"Solicitando envio de e-mail para recuperação de "
+            f"senha | rf={rf} | email={email}"
+        )
         if rf:
             user = UserRepository.obter_por_username(rf)
         else:
             user = UserRepository.obter_por_email(email)
         if not user:
+            logger.info(f"Usuário não encontrado")
             return Response(
                 {"detail": "Usuário não encontrado"},
                 status=status.HTTP_404_NOT_FOUND,
             )
         try:
             info = SmeIntegracaoService.informacao_usuario(user.username)
-        except Exception:
+        except Exception as exc:
+            logger.exception(f"Falha ao consultar dados do usuário: {str(exc)}")
             return Response(
                 {"detail": "Falha ao consultar dados do usuário"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -157,6 +172,7 @@ class EsqueciSenhaView(APIView):
             or user.first_name
         )
         if not email:
+            logger.info("E-mail não encontrado para o usuário")
             return Response(
                 {"detail": "E-mail não encontrado para o usuário"},
                 status=status.HTTP_404_NOT_FOUND,
@@ -165,7 +181,8 @@ class EsqueciSenhaView(APIView):
             EmailService.enviar_email_esqueci_senha(
                 user=user, email=email, nome=nome
             )
-        except Exception:
+        except Exception as exc:
+            logger.exception(f"Falha ao enviar e-mail: {str(exc)}")
             return Response(
                 {"detail": "Falha ao enviar e-mail"},
                 status=status.HTTP_502_BAD_GATEWAY,
@@ -195,14 +212,20 @@ class CriarNovaSenhaView(APIView):
         uidb64 = serializer.validated_data["uid"]
         token = serializer.validated_data["token"]
         nova_senha = serializer.validated_data["nova_senha"]
+        logger.info(
+            f"Redefinindo senha | uid={uidb64} | token={token} | "
+            f"nova_senha={nova_senha[0]}***"
+        )
         try:
             uid = urlsafe_base64_decode(uidb64).decode()
             user = UserRepository.obter_por_pk(uid)
-        except Exception:
+        except Exception as exc:
+            logger.exception(f"UID inválido: {str(exc)}")
             return Response(
                 {"detail": "UID inválido"}, status=status.HTTP_400_BAD_REQUEST
             )
         if not default_token_generator.check_token(user, token):
+            logger.info("Token inválido")
             return Response(
                 {"detail": "Token inválido"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -234,6 +257,11 @@ class MeusDadosView(APIView):
         user = request.user
         nome_completo = f"{user.first_name} {user.last_name}".strip()
         grupos = UserRepository.nomes_grupos_sem_ordem(user)
+        logger.info(
+            f"Retornando perfil e dados do usuário | rf={user.username} | "
+            f"nome_completo={nome_completo} | email={user.email} | "
+            f"grupos={grupos}"
+        )
         return Response(
             {
                 "rf": user.username,
@@ -259,7 +287,13 @@ class AlterarSenhaView(APIView):
         user = request.user
         senha_atual = serializer.validated_data["senha_atual"]
         nova_senha = serializer.validated_data["nova_senha"]
+        logger.info(
+            f"Alterando senha | rf={user.username} | "
+            f"senha_atual={senha_atual[0]}*** | "
+            f"nova_senha={nova_senha[0]}***"
+        )
         if not user.check_password(senha_atual):
+            logger.info("Senha atual incorreta")
             return Response(
                 {"detail": "Senha atual incorreta."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -267,12 +301,13 @@ class AlterarSenhaView(APIView):
         try:
             SmeIntegracaoService.redefine_senha(user.username, nova_senha)
         except SmeIntegracaoException as e:
-            logger.error(f"Falha ao redefinir senha no SME Integração: {e}")
+            logger.exception(f"Falha ao redefinir senha no SME Integração: {e}")
             return Response(
                 {"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST
             )
         user.set_password(nova_senha)
         UserRepository.salvar(user, campos_atualizacao=["password"])
+        logger.info("Senha alterada com sucesso")
         return Response(
             {"detail": "Senha alterada com sucesso"}, status=status.HTTP_200_OK
         )
@@ -291,20 +326,25 @@ class BuscarUsuarioEolView(APIView):
         serializer = BuscarUsuarioEolSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         rf = serializer.validated_data["rf"]
+        logger.info(
+            f"Consultando dados do usuário no EOL | rf={rf}"
+        )
         if UserRepository.existe_por_username(rf):
+            logger.info("Usuário já cadastrado no SIGLA")
             return Response(
                 {"detail": "Usuário já cadastrado no SIGLA."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
             info = SmeIntegracaoService.informacao_usuario(rf)
-        except SmeIntegracaoException:
+        except SmeIntegracaoException as exc:
+            logger.exception(f"Falha ao consultar EOL | rf={rf} | erro={str(exc)}") # noqa: E501
             return Response(
                 {"detail": "Usuário não encontrado no EOL."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        except Exception:
-            logger.exception("Falha ao consultar EOL para RF: %s", rf)
+        except Exception as exc:
+            logger.exception(f"Falha ao consultar EOL para RF: {rf} | erro={str(exc)}") # noqa: E501
             return Response(
                 {"detail": "Falha ao consultar o EOL."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -312,6 +352,7 @@ class BuscarUsuarioEolView(APIView):
         nome = (info or {}).get("Nome") or (info or {}).get("nome", "")
         email = (info or {}).get("Email") or (info or {}).get("email", "")
         if not nome and (not email):
+            logger.info("Usuário não encontrado no EOL")
             return Response(
                 {"detail": "Usuário não encontrado no EOL."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -337,12 +378,18 @@ class CriarUsuarioView(APIView):
         username = serializer.validated_data["username"]
         email = serializer.validated_data["email"]
         nome = serializer.validated_data["nome"]
+        logger.info(
+            f"Cadastrando novo usuário | username={username} | "
+            f"email={email} | nome={nome}"
+        )
         if UserRepository.existe_por_username(username):
+            logger.info("Nome de usuário já está cadastrado")
             return Response(
                 {"detail": "Nome de usuário já está cadastrado."},
                 status=status.HTTP_409_CONFLICT,
             )
         if UserRepository.existe_por_email(email):
+            logger.info("E-mail já está cadastrado")
             return Response(
                 {"detail": "E-mail já está cadastrado."},
                 status=status.HTTP_409_CONFLICT,
@@ -377,15 +424,19 @@ class AlterarEmailView(APIView):
         serializer.is_valid(raise_exception=True)
         user = request.user
         novo_email = serializer.validated_data["novo_email"]
+        logger.info(
+            f"Alterando e-mail | rf={user.username} | novo_email={novo_email}"
+        )
         try:
             SmeIntegracaoService.alterar_email(user.username, novo_email)
         except SmeIntegracaoException as e:
-            logger.error(f"Falha ao alterar email no SME Integração: {e}")
+            logger.exception(f"Falha ao alterar email no SME Integração: {e}")
             return Response(
                 {"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST
             )
         user.email = novo_email
         UserRepository.salvar(user, campos_atualizacao=["email"])
+        logger.info("E-mail alterado com sucesso")
         return Response(
             {"detail": "Email alterado com sucesso"}, status=status.HTTP_200_OK
         )
