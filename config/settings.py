@@ -189,7 +189,7 @@ LOGGING = {
             "propagate": False,
         },
         # Seu Logger de Aplicação (substitua pelo nome do seu app)
-        "relatorios": {
+        "usuarios": {
             "handlers": ["console", "elasticapm"],
             "level": "DEBUG",
             "propagate": False,
