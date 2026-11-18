@@ -213,7 +213,7 @@ class CriarNovaSenhaView(APIView):
         token = serializer.validated_data["token"]
         nova_senha = serializer.validated_data["nova_senha"]
         logger.info(
-            f"Redefinindo senha | uid={uidb64} | token={token} | "
+            f"Redefinindo senha | uid={uidb64} | token={token[0]}*** | "
             f"nova_senha={nova_senha[0]}***"
         )
         try:

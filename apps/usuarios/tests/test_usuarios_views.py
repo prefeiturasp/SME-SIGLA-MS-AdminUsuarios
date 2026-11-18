@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 import pytest
 from django.contrib.auth.models import Group, User
 from django.utils.encoding import force_bytes
@@ -343,6 +345,23 @@ def test_criar_nova_senha_success(rf, monkeypatch):
     user.refresh_from_db()
     assert response.status_code == status.HTTP_200_OK
     assert user.check_password("novasenha")
+
+
+def test_criar_nova_senha_mascara_token_no_log(rf, monkeypatch, caplog):
+    """Verifica que o token de recuperação não aparece inteiro no log."""
+    monkeypatch.setattr(logging.getLogger("usuarios"), "propagate", True)
+    user = User.objects.create_user(username="123", password="senha-antiga")
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = "c3k9xz-0123456789abcdef"
+    request = rf.post(
+        "/usuarios/criar-nova-senha/",
+        {"uid": uid, "token": token, "nova_senha": "novasenha"},
+        format="json",
+    )
+    with caplog.at_level(logging.INFO, logger="usuarios.api.views"):
+        CriarNovaSenhaView.as_view()(request)
+    assert token not in caplog.text
+    assert "token=c***" in caplog.text
 
 
 def test_criar_usuario_username_conflict(rf):
